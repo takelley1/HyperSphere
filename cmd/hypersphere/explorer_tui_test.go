@@ -873,6 +873,34 @@ func TestReadThemeUsesYellowSelectionHighlights(t *testing.T) {
 	}
 }
 
+func TestReadThemeAppliesSkinFilePaletteOverrides(t *testing.T) {
+	skinPath := filepath.Join(t.TempDir(), "skins.json")
+	content := `{
+		"canvas_background":"navy",
+		"header_background":"teal",
+		"header_text":"white",
+		"status_error":"[orange]"
+	}`
+	if err := os.WriteFile(skinPath, []byte(content), 0o600); err != nil {
+		t.Fatalf("expected skin file write to succeed: %v", err)
+	}
+	t.Setenv("HYPERSPHERE_SKIN_FILE", skinPath)
+	t.Setenv("NO_COLOR", "")
+	theme := readTheme()
+	if theme.CanvasBackground != tcell.ColorNavy {
+		t.Fatalf("expected skin to override canvas background, got %v", theme.CanvasBackground)
+	}
+	if theme.HeaderBackground != tcell.ColorTeal {
+		t.Fatalf("expected skin to override header background, got %v", theme.HeaderBackground)
+	}
+	if theme.HeaderText != tcell.ColorWhite {
+		t.Fatalf("expected skin to override header text, got %v", theme.HeaderText)
+	}
+	if theme.StatusError != "[orange]" {
+		t.Fatalf("expected skin to override status error tag, got %q", theme.StatusError)
+	}
+}
+
 func TestRenderTopHeaderWithWidthUsesScreenshotAccentColors(t *testing.T) {
 	t.Setenv("NO_COLOR", "")
 	runtime := newExplorerRuntime()

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -129,6 +130,13 @@ type explorerTheme struct {
 	RowMarked          tcell.Color
 	RowMarkedSelected  tcell.Color
 	StatusError        string
+}
+
+type skinPalette struct {
+	CanvasBackground string `json:"canvas_background"`
+	HeaderText       string `json:"header_text"`
+	HeaderBackground string `json:"header_background"`
+	StatusError      string `json:"status_error"`
 }
 
 func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, ids []string) error {
@@ -1781,6 +1789,9 @@ func readTheme() explorerTheme {
 		RowMarkedSelected:  tcell.ColorYellow,
 		StatusError:        "[red]",
 	}
+	if skinPath := strings.TrimSpace(os.Getenv("HYPERSPHERE_SKIN_FILE")); skinPath != "" {
+		theme = applySkinOverrides(theme, skinPath)
+	}
 	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
 		theme.UseColor = false
 		theme.CanvasBackground = tcell.ColorBlack
@@ -1800,6 +1811,55 @@ func readTheme() explorerTheme {
 		theme.StatusError = ""
 	}
 	return theme
+}
+
+func applySkinOverrides(theme explorerTheme, skinPath string) explorerTheme {
+	content, err := os.ReadFile(skinPath)
+	if err != nil {
+		return theme
+	}
+	palette := skinPalette{}
+	if err := json.Unmarshal(content, &palette); err != nil {
+		return theme
+	}
+	if color, ok := parseThemeColor(palette.CanvasBackground); ok {
+		theme.CanvasBackground = color
+	}
+	if color, ok := parseThemeColor(palette.HeaderText); ok {
+		theme.HeaderText = color
+	}
+	if color, ok := parseThemeColor(palette.HeaderBackground); ok {
+		theme.HeaderBackground = color
+	}
+	if strings.TrimSpace(palette.StatusError) != "" {
+		theme.StatusError = strings.TrimSpace(palette.StatusError)
+	}
+	return theme
+}
+
+func parseThemeColor(name string) (tcell.Color, bool) {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "black":
+		return tcell.ColorBlack, true
+	case "white":
+		return tcell.ColorWhite, true
+	case "yellow":
+		return tcell.ColorYellow, true
+	case "aqua", "cyan":
+		return tcell.ColorAqua, true
+	case "teal":
+		return tcell.ColorTeal, true
+	case "fuchsia", "magenta":
+		return tcell.ColorFuchsia, true
+	case "navy":
+		return tcell.ColorNavy, true
+	case "red":
+		return tcell.ColorRed, true
+	case "green":
+		return tcell.ColorGreen, true
+	default:
+		return tcell.ColorDefault, false
+	}
 }
 
 func maxHeaderLineCount(left []string, center []string, right []string) int {

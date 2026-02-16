@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-071 by adding skin-file theme overrides via
+  `HYPERSPHERE_SKIN_FILE`, enabling selected skin palettes to update header,
+  body, and status-region rendering colors/tags.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  skin-file palette override application in `readTheme()`.
 - Implemented and fulfilled RQ-070 by adding plugin registry config loading
   and schema validation (required `name`, `command`, and non-empty `scopes`)
   before plugin entries are considered active.

@@ -639,6 +639,7 @@
 ### RQ-071: Add skins/themes config support
 - vSphere mapping: terminal visual customization.
 - Acceptance: selected skin file changes color palette for header/body/status regions.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-072: Add `NO_COLOR` and ASCII symbol compatibility mode
 - vSphere mapping: terminal compatibility.
