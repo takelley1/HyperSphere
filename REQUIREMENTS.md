@@ -619,6 +619,7 @@
 ### RQ-067: Add config schema validation for main config file
 - vSphere mapping: fail-fast misconfiguration handling.
 - Acceptance: invalid config fields produce schema error with failing field path.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-068: Add hotkeys config file support
 - vSphere mapping: user key remapping parity.

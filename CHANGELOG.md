@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-067 by adding explicit main-config schema
+  validation with `SchemaValidationError` reporting the precise failing field
+  path for unknown keys and object type mismatches.
+- Added failing-first coverage in `internal/config/schema_test.go` for valid
+  schema acceptance, unknown top-level and nested field paths, and nested type
+  mismatch path reporting.
 - Implemented and fulfilled RQ-066 by adding XDG-style config-root discovery
   with `HOME/.config/hypersphere` defaulting and
   `HYPERSPHERE_CONFIG_DIR` environment override support.
