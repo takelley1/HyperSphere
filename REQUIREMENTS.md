@@ -116,6 +116,7 @@
 ### RQ-019: Add sticky table headers
 - vSphere mapping: large inventory scan usability.
 - Acceptance: vertical scroll keeps header row fixed while body rows change.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-020: Add selected-column sort glyphs
 - vSphere mapping: visible ascending/descending state.

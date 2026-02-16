@@ -37,6 +37,11 @@
   integration coverage.
 
 ## 2026-02-15
+- Implemented RQ-019 sticky table header parity by adding a selection-driven body viewport so vertical scrolling changes visible rows while the table header remains fixed.
+- Added failing-first coverage in `internal/tui/runtime_test.go` to assert sticky header persistence and body-row changes after vertical scroll.
+- Added viewport helper branch coverage in `internal/tui/explorer_coverage_test.go` and removed dead defensive branching in `internal/tui/explorer.go` to preserve the enforced 100% coverage gate.
+- Marked `RQ-019` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed sticky-header roadmap item and adding follow-on viewport indicator/configuration sub-tasks plus explicit sort-glyph work.
 - Implemented RQ-017 prompt-mode discoverability parity by adding `:-` to command suggestions.
 - Added failing-first coverage in `internal/tui/prompt_test.go` to verify `:-` suggestion matching.
 - Updated `internal/tui/prompt.go` suggestion candidates to include the last-view toggle command.

@@ -10,7 +10,9 @@
 
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.
-- [ ] Add sticky multi-column headers with sort-direction glyphs.
+- [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
+- [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
+- [ ] Add selected-column sort-direction glyphs in table headers.
 - [ ] Add per-resource status badges in the header line.
 - [ ] Add column-width autosizing based on terminal resize events.
 
