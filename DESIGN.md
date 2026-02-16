@@ -40,11 +40,12 @@
 - [ ] Sub-task: add inversion-style accessibility toggle for high-contrast themes.
 
 ### Header Layout Parity
-- [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
 - [ ] Sub-task: add compact help-line rotation when top-center hint set exceeds available lines.
 - [ ] Sub-task: add top-center help alignment checks for 80-column and 100-column terminals.
+- [ ] Sub-task: add threshold tuning tests for collapse/hide transitions near boundary widths.
+- [ ] Sub-task: add per-view compact legend variants for log/table modes under tight widths.
 - [ ] Sub-task: add integration coverage for `:log <object-path> target=<value>` title transitions.
 - [ ] Sub-task: add default log object-path derivation tests from selected row identity.
 - [ ] Sub-task: add log-line wrap coverage across narrow widths and long message tokens.

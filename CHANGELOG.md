@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-106 compact-header degradation behavior with width thresholds:
+  center legend collapses first, then right logo hides, while left metadata and
+  active view title remain visible.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  collapse-before-hide ordering and narrow-width logo removal behavior.
+- Marked `RQ-106` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for threshold boundary tuning
+  and per-view compact legend variants.
 - Refined the top-right ASCII logo by removing the `TESSERACT` label and
   enclosing the wireframe square/cube with a circular outline for clearer
   tetrahedron/tesseract-style geometry in the header.

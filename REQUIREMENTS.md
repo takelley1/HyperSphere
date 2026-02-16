@@ -287,6 +287,7 @@
 - vSphere mapping: preserve usability on smaller terminals.
 - Acceptance: below configured width, center legend collapses first,
   then logo hides, while left metadata and active view remain visible.
+- Status: fulfilled (2026-02-16).
 
 ## Resource Coverage Parity (vSphere Analogs)
 

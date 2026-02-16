@@ -937,6 +937,36 @@ func TestRenderTopHeaderCenterOmitsClockForEventDrivenRedraw(t *testing.T) {
 	}
 }
 
+func TestRenderTopHeaderWithWidthCollapsesCenterLegendBeforeHidingLogo(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.renderTopHeaderWithWidth(90)
+	text := runtime.topHeader.GetText(false)
+	if !strings.Contains(text, "Context: vc-primary") {
+		t.Fatalf("expected left metadata to remain visible at compact width, got %q", text)
+	}
+	if strings.Contains(text, "<Tab> Complete") {
+		t.Fatalf("expected center legend to collapse before logo hide, got %q", text)
+	}
+	if !strings.Contains(text, ".------------.") {
+		t.Fatalf("expected logo to remain visible before hide threshold, got %q", text)
+	}
+}
+
+func TestRenderTopHeaderWithWidthHidesLogoAfterCenterCollapse(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.renderTopHeaderWithWidth(70)
+	text := runtime.topHeader.GetText(false)
+	if !strings.Contains(text, "Context: vc-primary") {
+		t.Fatalf("expected left metadata to remain visible at narrow width, got %q", text)
+	}
+	if strings.Contains(text, ".------------.") || strings.Contains(text, "+------+") {
+		t.Fatalf("expected logo to hide at narrow width, got %q", text)
+	}
+	if !strings.Contains(runtime.body.GetTitle(), "VM(all)") {
+		t.Fatalf("expected active view title to remain visible, got %q", runtime.body.GetTitle())
+	}
+}
+
 func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	promptState := tui.NewPromptState(20)

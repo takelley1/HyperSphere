@@ -26,6 +26,8 @@ const defaultMEMTrend = -1
 const logTimestampWidth = 20
 const logLevelWidth = 5
 const logMessageMinWidth = 16
+const compactHeaderCollapseWidth = 100
+const compactHeaderHideLogoWidth = 80
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
@@ -701,14 +703,43 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	if r.topHeader == nil {
 		return
 	}
+	leftLines := strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n")
+	centerLines := strings.Split(renderTopHeaderCenter(r.logMode, r.promptMode), "\n")
+	rightLines := strings.Split(renderTopHeaderRight(), "\n")
+	centerLines, rightLines = degradeTopHeaderSections(width, centerLines, rightLines)
 	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
-		strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n"),
-		strings.Split(renderTopHeaderCenter(r.logMode, r.promptMode), "\n"),
-		strings.Split(renderTopHeaderRight(), "\n"),
+		leftLines,
+		centerLines,
+		rightLines,
 		r.theme,
 	)
 	r.topHeader.SetText(strings.Join(headerLines, "\n"))
+}
+
+func degradeTopHeaderSections(
+	width int,
+	center []string,
+	right []string,
+) ([]string, []string) {
+	if width < compactHeaderHideLogoWidth {
+		right = nil
+	}
+	if width < compactHeaderCollapseWidth {
+		center = compactCenterLegend(center)
+	}
+	return center, right
+}
+
+func compactCenterLegend(lines []string) []string {
+	if len(lines) == 0 {
+		return lines
+	}
+	compact := []string{lines[0]}
+	if len(lines) > 0 {
+		compact = append(compact, lines[len(lines)-1])
+	}
+	return compact
 }
 
 func (r *explorerRuntime) renderBreadcrumb() {
