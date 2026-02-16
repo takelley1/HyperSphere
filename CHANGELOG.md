@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-003 `--refresh` startup flag parsing with float-seconds support.
+- Added failing-first CLI tests in `cmd/hypersphere/main_test.go` for minimum
+  clamp behavior and unchanged values above the minimum.
+- Added canonical `--refresh` parsing in `cmd/hypersphere/main.go` with
+  `minimumRefreshSeconds` clamping logic.
+- Updated `DESIGN.md` by removing the completed `--refresh` sub-task from
+  short-term CLI startup parity goals.
 - Implemented RQ-002 `hypersphere info` command parity with runtime path introspection output.
 - Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to assert required
   `config/logs/dumps/skins/plugins/hotkeys` keys and absolute path values.

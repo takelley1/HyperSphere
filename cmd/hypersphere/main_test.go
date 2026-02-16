@@ -58,3 +58,27 @@ func TestRunInfoCommandPrintsAbsolutePaths(t *testing.T) {
 		}
 	}
 }
+
+func TestParseFlagsRefreshClampsToMinimum(t *testing.T) {
+	flags, err := parseFlags([]string{"--refresh", "0.25"})
+	if err != nil {
+		t.Fatalf("expected --refresh to parse, got error: %v", err)
+	}
+	if flags.refreshSeconds != minimumRefreshSeconds {
+		t.Fatalf(
+			"expected refresh seconds clamped to %.2f, got %.2f",
+			minimumRefreshSeconds,
+			flags.refreshSeconds,
+		)
+	}
+}
+
+func TestParseFlagsRefreshKeepsConfiguredValueAboveMinimum(t *testing.T) {
+	flags, err := parseFlags([]string{"--refresh", "2.75"})
+	if err != nil {
+		t.Fatalf("expected --refresh to parse, got error: %v", err)
+	}
+	if flags.refreshSeconds != 2.75 {
+		t.Fatalf("expected refresh seconds to stay 2.75, got %.2f", flags.refreshSeconds)
+	}
+}

@@ -19,17 +19,20 @@ import (
 )
 
 type cliFlags struct {
-	command   string
-	workflow  string
-	mode      string
-	execute   bool
-	threshold int
+	command        string
+	workflow       string
+	mode           string
+	execute        bool
+	threshold      int
+	refreshSeconds float64
 }
 
 var (
-	buildVersion = "0.0.0"
-	buildCommit  = "unknown"
-	buildDate    = "unknown"
+	buildVersion          = "0.0.0"
+	buildCommit           = "unknown"
+	buildDate             = "unknown"
+	defaultRefreshSeconds = 2.0
+	minimumRefreshSeconds = 1.0
 )
 
 func main() {
@@ -73,6 +76,7 @@ func parseFlags(args []string) (cliFlags, error) {
 	mode := flagSet.String("mode", "all", "mode: mark, purge, or all")
 	execute := flagSet.Bool("execute", false, "execute mutating actions")
 	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
+	refresh := flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds")
 	if err := flagSet.Parse(args); err != nil {
 		return cliFlags{}, err
 	}
@@ -85,12 +89,20 @@ func parseFlags(args []string) (cliFlags, error) {
 		return cliFlags{}, fmt.Errorf("unsupported workflow %q", *workflow)
 	}
 	return cliFlags{
-		command:   command,
-		workflow:  value,
-		mode:      strings.TrimSpace(*mode),
-		execute:   *execute,
-		threshold: *threshold,
+		command:        command,
+		workflow:       value,
+		mode:           strings.TrimSpace(*mode),
+		execute:        *execute,
+		threshold:      *threshold,
+		refreshSeconds: clampRefreshSeconds(*refresh),
 	}, nil
+}
+
+func clampRefreshSeconds(refreshSeconds float64) float64 {
+	if refreshSeconds < minimumRefreshSeconds {
+		return minimumRefreshSeconds
+	}
+	return refreshSeconds
 }
 
 func parseSubcommand(args []string) (string, error) {
