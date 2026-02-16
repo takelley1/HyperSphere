@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-115 by removing the bottom help bar and moving
+  actionable help hints into the top-center header in cyan-accented lines.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  footer removal from layout, moved help hints, prompt/quit visibility, and
+  clock-free top-header help rendering.
+- Updated `DESIGN.md` with follow-on top-center help packing/alignment tasks for
+  narrower terminal widths.
 - Implemented RQ-104 monospaced log-line parity by adding timestamped log row
   rendering with fixed-width level markers and wrapped continuation indentation.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for

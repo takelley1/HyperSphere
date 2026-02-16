@@ -213,6 +213,16 @@
   off VMs and disconnected hosts) to exercise browsing and status cues.
 - Status: fulfilled (2026-02-16).
 
+### RQ-115: Remove bottom help bar and move help hints to top header
+- vSphere mapping: keep operator guidance visible without consuming bottom-panel
+  vertical space needed for status and browsing.
+- Acceptance: bottom "Help" bar widget is removed from the explorer layout.
+- Acceptance: relevant help hints (command/filter/help/action, completion,
+  movement, prompt state, quit key) render in the top-center header region.
+- Acceptance: moved help hints render with the existing cyan center accent in
+  color mode and remain clock-free for event-driven redraw behavior.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

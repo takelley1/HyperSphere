@@ -54,7 +54,6 @@ type explorerRuntime struct {
 	breadcrumb    *tview.TextView
 	status        *tview.TextView
 	prompt        *tview.InputField
-	footer        *tview.TextView
 	aliasEntries  []string
 	promptMode    bool
 	helpOpen      bool
@@ -219,7 +218,6 @@ func newExplorerRuntimeWithRenderOptions(
 		breadcrumb:    tview.NewTextView(),
 		status:        tview.NewTextView(),
 		prompt:        tview.NewInputField(),
-		footer:        tview.NewTextView(),
 		wideColumns:   true,
 		headerVisible: !headless,
 		logEntries:    defaultRuntimeLogEntries(),
@@ -267,10 +265,6 @@ func (r *explorerRuntime) configureWidgets() {
 	r.prompt.SetLabel("Command: ")
 	r.prompt.SetFieldBackgroundColor(r.theme.CanvasBackground)
 	applyPromptValidationState(r.prompt, "")
-	r.footer.SetDynamicColors(true)
-	r.footer.SetBorder(true)
-	r.footer.SetBackgroundColor(r.theme.CanvasBackground)
-	r.footer.SetTitle(" Help ")
 	r.helpModal.SetBorder(true)
 	r.helpModal.SetTitle(" Keymap Help ")
 	r.aliasEntries = tui.ResourceCommandAliases()
@@ -290,7 +284,7 @@ func (r *explorerRuntime) configureWidgets() {
 	if !r.crumbsless {
 		layout.AddItem(r.breadcrumb, 3, 0, false)
 	}
-	layout.AddItem(r.status, 3, 0, false).AddItem(r.footer, 3, 0, false)
+	layout.AddItem(r.status, 3, 0, false)
 	r.layout = layout
 	r.layout.SetBackgroundColor(r.theme.CanvasBackground)
 	r.pages.AddPage("main", layout, true, true)
@@ -654,7 +648,6 @@ func (r *explorerRuntime) render(message string) {
 	r.renderTopHeader()
 	r.renderTable()
 	r.renderBreadcrumb()
-	r.footer.SetText(renderFooter(r.promptMode))
 }
 
 func (r *explorerRuntime) renderTopHeader() {
@@ -668,7 +661,7 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
 		strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n"),
-		strings.Split(renderTopHeaderCenter(r.logMode), "\n"),
+		strings.Split(renderTopHeaderCenter(r.logMode, r.promptMode), "\n"),
 		strings.Split(renderTopHeaderRight(), "\n"),
 		r.theme,
 	)
@@ -1321,17 +1314,6 @@ func (r *explorerRuntime) tableHeaderVisible() bool {
 	return r.headerVisible
 }
 
-func renderFooter(promptMode bool) string {
-	prompt := "OFF"
-	if promptMode {
-		prompt = "ON"
-	}
-	return fmt.Sprintf(
-		": view | / filter | ! action | Tab complete | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit",
-		prompt,
-	)
-}
-
 func helpModalText(view tui.ResourceView) string {
 	actions := "none"
 	if len(view.Actions) > 0 {
@@ -1553,13 +1535,18 @@ func defaultRuntimeLogEntries() []runtimeLogEntry {
 	}
 }
 
-func renderTopHeaderCenter(logMode bool) string {
+func renderTopHeaderCenter(logMode bool, promptMode bool) string {
+	prompt := "OFF"
+	if promptMode {
+		prompt = "ON"
+	}
 	if logMode {
 		return strings.Join(
 			[]string{
 				"<g> Top",
 				"<G> Bottom",
 				"<PgUp/PgDn> Scroll",
+				fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
 			},
 			"\n",
 		)
@@ -1569,6 +1556,10 @@ func renderTopHeaderCenter(logMode bool) string {
 			"<:> Command",
 			"</> Filter",
 			"<?> Help",
+			"<!> Action",
+			"<Tab> Complete",
+			"<h/j/k/l> Move",
+			fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
 		},
 		"\n",
 	)

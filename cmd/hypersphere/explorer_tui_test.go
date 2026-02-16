@@ -333,12 +333,24 @@ func TestTableRowColorFallsBackToAlternatingPaletteForUnknownStatus(t *testing.T
 	}
 }
 
-func TestRenderFooterIncludesPromptMode(t *testing.T) {
-	if !strings.Contains(renderFooter(true), "Prompt: ON") {
-		t.Fatalf("expected prompt-on indicator in footer")
+func TestRenderTopHeaderCenterIncludesMovedHelpHintsAndPromptState(t *testing.T) {
+	lines := strings.Split(renderTopHeaderCenter(false, true), "\n")
+	want := []string{
+		"<:> Command",
+		"</> Filter",
+		"<?> Help",
+		"<!> Action",
+		"<Tab> Complete",
+		"<h/j/k/l> Move",
+		"Prompt: ON | <q> Quit",
 	}
-	if !strings.Contains(renderFooter(false), "Prompt: OFF") {
-		t.Fatalf("expected prompt-off indicator in footer")
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d center lines, got %d (%q)", len(want), len(lines), lines)
+	}
+	for index, expected := range want {
+		if lines[index] != expected {
+			t.Fatalf("expected center help line %d to be %q, got %q", index, expected, lines[index])
+		}
 	}
 }
 
@@ -415,14 +427,14 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 }
 
 func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
-	lines := strings.Split(renderTopHeaderCenter(false), "\n")
+	lines := strings.Split(renderTopHeaderCenter(false, false), "\n")
 	want := []string{
 		"<:> Command",
 		"</> Filter",
 		"<?> Help",
 	}
-	if len(lines) != len(want) {
-		t.Fatalf("expected %d center legend lines, got %d (%q)", len(want), len(lines), lines)
+	if len(lines) < len(want) {
+		t.Fatalf("expected at least %d center legend lines, got %d (%q)", len(want), len(lines), lines)
 	}
 	for index, expected := range want {
 		if lines[index] != expected {
@@ -437,11 +449,12 @@ func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
 }
 
 func TestRenderTopHeaderCenterUsesLogNavigationLegendInLogView(t *testing.T) {
-	lines := strings.Split(renderTopHeaderCenter(true), "\n")
+	lines := strings.Split(renderTopHeaderCenter(true, false), "\n")
 	want := []string{
 		"<g> Top",
 		"<G> Bottom",
 		"<PgUp/PgDn> Scroll",
+		"Prompt: OFF | <q> Quit",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d log legend lines, got %d (%q)", len(want), len(lines), lines)
@@ -465,6 +478,9 @@ func TestHandlePromptDoneSwitchesHeaderLegendForLogViewAndRestoresTableLegend(t 
 	if !strings.Contains(runtime.topHeader.GetText(false), "<PgUp/PgDn> Scroll") {
 		t.Fatalf("expected log-view legend after :log command")
 	}
+	if !strings.Contains(runtime.topHeader.GetText(false), "Prompt: OFF | <q> Quit") {
+		t.Fatalf("expected moved prompt/quit help in top header during log view")
+	}
 
 	runtime.startPrompt(":table")
 	runtime.handlePromptDone(tcell.KeyEnter)
@@ -474,6 +490,9 @@ func TestHandlePromptDoneSwitchesHeaderLegendForLogViewAndRestoresTableLegend(t 
 	runtime.renderTopHeaderWithWidth(120)
 	if !strings.Contains(runtime.topHeader.GetText(false), "<:> Command") {
 		t.Fatalf("expected table legend after :table command")
+	}
+	if !strings.Contains(runtime.topHeader.GetText(false), "<Tab> Complete") {
+		t.Fatalf("expected moved help hints in top header after returning to table view")
 	}
 }
 
@@ -846,11 +865,11 @@ func TestAliasPaletteSelectionExecutesAliasCommand(t *testing.T) {
 	}
 }
 
-func TestRenderFooterOmitsClockForEventDrivenRedraw(t *testing.T) {
-	footer := renderFooter(true)
+func TestRenderTopHeaderCenterOmitsClockForEventDrivenRedraw(t *testing.T) {
+	footer := renderTopHeaderCenter(false, true)
 	clock := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\b`)
 	if clock.MatchString(footer) {
-		t.Fatalf("expected footer without realtime clock: %q", footer)
+		t.Fatalf("expected top-header help without realtime clock: %q", footer)
 	}
 }
 
@@ -1061,8 +1080,15 @@ func TestNewExplorerRuntimeCrumbslessOmitsBreadcrumbWidget(t *testing.T) {
 	if runtime.breadcrumb.GetText(true) != "" {
 		t.Fatalf("expected crumbsless runtime to keep breadcrumb empty")
 	}
+	if runtime.layout.GetItemCount() != 4 {
+		t.Fatalf("expected crumbsless layout to omit breadcrumb and bottom help bar widgets")
+	}
+}
+
+func TestNewExplorerRuntimeRemovesBottomHelpBarFromLayout(t *testing.T) {
+	runtime := newExplorerRuntime()
 	if runtime.layout.GetItemCount() != 5 {
-		t.Fatalf("expected crumbsless layout to omit breadcrumb widget")
+		t.Fatalf("expected runtime layout without footer help bar")
 	}
 }
 

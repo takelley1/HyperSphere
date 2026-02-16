@@ -35,7 +35,7 @@
 - [ ] Sub-task: add NO_COLOR snapshot tests for clean accent-tag removal and monochrome fallback.
 - [ ] Sub-task: add theme-override plumbing for palette selection via config and CLI.
 - [ ] Sub-task: add status mapping coverage for host `CONNECTION` and VM `POWER` fields.
-- [ ] Sub-task: add severity legend hints to the header/footer for color semantics.
+- [ ] Sub-task: add severity legend hints to the top header for color semantics.
 - [ ] Sub-task: add selected-row inversion coverage for compact headers and hidden-header mode.
 - [ ] Sub-task: add inversion-style accessibility toggle for high-contrast themes.
 
@@ -43,6 +43,8 @@
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
+- [ ] Sub-task: add compact help-line rotation when top-center hint set exceeds available lines.
+- [ ] Sub-task: add top-center help alignment checks for 80-column and 100-column terminals.
 - [ ] Sub-task: add log-mode legend wiring for `Top`/`Bottom`/paging runtime actions.
 - [ ] Sub-task: add integration coverage for `:log <object-path> target=<value>` title transitions.
 - [ ] Sub-task: add default log object-path derivation tests from selected row identity.
