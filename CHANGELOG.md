@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-075 by adding plugin scope filtering so plugin
+  visibility resolves only for matching view scopes (plus `all/*` global scope)
+  and remains hidden outside declared scopes.
+- Added failing-first coverage in `cmd/hypersphere/plugin_registry_test.go` for
+  per-scope plugin visibility behavior.
 - Implemented and fulfilled RQ-074 by adding plugin command execution wiring
   with an environment contract that passes selected object IDs and active
   endpoint metadata into plugin runs.

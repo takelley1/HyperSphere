@@ -98,3 +98,24 @@ func validatePluginEntry(entry pluginEntry, index int) error {
 func pluginFieldError(index int, field string) error {
 	return fmt.Errorf("invalid plugin field plugins[%d].%s", index, field)
 }
+
+func visiblePluginsForScope(registry pluginRegistry, scope string) []pluginEntry {
+	normalizedScope := strings.ToLower(strings.TrimSpace(scope))
+	visible := make([]pluginEntry, 0, len(registry.entries))
+	for _, entry := range registry.entries {
+		if pluginMatchesScope(entry, normalizedScope) {
+			visible = append(visible, entry)
+		}
+	}
+	return visible
+}
+
+func pluginMatchesScope(entry pluginEntry, scope string) bool {
+	for _, value := range entry.Scopes {
+		normalized := strings.ToLower(strings.TrimSpace(value))
+		if normalized == "all" || normalized == "*" || normalized == scope {
+			return true
+		}
+	}
+	return false
+}

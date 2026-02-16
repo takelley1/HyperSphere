@@ -709,6 +709,7 @@
 ### RQ-075: Add plugin scope binding per view
 - vSphere mapping: only show plugin where resource type is valid.
 - Acceptance: plugin is visible only in listed scopes and hidden elsewhere.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-076: Add plugin shortcut binding and collision detection
 - vSphere mapping: predictable key behavior.

@@ -63,3 +63,27 @@ func TestDefaultPluginRegistryPathUsesEnvironmentOverride(t *testing.T) {
 		t.Fatalf("expected %q, got %q", expected, path)
 	}
 }
+
+func TestVisiblePluginsForScopeFiltersToAllowedScopes(t *testing.T) {
+	registry := pluginRegistry{
+		entries: []pluginEntry{
+			{Name: "VM Only", Command: "vm.sh", Scopes: []string{"vm"}},
+			{Name: "Host Only", Command: "host.sh", Scopes: []string{"host"}},
+			{Name: "All Views", Command: "all.sh", Scopes: []string{"all"}},
+		},
+	}
+	visible := visiblePluginsForScope(registry, "vm")
+	if len(visible) != 2 {
+		t.Fatalf("expected two visible plugins for vm scope, got %d", len(visible))
+	}
+	if visible[0].Name != "VM Only" || visible[1].Name != "All Views" {
+		t.Fatalf("unexpected visible plugin set for vm scope: %+v", visible)
+	}
+	hostVisible := visiblePluginsForScope(registry, "host")
+	if len(hostVisible) != 2 {
+		t.Fatalf("expected two visible plugins for host scope, got %d", len(hostVisible))
+	}
+	if hostVisible[0].Name != "Host Only" || hostVisible[1].Name != "All Views" {
+		t.Fatalf("unexpected visible plugin set for host scope: %+v", hostVisible)
+	}
+}
