@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-034 by adding the `:event`/`:events` view with
+  columns `TIME`, `SEVERITY`, `ENTITY`, `MESSAGE`, and `USER`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for event alias parsing and event view column
+  rendering.
+- Extended `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded event
+  rows and added browse-dataset assertions in `cmd/hypersphere/main_test.go`.
 - Implemented and fulfilled RQ-033 by adding the `:task`/`:tasks` view with
   columns `ENTITY`, `ACTION`, `STATE`, `STARTED`, `DURATION`, and `OWNER`.
 - Added failing-first coverage in `internal/tui/command_test.go` and

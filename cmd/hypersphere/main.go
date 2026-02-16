@@ -337,6 +337,7 @@ func defaultCatalog() tui.Catalog {
 		Templates:     defaultTemplateRows(),
 		Snapshots:     defaultSnapshotRows(),
 		Tasks:         defaultTaskRows(),
+		Events:        defaultEventRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -435,6 +436,17 @@ func defaultTaskRows() []tui.TaskRow {
 		{Entity: "ds-7", Action: "rescan", State: "success", Started: "2026-02-16T08:01:00Z", Duration: "11s", Owner: "storage@example.com"},
 		{Entity: "vm-c", Action: "snapshot-create", State: "failed", Started: "2026-02-16T07:55:00Z", Duration: "38s", Owner: "dba@example.com"},
 		{Entity: "cluster-west", Action: "rebalance", State: "running", Started: "2026-02-16T08:05:00Z", Duration: "6m02s", Owner: "sre@example.com"},
+	}
+}
+
+func defaultEventRows() []tui.EventRow {
+	return []tui.EventRow{
+		{Time: "2026-02-16T08:04:00Z", Severity: "info", Entity: "vm-a", Message: "power state changed to on", User: "ops@example.com"},
+		{Time: "2026-02-16T08:09:00Z", Severity: "warning", Entity: "esxi-06", Message: "host entered disconnected state", User: "infra@example.com"},
+		{Time: "2026-02-16T08:12:00Z", Severity: "error", Entity: "ds-7", Message: "datastore latency threshold exceeded", User: "storage@example.com"},
+		{Time: "2026-02-16T08:18:00Z", Severity: "info", Entity: "vm-b", Message: "snapshot created", User: "dev@example.com"},
+		{Time: "2026-02-16T08:20:00Z", Severity: "warning", Entity: "cluster-west", Message: "demand imbalance detected", User: "sre@example.com"},
+		{Time: "2026-02-16T08:23:00Z", Severity: "info", Entity: "vm-c", Message: "guest tools upgraded", User: "dba@example.com"},
 	}
 }
 

@@ -181,6 +181,24 @@ func TestTaskViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestEventViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Events: []EventRow{
+				{Time: "2026-02-16T09:04:00Z", Severity: "warning", Entity: "vm-a", Message: "guest tools out of date", User: "ops@example.com"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":event")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"TIME", "SEVERITY", "ENTITY", "MESSAGE", "USER"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected event columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 	navigator := NewNavigator(Catalog{
 		VMs:           []VMRow{{Name: "vm-a"}},
@@ -192,6 +210,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		Templates:     []TemplateRow{{Name: "tpl-a", CPUCount: 2, MemoryMB: 4096}},
 		Snapshots:     []SnapshotRow{{VM: "vm-a", Snapshot: "snap-a", Owner: "ops@example.com"}},
 		Tasks:         []TaskRow{{Entity: "vm-a", Action: "power-off", State: "running", Started: "2026-02-16T00:00:00Z", Duration: "5s", Owner: "ops@example.com"}},
+		Events:        []EventRow{{Time: "2026-02-16T00:00:00Z", Severity: "info", Entity: "vm-a", Message: "vm powered on", User: "ops@example.com"}},
 		Hosts:         []HostRow{{Name: "host-a", CoreCount: 24, ThreadCount: 48, VMCount: 50}},
 		Datastores:    []DatastoreRow{{Name: "ds-a", CapacityGB: 1000, UsedGB: 600, FreeGB: 400, Type: "vsan", LatencyMS: 3}},
 	})
@@ -208,6 +227,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		{command: ":tp", column: "CPU_COUNT"},
 		{command: ":ss", column: "OWNER"},
 		{command: ":task", column: "DURATION"},
+		{command: ":event", column: "MESSAGE"},
 		{command: ":host", column: "THREADS"},
 		{command: ":datastore", column: "LATENCY_MS"},
 	}

@@ -438,6 +438,7 @@
 ### RQ-034: Add `:event` view
 - vSphere mapping: inventory event chronology.
 - Acceptance: view columns include `TIME`, `SEVERITY`, `ENTITY`, `MESSAGE`, `USER`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-035: Add `:alarm` view
 - vSphere mapping: active alarm tracking.

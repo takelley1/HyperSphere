@@ -40,6 +40,7 @@ const (
 	ResourceTemplate   Resource = "template"
 	ResourceSnapshot   Resource = "snapshot"
 	ResourceTask       Resource = "task"
+	ResourceEvent      Resource = "event"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -70,6 +71,8 @@ var resourceAliasMap = map[string]Resource{
 	"snapshots":     ResourceSnapshot,
 	"task":          ResourceTask,
 	"tasks":         ResourceTask,
+	"event":         ResourceEvent,
+	"events":        ResourceEvent,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -197,6 +200,15 @@ type TaskRow struct {
 	Owner    string
 }
 
+// EventRow represents one inventory event stream row in the resource table.
+type EventRow struct {
+	Time     string
+	Severity string
+	Entity   string
+	Message  string
+	User     string
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -233,6 +245,7 @@ type Catalog struct {
 	Templates     []TemplateRow
 	Snapshots     []SnapshotRow
 	Tasks         []TaskRow
+	Events        []EventRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -351,6 +364,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return snapshotView(n.catalog.Snapshots), true
 	case ResourceTask:
 		return taskView(n.catalog.Tasks), true
+	case ResourceEvent:
+		return eventView(n.catalog.Events), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -855,6 +870,11 @@ func taskView(rows []TaskRow) ResourceView {
 	return buildView(ResourceTask, columns, taskSortHotKeys(), taskActions(), rows, taskCells)
 }
 
+func eventView(rows []EventRow) ResourceView {
+	columns := []string{"TIME", "SEVERITY", "ENTITY", "MESSAGE", "USER"}
+	return buildView(ResourceEvent, columns, eventSortHotKeys(), eventActions(), rows, eventCells)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{
 		"NAME",
@@ -1052,6 +1072,17 @@ func taskCells(row TaskRow) (string, []string) {
 	}
 }
 
+func eventCells(row EventRow) (string, []string) {
+	id := defaultCell(row.Time) + ":" + defaultCell(row.Entity) + ":" + defaultCell(row.Message)
+	return id, []string{
+		defaultCell(row.Time),
+		defaultCell(row.Severity),
+		defaultCell(row.Entity),
+		defaultCell(row.Message),
+		defaultCell(row.User),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{
 		row.Name,
@@ -1205,6 +1236,16 @@ func taskSortHotKeys() map[string]string {
 	}
 }
 
+func eventSortHotKeys() map[string]string {
+	return map[string]string{
+		"T": "TIME",
+		"S": "SEVERITY",
+		"E": "ENTITY",
+		"M": "MESSAGE",
+		"U": "USER",
+	}
+}
+
 func hostSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
@@ -1270,6 +1311,10 @@ func snapshotActions() []string {
 
 func taskActions() []string {
 	return []string{"cancel", "retry"}
+}
+
+func eventActions() []string {
+	return []string{"acknowledge"}
 }
 
 func datastoreActions() []string {
