@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-054 by adding completed bulk-action audit
+  summaries with actor, timestamp, action, target IDs, outcome, and failed IDs.
+- Added failing-first coverage in `internal/tui/session_test.go` for both
+  successful and failed action audit summary behavior.
 - Implemented and fulfilled RQ-053 by standardizing failed action status
   rendering into structured fields: `code`, `message`, `entity`, `retryable`.
 - Updated action-command handling in `cmd/hypersphere/explorer_tui.go` to emit

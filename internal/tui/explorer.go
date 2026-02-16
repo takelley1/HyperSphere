@@ -332,6 +332,17 @@ type ActionPreview struct {
 	SideEffects []string
 }
 
+// ActionAudit stores a completed action summary for accountability.
+type ActionAudit struct {
+	Resource  Resource
+	Actor     string
+	Timestamp string
+	Action    string
+	Targets   []string
+	Outcome   string
+	FailedIDs []string
+}
+
 // ActionExecutor applies bulk actions through a VMware API adapter.
 type ActionExecutor interface {
 	Execute(resource Resource, action string, ids []string) error
@@ -381,6 +392,8 @@ type Session struct {
 	actionRetries    map[string]int
 	pendingAction    actionRequest
 	hasPendingAction bool
+	audits           []ActionAudit
+	actor            string
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -407,6 +420,8 @@ func NewSession(catalog Catalog) Session {
 		actionRetries:    map[string]int{},
 		pendingAction:    actionRequest{},
 		hasPendingAction: false,
+		audits:           []ActionAudit{},
+		actor:            "operator",
 	}
 }
 
@@ -633,11 +648,13 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 				execErr = fmt.Errorf("%w: %s", ErrActionTimeout, normalized)
 			} else {
 				s.recordTransition(normalized, "success")
+				s.recordAudit(normalized, ids, "success", nil)
 				return nil
 			}
 		}
 		if !isRetriableError(execErr) || attempt >= retryLimit {
 			s.recordTransition(normalized, "failure")
+			s.recordAudit(normalized, ids, "failure", ids)
 			return execErr
 		}
 	}
@@ -646,6 +663,18 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 // ActionTransitions returns the recorded action lifecycle transitions.
 func (s *Session) ActionTransitions() []ActionTransition {
 	return append([]ActionTransition{}, s.transitions...)
+}
+
+// ActionAudits returns completed action audit summaries.
+func (s *Session) ActionAudits() []ActionAudit {
+	audits := make([]ActionAudit, 0, len(s.audits))
+	for _, audit := range s.audits {
+		entry := audit
+		entry.Targets = append([]string{}, audit.Targets...)
+		entry.FailedIDs = append([]string{}, audit.FailedIDs...)
+		audits = append(audits, entry)
+	}
+	return audits
 }
 
 // PreviewAction returns target and side-effect summary for an action.
@@ -1888,6 +1917,23 @@ func (s *Session) recordTransition(action string, status string) {
 		Action:    action,
 		Status:    status,
 		Timestamp: s.now().UTC().Format(time.RFC3339Nano),
+	})
+}
+
+func (s *Session) recordAudit(
+	action string,
+	targets []string,
+	outcome string,
+	failedIDs []string,
+) {
+	s.audits = append(s.audits, ActionAudit{
+		Resource:  s.view.Resource,
+		Actor:     s.actor,
+		Timestamp: s.now().UTC().Format(time.RFC3339Nano),
+		Action:    action,
+		Targets:   append([]string{}, targets...),
+		Outcome:   outcome,
+		FailedIDs: append([]string{}, failedIDs...),
 	})
 }
 

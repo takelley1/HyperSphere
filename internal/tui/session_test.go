@@ -554,6 +554,65 @@ func TestActionSideEffectsBranchCoverage(t *testing.T) {
 	}
 }
 
+func TestSessionApplyActionRecordsAuditSummaryForSuccess(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("ApplyAction returned error: %v", err)
+	}
+	audits := session.ActionAudits()
+	if len(audits) == 0 {
+		t.Fatalf("expected action audit summary entry")
+	}
+	latest := audits[len(audits)-1]
+	if latest.Actor == "" || latest.Timestamp == "" {
+		t.Fatalf("expected actor and timestamp fields in action audit summary")
+	}
+	if latest.Action != "power-on" || latest.Outcome != "success" {
+		t.Fatalf("unexpected audit action summary outcome: %+v", latest)
+	}
+	if len(latest.Targets) != 2 {
+		t.Fatalf("expected two audit targets, got %d", len(latest.Targets))
+	}
+	if len(latest.FailedIDs) != 0 {
+		t.Fatalf("expected no failed ids for successful action")
+	}
+}
+
+func TestSessionApplyActionRecordsAuditSummaryForFailure(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{err: errors.New("boom")}
+	if err := session.ApplyAction("power-on", executor); err == nil {
+		t.Fatalf("expected action failure")
+	}
+	audits := session.ActionAudits()
+	if len(audits) == 0 {
+		t.Fatalf("expected action audit summary entry")
+	}
+	latest := audits[len(audits)-1]
+	if latest.Outcome != "failure" {
+		t.Fatalf("expected failure outcome in action audit summary, got %q", latest.Outcome)
+	}
+	if len(latest.FailedIDs) != 1 || latest.FailedIDs[0] != "vm-a" {
+		t.Fatalf("expected failed ids to include failed action targets")
+	}
+}
+
 func TestSessionCancelLastActionReturnsErrorWhenUnsupported(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
 	canceler := &fakeCanceler{}

@@ -548,6 +548,7 @@
 ### RQ-054: Add audit summary for completed bulk actions
 - vSphere mapping: post-action accountability.
 - Acceptance: summary records actor, timestamp, action, targets, outcomes, and failed IDs.
+- Status: fulfilled (2026-02-16).
 
 ## vSphere-Specific Action Mappings
 
