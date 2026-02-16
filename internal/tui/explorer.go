@@ -374,7 +374,9 @@ func RenderInteractiveView(
 	rows := decorateRows(view, selectedRow, marks)
 	rows = viewportRows(rows, selectedRow)
 	widths := columnWidths(columns, rows)
-	builder.WriteString(formatCells(markColumn(columns, selectedColumn+2, sortColumn), widths))
+	builder.WriteString(
+		formatCells(markColumn(columns, selectedColumn+2, sortColumn, sortAsc), widths),
+	)
 	for _, row := range rows {
 		builder.WriteString(formatCells(row, widths))
 	}
@@ -423,18 +425,32 @@ func actionLine(actions []string) string {
 	return "Actions: " + strings.Join(actions, ", ") + " (run: !<action>)\n"
 }
 
-func markColumn(columns []string, selectedColumn int, sortColumn string) []string {
+func markColumn(
+	columns []string,
+	selectedColumn int,
+	sortColumn string,
+	sortAsc bool,
+) []string {
 	decorated := make([]string, len(columns))
 	copy(decorated, columns)
 	for index, column := range columns {
-		if index == selectedColumn {
-			decorated[index] = "[" + decorated[index] + "]"
-		}
+		label := decorated[index]
 		if sortColumn != "" && column == sortColumn {
-			decorated[index] += "*"
+			label += sortDirectionGlyph(sortAsc)
 		}
+		if index == selectedColumn {
+			label = "[" + label + "]"
+		}
+		decorated[index] = label
 	}
 	return decorated
+}
+
+func sortDirectionGlyph(sortAsc bool) string {
+	if sortAsc {
+		return "↑"
+	}
+	return "↓"
 }
 
 func decorateRows(view ResourceView, selectedRow int, marks map[string]struct{}) [][]string {

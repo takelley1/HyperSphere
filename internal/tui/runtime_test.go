@@ -101,6 +101,21 @@ func TestSortInvertHotkey(t *testing.T) {
 	}
 }
 
+func TestSortedColumnHeaderUsesDirectionGlyph(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-z"}, {Name: "vm-a"}}})
+	_ = session.ExecuteCommand(":vm")
+	_ = session.HandleKey("N")
+	ascendingHeader := strings.Split(session.Render(), "\n")[1]
+	if !strings.Contains(ascendingHeader, "[NAME↑]") {
+		t.Fatalf("expected ascending glyph in selected header: %s", ascendingHeader)
+	}
+	_ = session.HandleKey("N")
+	descendingHeader := strings.Split(session.Render(), "\n")[1]
+	if !strings.Contains(descendingHeader, "[NAME↓]") {
+		t.Fatalf("expected descending glyph in selected header: %s", descendingHeader)
+	}
+}
+
 func TestLastViewReturnsUnderlyingExecuteError(t *testing.T) {
 	session := NewSession(Catalog{})
 	session.previousView = Resource("unknown")

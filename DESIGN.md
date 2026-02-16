@@ -12,7 +12,7 @@
 - [ ] Sync table focus from mouse selection back into session row/column state.
 - [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
-- [ ] Add selected-column sort-direction glyphs in table headers.
+- [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
 - [ ] Add per-resource status badges in the header line.
 - [ ] Add column-width autosizing based on terminal resize events.
 

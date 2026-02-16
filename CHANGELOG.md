@@ -37,6 +37,17 @@
   integration coverage.
 
 ## 2026-02-15
+- Implemented RQ-020 selected-column sort glyph parity so sorted headers show
+  `↑` and `↓` and flip deterministically with sort direction changes.
+- Added failing-first coverage in `internal/tui/runtime_test.go` to assert the
+  table header line renders `[NAME↑]` then `[NAME↓]` after repeat sort input.
+- Updated `internal/tui/explorer.go` header decoration logic to render
+  sort-direction glyphs on the sorted column instead of a generic `*` marker.
+- Updated `internal/tui/explorer_coverage_test.go` for the new sorted-header
+  glyph output.
+- Marked `RQ-020` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed sort-glyph roadmap item and
+  adding a follow-on ASCII glyph fallback sub-task.
 - Implemented RQ-019 sticky table header parity by adding a selection-driven body viewport so vertical scrolling changes visible rows while the table header remains fixed.
 - Added failing-first coverage in `internal/tui/runtime_test.go` to assert sticky header persistence and body-row changes after vertical scroll.
 - Added viewport helper branch coverage in `internal/tui/explorer_coverage_test.go` and removed dead defensive branching in `internal/tui/explorer.go` to preserve the enforced 100% coverage gate.

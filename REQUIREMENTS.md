@@ -121,6 +121,7 @@
 ### RQ-020: Add selected-column sort glyphs
 - vSphere mapping: visible ascending/descending state.
 - Acceptance: sorted column header includes up/down glyph and changes when sort direction flips.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-021: Add autosized columns on terminal resize
 - vSphere mapping: maintain readability across narrow/wide terminals.
@@ -434,6 +435,53 @@
 ### RQ-072: Add `NO_COLOR` and ASCII symbol compatibility mode
 - vSphere mapping: terminal compatibility.
 - Acceptance: when enabled, unicode glyphs are replaced with ASCII symbols and color is disabled.
+
+### RQ-108: Add full Unicode glyph rendering support
+- vSphere mapping: richer visual parity for headers, tables, borders, and status icons.
+- Acceptance: UTF-8 box-drawing, arrows, and symbol glyphs render without
+  truncation, misalignment, or replacement characters in supported terminals.
+- Acceptance: column width calculations use rune/cell-width-aware logic so
+  wide Unicode glyphs do not break table alignment.
+- Acceptance: unsupported-glyph terminals can fall back to ASCII mode without
+  panics or corrupted layout.
+
+### RQ-109: Add emoji-capable rendering mode
+- vSphere mapping: expressive status and context markers in high-signal views.
+- Acceptance: emoji markers render correctly in headers/status/details panels
+  when emoji mode is enabled.
+- Acceptance: layout remains stable when emoji appear in table cells, including
+  selection/highlight rows and sorted columns.
+- Acceptance: emoji mode can be toggled off to restore plain-text glyph output
+  for terminals with limited emoji support.
+
+### RQ-110: Apply Unicode status glyphs across primary views
+- vSphere mapping: faster at-a-glance interpretation of health/state in dense
+  inventories.
+- Acceptance: VM, host, datastore, cluster, and task rows include canonical
+  Unicode state glyphs (for example healthy/warn/error/running/stopped) mapped
+  from existing status fields.
+- Acceptance: glyph mapping is centralized in one canonical formatter used by
+  table view and details view renderers.
+- Acceptance: when ASCII compatibility mode is enabled, each Unicode glyph maps
+  to a deterministic ASCII equivalent with unchanged semantics.
+
+### RQ-111: Apply extended glyphs to navigation and interaction affordances
+- vSphere mapping: clearer command-mode and navigation cues with less text noise.
+- Acceptance: breadcrumbs, sort indicators, overflow hints, and selection
+  markers use Unicode arrows/symbols in Unicode mode.
+- Acceptance: describe/detail panels use Unicode section markers and bullets for
+  field grouping without breaking line wrapping.
+- Acceptance: all interaction glyphs downgrade to ASCII equivalents in
+  compatibility mode while preserving keyboard behavior and screen layout.
+
+### RQ-112: Apply emoji markers to high-signal operational contexts
+- vSphere mapping: prioritize urgent operator signals in status-heavy workflows.
+- Acceptance: emoji markers are used only in approved contexts (alarms, task
+  outcomes, maintenance state, and watch/event severity), not as decorative noise.
+- Acceptance: emoji marker usage is controlled by a single feature flag and a
+  centralized mapping table.
+- Acceptance: disabling emoji mode removes emoji while retaining the same
+  severity ordering and textual meaning.
 
 ### RQ-073: Add context-specific config overlays per vCenter
 - vSphere mapping: per-endpoint preferences and overrides.

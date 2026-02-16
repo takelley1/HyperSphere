@@ -25,8 +25,8 @@ func TestSessionRenderAndHelperBranches(t *testing.T) {
 }
 
 func TestMarkColumnDecorateAndNormalizeBranches(t *testing.T) {
-	marked := markColumn([]string{"M", ">", "NAME"}, 2, "NAME")
-	if marked[2] != "[NAME]*" {
+	marked := markColumn([]string{"M", ">", "NAME"}, 2, "NAME", true)
+	if marked[2] != "[NAME↑]" {
 		t.Fatalf("unexpected marked column: %v", marked)
 	}
 	row := decorateRow(ResourceView{}, []string{"vm-a"}, 0, 0, map[string]struct{}{})
