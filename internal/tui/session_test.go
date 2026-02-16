@@ -86,6 +86,18 @@ func TestVMViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestVMViewActionsIncludePowerLifecycleSet(t *testing.T) {
+	navigator := NewNavigator(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	view, err := navigator.Execute(":vm")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"power-on", "power-off", "reset", "suspend", "migrate", "edit-tags"}
+	if !reflect.DeepEqual(view.Actions, want) {
+		t.Fatalf("unexpected vm actions: got %v want %v", view.Actions, want)
+	}
+}
+
 func TestLUNViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(Catalog{LUNs: []LUNRow{{Name: "lun-1", Tags: "tier1", Cluster: "c1", Datastore: "san-a", CapacityGB: 100, UsedGB: 60}}})
 	view, err := navigator.Execute(":lun")

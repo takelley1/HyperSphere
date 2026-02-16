@@ -1652,7 +1652,7 @@ func datastoreSortHotKeys() map[string]string {
 }
 
 func vmActions() []string {
-	return []string{"power-on", "power-off", "migrate", "edit-tags"}
+	return []string{"power-on", "power-off", "reset", "suspend", "migrate", "edit-tags"}
 }
 
 func lunActions() []string {

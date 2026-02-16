@@ -77,7 +77,8 @@ type explorerRuntime struct {
 }
 
 type runtimeActionExecutor struct {
-	last string
+	last    string
+	vmPower runtimeVMPowerClient
 }
 
 type runtimeLogEntry struct {
@@ -85,6 +86,15 @@ type runtimeLogEntry struct {
 	Level     string
 	Message   string
 }
+
+type runtimeVMPowerClient interface {
+	PowerOn(ids []string) error
+	PowerOff(ids []string) error
+	Reset(ids []string) error
+	Suspend(ids []string) error
+}
+
+type inMemoryVMPowerClient struct{}
 
 type runtimeContextConnector interface {
 	List() []string
@@ -121,12 +131,66 @@ type explorerTheme struct {
 }
 
 func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, ids []string) error {
+	if resource == tui.ResourceVM {
+		return r.executeVMAction(action, ids)
+	}
 	r.last = fmt.Sprintf(
 		"vmware-api action=%s resource=%s targets=%s",
 		action,
 		resource,
 		strings.Join(ids, ","),
 	)
+	return nil
+}
+
+func (r *runtimeActionExecutor) executeVMAction(action string, ids []string) error {
+	client := r.vmPowerClient()
+	method := ""
+	var err error
+	switch action {
+	case "power-on":
+		method = "power_on"
+		err = client.PowerOn(ids)
+	case "power-off":
+		method = "power_off"
+		err = client.PowerOff(ids)
+	case "reset":
+		method = "reset"
+		err = client.Reset(ids)
+	case "suspend":
+		method = "suspend"
+		err = client.Suspend(ids)
+	default:
+		r.last = fmt.Sprintf("vmware-api action=%s resource=vm targets=%s", action, strings.Join(ids, ","))
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	r.last = fmt.Sprintf("vmware-api method=%s resource=vm targets=%s", method, strings.Join(ids, ","))
+	return nil
+}
+
+func (r *runtimeActionExecutor) vmPowerClient() runtimeVMPowerClient {
+	if r.vmPower == nil {
+		r.vmPower = inMemoryVMPowerClient{}
+	}
+	return r.vmPower
+}
+
+func (inMemoryVMPowerClient) PowerOn(_ []string) error {
+	return nil
+}
+
+func (inMemoryVMPowerClient) PowerOff(_ []string) error {
+	return nil
+}
+
+func (inMemoryVMPowerClient) Reset(_ []string) error {
+	return nil
+}
+
+func (inMemoryVMPowerClient) Suspend(_ []string) error {
 	return nil
 }
 

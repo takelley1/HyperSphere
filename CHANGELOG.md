@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-055 by adding VM lifecycle actions (`power-on`,
+  `power-off`, `reset`, `suspend`) and routing each to a distinct VM backend
+  method path in runtime execution.
+- Added failing-first coverage for VM action list completeness and per-action
+  runtime method routing in `internal/tui/session_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go`.
 - Implemented and fulfilled RQ-054 by adding completed bulk-action audit
   summaries with actor, timestamp, action, target IDs, outcome, and failed IDs.
 - Added failing-first coverage in `internal/tui/session_test.go` for both

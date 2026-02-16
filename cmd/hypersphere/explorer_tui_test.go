@@ -1072,6 +1072,27 @@ func TestRenderTopHeaderWithWidthHidesLogoAfterCenterCollapse(t *testing.T) {
 	}
 }
 
+func TestRuntimeActionExecutorRoutesVMPowerLifecycleActions(t *testing.T) {
+	executor := &runtimeActionExecutor{}
+	cases := []struct {
+		action string
+		method string
+	}{
+		{action: "power-on", method: "power_on"},
+		{action: "power-off", method: "power_off"},
+		{action: "reset", method: "reset"},
+		{action: "suspend", method: "suspend"},
+	}
+	for _, tc := range cases {
+		if err := executor.Execute(tui.ResourceVM, tc.action, []string{"vm-a"}); err != nil {
+			t.Fatalf("Execute returned error for %s: %v", tc.action, err)
+		}
+		if !strings.Contains(executor.last, "method="+tc.method) {
+			t.Fatalf("expected method routing %q in %q", tc.method, executor.last)
+		}
+	}
+}
+
 func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	promptState := tui.NewPromptState(20)

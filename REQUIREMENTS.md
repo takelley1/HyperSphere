@@ -555,6 +555,7 @@
 ### RQ-055: Add VM power lifecycle actions
 - vSphere mapping: `power_on`, `power_off`, `reset`, `suspend`.
 - Acceptance: each action appears in VM action list and routes to distinct backend method.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-056: Add VM migrate action with placement target
 - vSphere mapping: live/cold migration.
