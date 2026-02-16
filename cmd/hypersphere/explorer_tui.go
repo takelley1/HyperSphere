@@ -1205,7 +1205,18 @@ func renderTopHeaderCenter() string {
 }
 
 func renderTopHeaderRight() string {
-	return "HyperSphere"
+	return strings.Join(
+		[]string{
+			" _   _                        ",
+			"| | | |_   _ _ __   ___ _ __ ",
+			"| |_| | | | | '_ \\ / _ \\ '__|",
+			"|  _  | |_| | |_) |  __/ |   ",
+			"|_| |_|\\__, | .__/ \\___|_|   ",
+			"        __/ | |              ",
+			"       |___/|_|              ",
+		},
+		"\n",
+	)
 }
 
 func executePromptCommand(

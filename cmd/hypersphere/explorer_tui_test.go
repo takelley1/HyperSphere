@@ -268,6 +268,52 @@ func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
 	}
 }
 
+func TestRenderTopHeaderRightUsesMultilineASCIILogoBlock(t *testing.T) {
+	lines := strings.Split(renderTopHeaderRight(), "\n")
+	want := []string{
+		" _   _                        ",
+		"| | | |_   _ _ __   ___ _ __ ",
+		"| |_| | | | | '_ \\ / _ \\ '__|",
+		"|  _  | |_| | |_) |  __/ |   ",
+		"|_| |_|\\__, | .__/ \\___|_|   ",
+		"        __/ | |              ",
+		"       |___/|_|              ",
+	}
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d logo lines, got %d (%q)", len(want), len(lines), lines)
+	}
+	for index, expected := range want {
+		if lines[index] != expected {
+			t.Fatalf(
+				"expected logo line %d to be %q, got %q",
+				index,
+				expected,
+				lines[index],
+			)
+		}
+	}
+}
+
+func TestRenderTopHeaderLinesRightLogoIsRightAlignedAndClippedToZone(t *testing.T) {
+	width := 60
+	rightLines := strings.Split(renderTopHeaderRight(), "\n")
+	lines := renderTopHeaderLines(width, []string{""}, []string{""}, rightLines)
+	_, _, rightWidth := topHeaderZoneWidths(width)
+	for index, line := range lines {
+		if len(line) != width {
+			t.Fatalf("expected header line width %d, got %d", width, len(line))
+		}
+		leftAndCenter := line[:width-rightWidth]
+		if strings.TrimSpace(leftAndCenter) != "" {
+			t.Fatalf("expected empty left and center zones for line %d, got %q", index, leftAndCenter)
+		}
+		rightZone := line[width-rightWidth:]
+		if rightZone != fitHeaderRight(rightLines[index], rightWidth) {
+			t.Fatalf("expected clipped right-zone logo at line %d, got %q", index, rightZone)
+		}
+	}
+}
+
 func TestRenderTopHeaderLeftUsesFixedMetadataLabelOrder(t *testing.T) {
 	lines := strings.Split(renderTopHeaderLeft("vc-primary"), "\n")
 	want := []string{

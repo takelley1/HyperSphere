@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-095 right-side ASCII logo parity by rendering a canonical
+  seven-line HyperSphere ASCII block in the top-right header zone.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert exact multiline logo output and right-zone clipping/alignment bounds.
+- Marked `RQ-095` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed logo-block item and adding
+  follow-on header logo resize/clipping sub-tasks.
 - Implemented RQ-094 center hotkey legend parity so the top-center legend now
   renders one angle-bracket hotkey entry per line (`<:> Command`,
   `</> Filter`, `<?> Help`).

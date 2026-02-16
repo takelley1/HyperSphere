@@ -193,6 +193,7 @@
 - vSphere mapping: branded parity with k9s right-header mark.
 - Acceptance: logo renders as multiline ASCII art aligned to the top-right of
   header area and stays clipped within panel bounds.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
