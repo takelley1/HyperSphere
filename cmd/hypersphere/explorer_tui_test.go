@@ -227,3 +227,13 @@ func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 		t.Fatalf("expected deterministic read-only error, got %q", message)
 	}
 }
+
+func TestNewExplorerRuntimeWithStartupCommandSelectsInitialView(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "host")
+	if runtime.session.CurrentView().Resource != tui.ResourceHost {
+		t.Fatalf("expected startup command host to set host view")
+	}
+	if runtime.body.GetCell(0, 2).Text != "TAGS" {
+		t.Fatalf("expected host table to render immediately for startup command")
+	}
+}

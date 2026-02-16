@@ -184,3 +184,13 @@ func TestParseFlagsWriteOverridesReadOnlyConfigDefault(t *testing.T) {
 		t.Fatalf("expected --write to override config readOnly=true default")
 	}
 }
+
+func TestParseFlagsAcceptsStartupCommand(t *testing.T) {
+	flags, err := parseFlags([]string{"--command", "host"})
+	if err != nil {
+		t.Fatalf("expected --command to parse, got error: %v", err)
+	}
+	if flags.startupCommand != "host" {
+		t.Fatalf("expected startup command host, got %q", flags.startupCommand)
+	}
+}

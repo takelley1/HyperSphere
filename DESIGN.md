@@ -4,9 +4,9 @@
 
 ### CLI Startup Parity
 - [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
-- [ ] Sub-task: add startup `--readonly` wiring for non-interactive workflows.
-- [ ] Sub-task: wire `--command` to initial resource selection during explorer startup.
 - [ ] Sub-task: add startup rendering tests for `--headless` and `--crumbsless` toggles.
+- [ ] Sub-task: add startup command validation status when `--command` is unknown.
+- [ ] Sub-task: add startup alias coverage for `--command` values (`vm`, `vms`, `ds`).
 
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.
@@ -72,6 +72,7 @@
 - [ ] Add pulses-style health dashboard for live utilization and alarms.
 - [ ] Add xray-style dependency explorer for VM/host/datastore/network relationships.
 - [ ] Add endpoint health probing during context reconnect to classify degraded/disconnected states.
+- [ ] Add startup-view badge in header metadata to show active routed command.
 
 ### Write-Path UX
 - [ ] Add confirmation dialogs for destructive actions.
@@ -93,6 +94,7 @@
 - [ ] Add integration tests for failure handling, retries, and read-only enforcement.
 - [ ] Add benchmark tests for large inventory rendering and sorting.
 - [ ] Add integration tests for `:ctx` switch flow and active-view refresh behavior.
+- [ ] Add integration tests for startup `--command` view routing and first-frame rendering.
 
 ### API and Plugin Surface
 - [ ] Add versioned explorer API contracts for external adapters.

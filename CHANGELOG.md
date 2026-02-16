@@ -1,6 +1,16 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-008 `--command` startup flag to route explorer directly into
+  the requested resource view on first render.
+- Added failing-first tests in `cmd/hypersphere/main_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for CLI parsing and first-frame view
+  selection/rendering from startup command input.
+- Wired startup command parsing in `cmd/hypersphere/main.go` and runtime
+  startup command execution in `cmd/hypersphere/explorer_tui.go`.
+- Marked `RQ-008` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `--command` startup subtasks and
+  adding follow-on startup command validation/alias coverage work.
 - Implemented RQ-007 `--write` startup flag override behavior for explorer mode.
 - Added failing-first CLI tests in `cmd/hypersphere/main_test.go` to validate
   config-driven `readOnly: true` defaults and `--write` override precedence.

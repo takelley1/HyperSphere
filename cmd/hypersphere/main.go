@@ -21,6 +21,7 @@ import (
 
 type cliFlags struct {
 	command        string
+	startupCommand string
 	workflow       string
 	mode           string
 	execute        bool
@@ -49,15 +50,16 @@ var (
 )
 
 type startupFlagValues struct {
-	workflow  *string
-	mode      *string
-	execute   *bool
-	readOnly  *bool
-	write     *bool
-	threshold *int
-	refresh   *float64
-	level     *string
-	logFile   *string
+	startupCommand *string
+	workflow       *string
+	mode           *string
+	execute        *bool
+	readOnly       *bool
+	write          *bool
+	threshold      *int
+	refresh        *float64
+	level          *string
+	logFile        *string
 }
 
 func main() {
@@ -91,7 +93,7 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 	case "deletion":
 		runDeletionWorkflow(application, cfg)
 	case "explorer":
-		runExplorerWorkflow(os.Stdout, flags.readOnly)
+		runExplorerWorkflow(os.Stdout, flags.readOnly, flags.startupCommand)
 	default:
 		runMigrationWorkflow(application, cfg)
 	}
@@ -121,6 +123,7 @@ func parseFlags(args []string) (cliFlags, error) {
 	}
 	return cliFlags{
 		command:        command,
+		startupCommand: normalizeStartupCommand(*values.startupCommand),
 		workflow:       workflow,
 		mode:           strings.TrimSpace(*values.mode),
 		execute:        *values.execute,
@@ -136,17 +139,22 @@ func newStartupFlagSet() (*flag.FlagSet, startupFlagValues) {
 	flagSet := flag.NewFlagSet("hypersphere", flag.ContinueOnError)
 	flagSet.SetOutput(io.Discard)
 	values := startupFlagValues{
-		workflow:  flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion"),
-		mode:      flagSet.String("mode", "all", "mode: mark, purge, or all"),
-		execute:   flagSet.Bool("execute", false, "execute mutating actions"),
-		readOnly:  flagSet.Bool("readonly", false, "start in read-only mode"),
-		write:     flagSet.Bool("write", false, "override config read-only default"),
-		threshold: flagSet.Int("threshold", 85, "target utilization threshold percent"),
-		refresh:   flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds"),
-		level:     flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error"),
-		logFile:   flagSet.String("log-file", "", "path to runtime log output file"),
+		startupCommand: flagSet.String("command", "", "startup resource view command"),
+		workflow:       flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion"),
+		mode:           flagSet.String("mode", "all", "mode: mark, purge, or all"),
+		execute:        flagSet.Bool("execute", false, "execute mutating actions"),
+		readOnly:       flagSet.Bool("readonly", false, "start in read-only mode"),
+		write:          flagSet.Bool("write", false, "override config read-only default"),
+		threshold:      flagSet.Int("threshold", 85, "target utilization threshold percent"),
+		refresh:        flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds"),
+		level:          flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error"),
+		logFile:        flagSet.String("log-file", "", "path to runtime log output file"),
 	}
 	return flagSet, values
+}
+
+func normalizeStartupCommand(value string) string {
+	return strings.ToLower(strings.TrimSpace(strings.TrimPrefix(value, ":")))
 }
 
 func validateWorkflow(value string) (string, error) {

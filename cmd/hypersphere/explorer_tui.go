@@ -107,18 +107,22 @@ func (c *inMemoryContextConnector) Switch(name string) error {
 	return fmt.Errorf("unknown context: %s", name)
 }
 
-func runExplorerWorkflow(output io.Writer, readOnly bool) {
-	runtime := newExplorerRuntimeWithReadOnly(readOnly)
+func runExplorerWorkflow(output io.Writer, readOnly bool, startupCommand string) {
+	runtime := newExplorerRuntimeWithStartupCommand(readOnly, startupCommand)
 	if err := runtime.run(); err != nil {
 		_, _ = fmt.Fprintf(output, "tui error: %v\n", err)
 	}
 }
 
 func newExplorerRuntime() explorerRuntime {
-	return newExplorerRuntimeWithReadOnly(false)
+	return newExplorerRuntimeWithStartupCommand(false, "")
 }
 
 func newExplorerRuntimeWithReadOnly(readOnly bool) explorerRuntime {
+	return newExplorerRuntimeWithStartupCommand(readOnly, "")
+}
+
+func newExplorerRuntimeWithStartupCommand(readOnly bool, startupCommand string) explorerRuntime {
 	runtime := explorerRuntime{
 		app:         tview.NewApplication(),
 		session:     tui.NewSession(defaultCatalog()),
@@ -132,10 +136,22 @@ func newExplorerRuntimeWithReadOnly(readOnly bool) explorerRuntime {
 		footer:      tview.NewTextView(),
 	}
 	runtime.session.SetReadOnly(readOnly)
+	message := startupCommandStatus(&runtime.session, startupCommand)
 	runtime.configureWidgets()
 	runtime.configureHandlers()
-	runtime.render("ready")
+	runtime.render(message)
 	return runtime
+}
+
+func startupCommandStatus(session *tui.Session, startupCommand string) string {
+	trimmed := strings.TrimSpace(startupCommand)
+	if trimmed == "" {
+		return "ready"
+	}
+	if !strings.HasPrefix(trimmed, ":") {
+		trimmed = ":" + trimmed
+	}
+	return statusFromError(session.ExecuteCommand(trimmed), "view: "+strings.TrimPrefix(trimmed, ":"))
 }
 
 func (r *explorerRuntime) configureWidgets() {

@@ -57,6 +57,7 @@
 ### RQ-008: Add `--command` startup flag
 - vSphere mapping: Start directly in a resource view (`vm`, `host`, `datastore`, etc.).
 - Acceptance: app starts with selected view active and rendered without extra user input.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-009: Add `--headless` startup flag
 - vSphere mapping: Hide top header line for dense terminal sessions.
