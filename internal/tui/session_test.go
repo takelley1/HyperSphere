@@ -979,6 +979,115 @@ func TestSessionApplyActionTagAssignFallsBackWithoutPerObjectExecutor(t *testing
 	}
 }
 
+func TestSessionEventWatchAutoAppendsInTimestampOrder(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Events: []EventRow{
+				{
+					Time:     "2026-02-16T10:00:00Z",
+					Severity: "info",
+					Entity:   "vm-a",
+					Message:  "initial",
+					User:     "ops@example.com",
+				},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":event"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("watch", executor); err != nil {
+		t.Fatalf("expected event watch action to succeed: %v", err)
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected watch action to be handled locally without executor calls")
+	}
+	session.AppendEvent(
+		EventRow{
+			Time:     "2026-02-16T09:00:00Z",
+			Severity: "warning",
+			Entity:   "host-a",
+			Message:  "older event",
+			User:     "ops@example.com",
+		},
+	)
+	session.AppendEvent(
+		EventRow{
+			Time:     "2026-02-16T11:00:00Z",
+			Severity: "error",
+			Entity:   "vm-b",
+			Message:  "newer event",
+			User:     "ops@example.com",
+		},
+	)
+	view := session.CurrentView()
+	if len(view.Rows) != 3 {
+		t.Fatalf("expected watch mode to append events, got %d rows", len(view.Rows))
+	}
+	if view.Rows[0][0] != "2026-02-16T09:00:00Z" || view.Rows[2][0] != "2026-02-16T11:00:00Z" {
+		t.Fatalf("expected appended events sorted by timestamp, got %v", view.Rows)
+	}
+}
+
+func TestSessionEventWatchDisabledDoesNotAppend(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Events: []EventRow{
+				{Time: "2026-02-16T10:00:00Z", Severity: "info", Entity: "vm-a", Message: "initial", User: "ops@example.com"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":event"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.AppendEvent(
+		EventRow{
+			Time:     "2026-02-16T11:00:00Z",
+			Severity: "warning",
+			Entity:   "vm-b",
+			Message:  "ignored",
+			User:     "ops@example.com",
+		},
+	)
+	if len(session.CurrentView().Rows) != 1 {
+		t.Fatalf("expected event append to be ignored when watch mode is disabled")
+	}
+}
+
+func TestSessionEventWatchAppendHandlesInvalidTimestampsAndColumnSelectionErrors(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Events: []EventRow{
+				{Time: "not-a-time", Severity: "info", Entity: "vm-a", Message: "bad time", User: "ops@example.com"},
+				{Time: "2026-02-16T11:00:00Z", Severity: "info", Entity: "vm-b", Message: "good time", User: "ops@example.com"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":event"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	// Force applyStoredColumns error branch while ensuring append still succeeds.
+	session.columnSelection[ResourceEvent] = []string{"NOT_A_REAL_COLUMN"}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("watch", executor); err != nil {
+		t.Fatalf("expected watch action to succeed: %v", err)
+	}
+	session.AppendEvent(
+		EventRow{
+			Time:     "also-not-a-time",
+			Severity: "warning",
+			Entity:   "host-a",
+			Message:  "second bad time",
+			User:     "ops@example.com",
+		},
+	)
+	view := session.CurrentView()
+	if len(view.Rows) != 3 {
+		t.Fatalf("expected event append with invalid timestamps to still add row, got %d", len(view.Rows))
+	}
+}
+
 func TestUpdateHostConnectionCellsGuardsUnsupportedShapes(t *testing.T) {
 	targets := map[string]struct{}{"esxi-01": {}}
 	nonHostView := ResourceView{

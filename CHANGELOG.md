@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-065 by adding event watch mode in `:event`
+  where `!watch` toggles live append behavior and incoming events are inserted
+  in timestamp order.
+- Added failing-first coverage in `internal/tui/session_test.go` for watch-mode
+  append ordering and disabled-watch non-append behavior.
 - Implemented and fulfilled RQ-064 by adding a `:perf` panel that aggregates
   task history into per-action p50/p95 duration and success-rate metrics.
 - Added failing-first coverage in `internal/tui/session_test.go` for perf panel

@@ -607,6 +607,7 @@
 ### RQ-065: Add event watch mode
 - vSphere mapping: continuous vCenter event tailing.
 - Acceptance: event view auto-appends new events in timestamp order during watch mode.
+- Status: fulfilled (2026-02-16).
 
 ## Configuration and Customization Parity
 

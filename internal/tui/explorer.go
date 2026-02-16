@@ -410,6 +410,7 @@ type Session struct {
 	actor            string
 	xrayDepth        int
 	faultMode        bool
+	eventWatch       bool
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -440,6 +441,7 @@ func NewSession(catalog Catalog) Session {
 		actor:            "operator",
 		xrayDepth:        1,
 		faultMode:        false,
+		eventWatch:       false,
 	}
 }
 
@@ -535,6 +537,7 @@ func (s *Session) ExecuteCommand(command string) error {
 	s.marks = map[string]struct{}{}
 	s.markAnchor = -1
 	s.faultMode = false
+	s.eventWatch = false
 	return nil
 }
 
@@ -664,6 +667,10 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 		s.expandXRayOneLevel()
 		s.recordTransition(actionName, "success")
 		s.recordAudit(actionName, ids, "success", nil)
+		return nil
+	}
+	if s.view.Resource == ResourceEvent && actionName == "watch" {
+		s.eventWatch = !s.eventWatch
 		return nil
 	}
 	executorAction := actionName
@@ -1698,6 +1705,14 @@ func parseDurationSeconds(value string) int {
 	return int(parsed / time.Second)
 }
 
+func parseEventTime(value string) time.Time {
+	parsed, err := time.Parse(time.RFC3339, strings.TrimSpace(value))
+	if err != nil {
+		return time.Time{}
+	}
+	return parsed
+}
+
 func percentile(sortedValues []int, percent int) int {
 	if len(sortedValues) == 0 {
 		return 0
@@ -1968,7 +1983,7 @@ func taskActions() []string {
 }
 
 func eventActions() []string {
-	return []string{"acknowledge"}
+	return []string{"acknowledge", "watch"}
 }
 
 func alarmActions() []string {
@@ -2465,6 +2480,29 @@ func (s *Session) expandXRayOneLevel() {
 	view := xrayView(s.navigator.catalog, s.xrayDepth)
 	s.view = view
 	s.baseView = view
+	s.clampSelectedRow()
+}
+
+// AppendEvent appends an event row during watch mode and keeps timestamp ordering.
+func (s *Session) AppendEvent(event EventRow) {
+	if !s.eventWatch || s.view.Resource != ResourceEvent {
+		return
+	}
+	s.navigator.catalog.Events = append(s.navigator.catalog.Events, event)
+	sort.SliceStable(s.navigator.catalog.Events, func(left int, right int) bool {
+		leftTime := parseEventTime(s.navigator.catalog.Events[left].Time)
+		rightTime := parseEventTime(s.navigator.catalog.Events[right].Time)
+		if leftTime.IsZero() || rightTime.IsZero() {
+			return s.navigator.catalog.Events[left].Time < s.navigator.catalog.Events[right].Time
+		}
+		return leftTime.Before(rightTime)
+	})
+	view := eventView(s.navigator.catalog.Events)
+	if customized, err := s.applyStoredColumns(view); err == nil {
+		view = customized
+	}
+	s.baseView = view
+	s.view = view
 	s.clampSelectedRow()
 }
 
