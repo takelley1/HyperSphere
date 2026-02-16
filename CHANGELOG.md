@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-035 by adding the `:alarm`/`:alarms` view with
+  columns `ENTITY`, `ALARM`, `STATUS`, `TRIGGERED`, and `ACKED_BY`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for alarm alias parsing and alarm view column
+  rendering.
+- Extended `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded alarm
+  rows and added browse-dataset assertions in `cmd/hypersphere/main_test.go`.
 - Implemented and fulfilled RQ-034 by adding the `:event`/`:events` view with
   columns `TIME`, `SEVERITY`, `ENTITY`, `MESSAGE`, and `USER`.
 - Added failing-first coverage in `internal/tui/command_test.go` and

@@ -338,6 +338,7 @@ func defaultCatalog() tui.Catalog {
 		Snapshots:     defaultSnapshotRows(),
 		Tasks:         defaultTaskRows(),
 		Events:        defaultEventRows(),
+		Alarms:        defaultAlarmRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -447,6 +448,17 @@ func defaultEventRows() []tui.EventRow {
 		{Time: "2026-02-16T08:18:00Z", Severity: "info", Entity: "vm-b", Message: "snapshot created", User: "dev@example.com"},
 		{Time: "2026-02-16T08:20:00Z", Severity: "warning", Entity: "cluster-west", Message: "demand imbalance detected", User: "sre@example.com"},
 		{Time: "2026-02-16T08:23:00Z", Severity: "info", Entity: "vm-c", Message: "guest tools upgraded", User: "dba@example.com"},
+	}
+}
+
+func defaultAlarmRows() []tui.AlarmRow {
+	return []tui.AlarmRow{
+		{Entity: "vm-a", Alarm: "CPU usage high", Status: "yellow", Triggered: "2026-02-16T08:05:00Z", AckedBy: "-"},
+		{Entity: "vm-c", Alarm: "Datastore latency critical", Status: "red", Triggered: "2026-02-16T08:12:00Z", AckedBy: "storage@example.com"},
+		{Entity: "esxi-06", Alarm: "Host disconnected", Status: "red", Triggered: "2026-02-16T08:09:00Z", AckedBy: "infra@example.com"},
+		{Entity: "cluster-west", Alarm: "Imbalance detected", Status: "yellow", Triggered: "2026-02-16T08:20:00Z", AckedBy: "-"},
+		{Entity: "ds-7", Alarm: "Space utilization warning", Status: "yellow", Triggered: "2026-02-16T08:18:00Z", AckedBy: "ops@example.com"},
+		{Entity: "vm-b", Alarm: "Snapshot chain length high", Status: "yellow", Triggered: "2026-02-16T08:22:00Z", AckedBy: "-"},
 	}
 }
 

@@ -41,6 +41,7 @@ const (
 	ResourceSnapshot   Resource = "snapshot"
 	ResourceTask       Resource = "task"
 	ResourceEvent      Resource = "event"
+	ResourceAlarm      Resource = "alarm"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -73,6 +74,8 @@ var resourceAliasMap = map[string]Resource{
 	"tasks":         ResourceTask,
 	"event":         ResourceEvent,
 	"events":        ResourceEvent,
+	"alarm":         ResourceAlarm,
+	"alarms":        ResourceAlarm,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -209,6 +212,15 @@ type EventRow struct {
 	User     string
 }
 
+// AlarmRow represents one active alarm row in the resource table.
+type AlarmRow struct {
+	Entity    string
+	Alarm     string
+	Status    string
+	Triggered string
+	AckedBy   string
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -246,6 +258,7 @@ type Catalog struct {
 	Snapshots     []SnapshotRow
 	Tasks         []TaskRow
 	Events        []EventRow
+	Alarms        []AlarmRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -366,6 +379,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return taskView(n.catalog.Tasks), true
 	case ResourceEvent:
 		return eventView(n.catalog.Events), true
+	case ResourceAlarm:
+		return alarmView(n.catalog.Alarms), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -875,6 +890,11 @@ func eventView(rows []EventRow) ResourceView {
 	return buildView(ResourceEvent, columns, eventSortHotKeys(), eventActions(), rows, eventCells)
 }
 
+func alarmView(rows []AlarmRow) ResourceView {
+	columns := []string{"ENTITY", "ALARM", "STATUS", "TRIGGERED", "ACKED_BY"}
+	return buildView(ResourceAlarm, columns, alarmSortHotKeys(), alarmActions(), rows, alarmCells)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{
 		"NAME",
@@ -1083,6 +1103,17 @@ func eventCells(row EventRow) (string, []string) {
 	}
 }
 
+func alarmCells(row AlarmRow) (string, []string) {
+	id := defaultCell(row.Entity) + ":" + defaultCell(row.Alarm)
+	return id, []string{
+		defaultCell(row.Entity),
+		defaultCell(row.Alarm),
+		defaultCell(row.Status),
+		defaultCell(row.Triggered),
+		defaultCell(row.AckedBy),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{
 		row.Name,
@@ -1246,6 +1277,16 @@ func eventSortHotKeys() map[string]string {
 	}
 }
 
+func alarmSortHotKeys() map[string]string {
+	return map[string]string{
+		"E": "ENTITY",
+		"A": "ALARM",
+		"S": "STATUS",
+		"T": "TRIGGERED",
+		"K": "ACKED_BY",
+	}
+}
+
 func hostSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
@@ -1315,6 +1356,10 @@ func taskActions() []string {
 
 func eventActions() []string {
 	return []string{"acknowledge"}
+}
+
+func alarmActions() []string {
+	return []string{"acknowledge", "clear"}
 }
 
 func datastoreActions() []string {

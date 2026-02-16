@@ -443,6 +443,7 @@
 ### RQ-035: Add `:alarm` view
 - vSphere mapping: active alarm tracking.
 - Acceptance: view columns include `ENTITY`, `ALARM`, `STATUS`, `TRIGGERED`, `ACKED_BY`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-036: Add `:folder` view
 - vSphere mapping: inventory hierarchy exploration.
