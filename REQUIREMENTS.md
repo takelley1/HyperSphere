@@ -697,6 +697,7 @@
 - vSphere mapping: per-endpoint preferences and overrides.
 - Acceptance: active endpoint loads endpoint-specific aliases/plugins/hotkeys
   before global defaults.
+- Status: fulfilled (2026-02-16).
 
 ## Plugin and Extensibility Parity
 

@@ -1275,6 +1275,71 @@ func TestRuntimeLoadsAliasRegistryAtStartupForMultiTokenArgs(t *testing.T) {
 	}
 }
 
+func TestRuntimeAppliesEndpointOverlaysBeforeGlobalDefaults(t *testing.T) {
+	aliasPath := filepath.Join(t.TempDir(), "aliases.yaml")
+	if err := os.WriteFile(aliasPath, []byte("go-view: :vm\n"), 0o600); err != nil {
+		t.Fatalf("expected alias file write to succeed: %v", err)
+	}
+	aliasOverlayPath := strings.TrimSuffix(aliasPath, ".yaml") + ".vc-primary.yaml"
+	if err := os.WriteFile(aliasOverlayPath, []byte("go-view: :host\n"), 0o600); err != nil {
+		t.Fatalf("expected alias overlay file write to succeed: %v", err)
+	}
+	t.Setenv(aliasRegistryEnvPath, aliasPath)
+
+	pluginPath := filepath.Join(t.TempDir(), "plugins.json")
+	if err := os.WriteFile(pluginPath, []byte(`[{"name":"global","command":"g.sh","scopes":["vm"]}]`), 0o600); err != nil {
+		t.Fatalf("expected plugin file write to succeed: %v", err)
+	}
+	pluginOverlayPath := strings.TrimSuffix(pluginPath, ".json") + ".vc-primary.json"
+	if err := os.WriteFile(
+		pluginOverlayPath,
+		[]byte(`[{"name":"overlay","command":"o.sh","scopes":["host"]}]`),
+		0o600,
+	); err != nil {
+		t.Fatalf("expected plugin overlay file write to succeed: %v", err)
+	}
+	t.Setenv(pluginRegistryEnvPath, pluginPath)
+
+	hotkeysPath := filepath.Join(t.TempDir(), "hotkeys.json")
+	if err := os.WriteFile(hotkeysPath, []byte(`{"SHIFT+O":"UP"}`), 0o600); err != nil {
+		t.Fatalf("expected hotkeys file write to succeed: %v", err)
+	}
+	hotkeysOverlayPath := strings.TrimSuffix(hotkeysPath, ".json") + ".vc-primary.json"
+	if err := os.WriteFile(hotkeysOverlayPath, []byte(`{"SHIFT+O":"DOWN"}`), 0o600); err != nil {
+		t.Fatalf("expected hotkeys overlay file write to succeed: %v", err)
+	}
+	t.Setenv(hotkeyRegistryEnvPath, hotkeysPath)
+
+	runtime := newExplorerRuntime()
+	message, keepRunning := executePromptCommand(
+		&runtime.session,
+		&runtime.promptState,
+		runtime.actionExec,
+		&runtime.contexts,
+		&runtime.aliasRegistry,
+		":go-view",
+	)
+	if !keepRunning {
+		t.Fatalf("expected alias command to keep runtime alive")
+	}
+	if message != "view: host" {
+		t.Fatalf("expected endpoint alias override to win, got %q", message)
+	}
+	if len(runtime.pluginRegistry.entries) != 2 {
+		t.Fatalf("expected global + endpoint plugin entries loaded, got %d", len(runtime.pluginRegistry.entries))
+	}
+
+	if err := runtime.session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := runtime.session.HandleKey("SHIFT+O"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if runtime.session.SelectedRow() != 1 {
+		t.Fatalf("expected endpoint hotkey overlay to win and move selection down")
+	}
+}
+
 func TestExecutePromptCommandHistoryTraversalIsBoundedWithoutSkipping(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	promptState := tui.NewPromptState(3)

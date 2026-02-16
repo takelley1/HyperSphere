@@ -76,6 +76,7 @@ type explorerRuntime struct {
 	logTarget      string
 	logEntries     []runtimeLogEntry
 	aliasRegistry  commandAliasRegistry
+	pluginRegistry pluginRegistry
 }
 
 type runtimeActionExecutor struct {
@@ -314,10 +315,13 @@ func newExplorerRuntimeWithRenderOptions(
 		headerVisible:  !headless,
 		logEntries:     defaultRuntimeLogEntries(),
 		aliasRegistry:  commandAliasRegistry{aliases: map[string]string{}},
+		pluginRegistry: pluginRegistry{entries: []pluginEntry{}},
 	}
-	if registry, err := loadDefaultCommandAliasRegistry(); err == nil {
-		runtime.aliasRegistry = registry
-	}
+	activeEndpoint := runtime.contexts.Active()
+	overlays := loadEndpointOverlays(activeEndpoint)
+	runtime.aliasRegistry = overlays.aliases
+	runtime.pluginRegistry = overlays.plugins
+	runtime.session.SetHotkeyBindings(overlays.hotkeys)
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
 	runtime.configureWidgets()

@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-073 by loading context-specific overlays for
+  aliases, plugins, and hotkeys using active endpoint-specific files before
+  falling back to global defaults.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  endpoint overlay precedence at runtime startup across alias resolution,
+  plugin loading, and hotkey behavior.
 - Implemented and fulfilled RQ-072 by extending compatibility mode so
   `NO_COLOR` or `HYPERSPHERE_ASCII` disables color rendering and sort-direction
   glyphs downgrade from Unicode arrows to ASCII (`^`/`v`).
