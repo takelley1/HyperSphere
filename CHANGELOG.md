@@ -26,3 +26,5 @@
 - Added comprehensive tests for parser semantics, new resources, mark controls, filter behavior, last-view toggling, sort inversion, and read-only gating while preserving 100% internal coverage.
 - Added a `DESIGN.md` goal tracker for ongoing k9s-to-vSphere parity work; fulfilled goals are removed as completed.
 - Updated project workflow to keep `.scratchpad.txt` for active execution notes and commit in regular validated increments.
+- Reorganized `DESIGN.md` into short-term, medium-term, and long-term goals, each with explicit sub-tasks.
+- Established `DESIGN.md` as the canonical active roadmap where completed goals/sub-tasks are removed when fulfilled.
