@@ -53,6 +53,7 @@ const (
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 	ResourcePulse      Resource = "pulse"
+	ResourceXRay       Resource = "xray"
 )
 
 var resourceAliasMap = map[string]Resource{
@@ -96,6 +97,8 @@ var resourceAliasMap = map[string]Resource{
 	"ds":            ResourceDatastore,
 	"pulse":         ResourcePulse,
 	"pulses":        ResourcePulse,
+	"xray":          ResourceXRay,
+	"xr":            ResourceXRay,
 }
 
 // VMRow represents one VM row in the resource table.
@@ -402,6 +405,7 @@ type Session struct {
 	hasPendingAction bool
 	audits           []ActionAudit
 	actor            string
+	xrayDepth        int
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -430,6 +434,7 @@ func NewSession(catalog Catalog) Session {
 		hasPendingAction: false,
 		audits:           []ActionAudit{},
 		actor:            "operator",
+		xrayDepth:        1,
 	}
 }
 
@@ -492,6 +497,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return datastoreView(n.catalog.Datastores), true
 	case ResourcePulse:
 		return pulseView(n.catalog), true
+	case ResourceXRay:
+		return xrayView(n.catalog, 1), true
 	default:
 		return ResourceView{}, false
 	}
@@ -510,6 +517,7 @@ func (s *Session) ExecuteCommand(command string) error {
 	if s.view.Resource != view.Resource {
 		s.previousView = s.view.Resource
 	}
+	s.xrayDepth = 1
 	s.view = view
 	s.baseView = view
 	s.selectedRow = 0
@@ -636,6 +644,15 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	}
 	if !containsAction(s.view.Actions, actionName) {
 		return fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+	if s.view.Resource == ResourceXRay && actionName == "expand" {
+		ids := s.selectedIDs()
+		s.recordTransition(actionName, "queued")
+		s.recordTransition(actionName, "running")
+		s.expandXRayOneLevel()
+		s.recordTransition(actionName, "success")
+		s.recordAudit(actionName, ids, "success", nil)
+		return nil
 	}
 	executorAction := actionName
 	if actionName == "migrate" {
@@ -1299,6 +1316,23 @@ func pulseView(catalog Catalog) ResourceView {
 	}
 }
 
+func xrayView(catalog Catalog, depth int) ResourceView {
+	columns := []string{"PATH", "RELATION", "TARGET"}
+	rows := xrayRows(catalog, depth)
+	ids := make([]string, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row[0])
+	}
+	return ResourceView{
+		Resource:    ResourceXRay,
+		Columns:     columns,
+		Rows:        rows,
+		IDs:         ids,
+		SortHotKeys: map[string]string{},
+		Actions:     []string{"expand"},
+	}
+}
+
 func buildView[T any](
 	resource Resource,
 	columns []string,
@@ -1556,6 +1590,41 @@ func activeAlarmCount(rows []AlarmRow) int {
 		}
 	}
 	return count
+}
+
+func xrayRows(catalog Catalog, depth int) [][]string {
+	if len(catalog.VMs) == 0 {
+		return [][]string{{"-", "none", "-"}}
+	}
+	vm := catalog.VMs[0]
+	rows := [][]string{
+		{fmt.Sprintf("%s -> %s", vm.Name, defaultCell(vm.Host)), "vm-host", defaultCell(vm.Host)},
+	}
+	if depth < 2 {
+		return rows
+	}
+	if strings.TrimSpace(vm.Cluster) != "" {
+		rows = append(rows, []string{
+			fmt.Sprintf("%s -> %s", defaultCell(vm.Host), vm.Cluster),
+			"host-cluster",
+			vm.Cluster,
+		})
+	}
+	if strings.TrimSpace(vm.Datastore) != "" {
+		rows = append(rows, []string{
+			fmt.Sprintf("%s -> %s", vm.Name, vm.Datastore),
+			"vm-datastore",
+			vm.Datastore,
+		})
+	}
+	if strings.TrimSpace(vm.Network) != "" {
+		rows = append(rows, []string{
+			fmt.Sprintf("%s -> %s", vm.Name, vm.Network),
+			"vm-network",
+			vm.Network,
+		})
+	}
+	return rows
 }
 
 func defaultCell(value string) string {
@@ -2294,6 +2363,14 @@ func (s *Session) jumpFilteredMatch(step int) bool {
 	}
 	s.SetSelection(next, s.selectedColumn)
 	return true
+}
+
+func (s *Session) expandXRayOneLevel() {
+	s.xrayDepth++
+	view := xrayView(s.navigator.catalog, s.xrayDepth)
+	s.view = view
+	s.baseView = view
+	s.clampSelectedRow()
 }
 
 func (s *Session) warpToScopedVMView() error {

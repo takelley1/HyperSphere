@@ -246,6 +246,63 @@ func TestPulseMetricHelpersHandleEmptyInputs(t *testing.T) {
 	}
 }
 
+func TestXRayViewRendersPathAndSupportsOneLevelExpansion(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{
+					Name:      "vm-a",
+					Host:      "esxi-01",
+					Cluster:   "cluster-east",
+					Datastore: "ds-1",
+					Network:   "dvpg-10",
+				},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":xray"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	view := session.CurrentView()
+	if view.Resource != ResourceXRay {
+		t.Fatalf("expected xray resource view, got %s", view.Resource)
+	}
+	if len(view.Rows) == 0 || !strings.Contains(view.Rows[0][0], "vm-a") {
+		t.Fatalf("expected xray row to include selected vm path, got %v", view.Rows)
+	}
+	initialRowCount := len(view.Rows)
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("expand", executor); err != nil {
+		t.Fatalf("expected xray expand action to succeed: %v", err)
+	}
+	expanded := session.CurrentView()
+	if len(expanded.Rows) <= initialRowCount {
+		t.Fatalf(
+			"expected xray expand to add one-level dependencies, before=%d after=%d",
+			initialRowCount,
+			len(expanded.Rows),
+		)
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected xray expand to be handled locally without executor call")
+	}
+}
+
+func TestXRayViewHandlesEmptyInventory(t *testing.T) {
+	session := NewSession(Catalog{})
+	if err := session.ExecuteCommand(":xray"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	view := session.CurrentView()
+	if len(view.Rows) != 1 {
+		t.Fatalf("expected placeholder xray row for empty inventory, got %d", len(view.Rows))
+	}
+	want := []string{"-", "none", "-"}
+	if !reflect.DeepEqual(view.Rows[0], want) {
+		t.Fatalf("unexpected placeholder xray row: got %v want %v", view.Rows[0], want)
+	}
+}
+
 func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{

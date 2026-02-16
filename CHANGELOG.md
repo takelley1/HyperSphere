@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-062 by adding an `:xray` dependency view for VM
+  path relationships and a local `expand` action that grows the graph one level
+  at a time without backend execution.
+- Added failing-first coverage in `internal/tui/session_test.go` for xray view
+  path rendering and one-step expansion behavior.
 - Implemented and fulfilled RQ-061 by adding a `:pulse` dashboard view that
   summarizes average cluster CPU/memory utilization, datastore usage percent,
   active alarms, and a refresh timer field.

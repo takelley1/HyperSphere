@@ -592,6 +592,7 @@
 ### RQ-062: Add XRay analog dependency graph
 - vSphere mapping: graph VM -> host -> datastore -> network dependencies.
 - Acceptance: graph view renders selected entity path and supports expanding one level at a time.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-063: Add fault/error toggle hotkey
 - vSphere mapping: show only objects with alarms or degraded state.
