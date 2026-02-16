@@ -23,6 +23,9 @@ const defaultCPUPercent = 63
 const defaultCPUTrend = 1
 const defaultMEMPercent = 58
 const defaultMEMTrend = -1
+const logTimestampWidth = 20
+const logLevelWidth = 5
+const logMessageMinWidth = 16
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
@@ -65,10 +68,17 @@ type explorerRuntime struct {
 	logMode       bool
 	logObjectPath string
 	logTarget     string
+	logEntries    []runtimeLogEntry
 }
 
 type runtimeActionExecutor struct {
 	last string
+}
+
+type runtimeLogEntry struct {
+	Timestamp string
+	Level     string
+	Message   string
 }
 
 type runtimeContextConnector interface {
@@ -212,6 +222,7 @@ func newExplorerRuntimeWithRenderOptions(
 		footer:        tview.NewTextView(),
 		wideColumns:   true,
 		headerVisible: !headless,
+		logEntries:    defaultRuntimeLogEntries(),
 	}
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
@@ -679,6 +690,9 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	includeHeader := r.tableHeaderVisible()
 	r.body.SetFixed(fixedHeaderRows(includeHeader), fixedTableColumns)
 	view := viewForColumnMode(r.session.CurrentView(), r.wideColumns)
+	if r.logMode {
+		view = logResourceView(r.logEntries, availableWidth)
+	}
 	view = compactViewForWidth(view, availableWidth)
 	rows := tableRows(view, r.session.IsMarked, includeHeader)
 	widths := autosizedColumnWidths(view, rows, availableWidth)
@@ -971,6 +985,93 @@ func composeLogTitle(objectPath string, target string) string {
 		return fmt.Sprintf(" ─ Logs %s ─ ", path)
 	}
 	return fmt.Sprintf(" ─ Logs %s (target=%s) ─ ", path, resolvedTarget)
+}
+
+func logResourceView(entries []runtimeLogEntry, availableWidth int) tui.ResourceView {
+	messageWidth := computeLogMessageWidth(availableWidth)
+	lines := renderLogLines(entries, messageWidth)
+	rows := make([][]string, 0, len(lines))
+	ids := make([]string, 0, len(lines))
+	for index, line := range lines {
+		rows = append(rows, []string{line})
+		ids = append(ids, fmt.Sprintf("log-%d", index))
+	}
+	return tui.ResourceView{
+		Resource: tui.ResourceVM,
+		Columns:  []string{"LOG"},
+		Rows:     rows,
+		IDs:      ids,
+	}
+}
+
+func renderLogLines(entries []runtimeLogEntry, messageWidth int) []string {
+	lines := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		lines = append(lines, formatLogEntry(entry, messageWidth)...)
+	}
+	if len(lines) == 0 {
+		return []string{""}
+	}
+	return lines
+}
+
+func formatLogEntry(entry runtimeLogEntry, messageWidth int) []string {
+	prefix := fmt.Sprintf(
+		"%-*s %-*s ",
+		logTimestampWidth,
+		strings.TrimSpace(entry.Timestamp),
+		logLevelWidth,
+		strings.ToUpper(strings.TrimSpace(entry.Level)),
+	)
+	continuationPrefix := strings.Repeat(" ", logContinuationIndentWidth())
+	chunks := wrapLogMessage(entry.Message, maxInt(messageWidth, logMessageMinWidth))
+	lines := make([]string, 0, len(chunks))
+	for index, chunk := range chunks {
+		if index == 0 {
+			lines = append(lines, prefix+chunk)
+			continue
+		}
+		lines = append(lines, continuationPrefix+chunk)
+	}
+	return lines
+}
+
+func logContinuationIndentWidth() int {
+	return logTimestampWidth + 1 + logLevelWidth + 1
+}
+
+func wrapLogMessage(message string, width int) []string {
+	trimmed := strings.TrimSpace(message)
+	if trimmed == "" {
+		return []string{"-"}
+	}
+	words := strings.Fields(trimmed)
+	lines := []string{}
+	current := ""
+	for _, word := range words {
+		if current == "" {
+			current = word
+			continue
+		}
+		if len(current)+1+len(word) > width {
+			lines = append(lines, current)
+			current = word
+			continue
+		}
+		current += " " + word
+	}
+	if current != "" {
+		lines = append(lines, current)
+	}
+	return lines
+}
+
+func computeLogMessageWidth(availableWidth int) int {
+	width := availableWidth - fixedTableColumns - logContinuationIndentWidth() - 2
+	if width < logMessageMinWidth {
+		return logMessageMinWidth
+	}
+	return width
 }
 
 func titleResourceLabel(resource tui.Resource) string {
@@ -1440,6 +1541,15 @@ func formatMetricWithTrend(percent int, trend int) string {
 		return fmt.Sprintf("%d%%(-)", percent)
 	default:
 		return fmt.Sprintf("%d%%", percent)
+	}
+}
+
+func defaultRuntimeLogEntries() []runtimeLogEntry {
+	return []runtimeLogEntry{
+		{Timestamp: "2026-02-16T10:31:10Z", Level: "INFO", Message: "Connected to vc-primary and initialized session"},
+		{Timestamp: "2026-02-16T10:31:22Z", Level: "WARN", Message: "Datastore ds-7 latency above baseline threshold"},
+		{Timestamp: "2026-02-16T10:31:40Z", Level: "ERROR", Message: "Host esxi-06 disconnected from management network"},
+		{Timestamp: "2026-02-16T10:32:03Z", Level: "INFO", Message: "Refresh cycle completed with 8 VM rows and 8 datastore rows"},
 	}
 }
 

@@ -265,6 +265,7 @@
 - vSphere mapping: operator-readable event/log triage.
 - Acceptance: log rows render with timestamp, level marker, and message
   columns in monospaced alignment with wrapped continuation indentation.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-105: Add viewport scroll controls in log mode
 - vSphere mapping: navigate high-volume logs with deterministic shortcuts.

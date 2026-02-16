@@ -46,6 +46,8 @@
 - [ ] Sub-task: add log-mode legend wiring for `Top`/`Bottom`/paging runtime actions.
 - [ ] Sub-task: add integration coverage for `:log <object-path> target=<value>` title transitions.
 - [ ] Sub-task: add default log object-path derivation tests from selected row identity.
+- [ ] Sub-task: add log-line wrap coverage across narrow widths and long message tokens.
+- [ ] Sub-task: add level-width normalization coverage for INFO/WARN/ERROR markers.
 - [ ] Sub-task: add integration coverage for centered `ViewName(scope)[count]` title updates.
 - [ ] Sub-task: add overflow-indicator placement tests in divider titles (`[◀]`, `[▶]`, `[◀▶]`).
 - [ ] Sub-task: add alternate hypersphere logo variants for low-width terminals.

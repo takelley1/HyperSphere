@@ -196,6 +196,40 @@ func TestHandlePromptDoneLogCommandSetsLogFrameTitleWithTarget(t *testing.T) {
 	}
 }
 
+func TestRenderLogLinesUsesTimestampLevelAndWrappedContinuationIndentation(t *testing.T) {
+	entries := []runtimeLogEntry{
+		{
+			Timestamp: "2026-02-16T11:20:00Z",
+			Level:     "INFO",
+			Message:   "task completed with very long detail string for wrapped output validation",
+		},
+	}
+	lines := renderLogLines(entries, 24)
+	if len(lines) < 2 {
+		t.Fatalf("expected wrapped log output to span multiple lines, got %d (%q)", len(lines), lines)
+	}
+	if !strings.HasPrefix(lines[0], "2026-02-16T11:20:00Z INFO ") {
+		t.Fatalf("expected timestamp+level prefix in first log line, got %q", lines[0])
+	}
+	if !strings.HasPrefix(lines[1], strings.Repeat(" ", logContinuationIndentWidth())) {
+		t.Fatalf("expected wrapped continuation indentation, got %q", lines[1])
+	}
+}
+
+func TestRenderTableWithWidthInLogModeShowsTimestampedMonospaceRows(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.startPrompt(":log")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 20)
+	logCell := runtime.body.GetCell(1, 1).Text
+	if !regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T`).MatchString(logCell) {
+		t.Fatalf("expected timestamped log cell, got %q", logCell)
+	}
+	if !strings.Contains(logCell, " INFO ") && !strings.Contains(logCell, " WARN ") && !strings.Contains(logCell, " ERROR ") {
+		t.Fatalf("expected level marker in log row, got %q", logCell)
+	}
+}
+
 func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing.T) {
 	testCases := []struct {
 		command string

@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-104 monospaced log-line parity by adding timestamped log row
+  rendering with fixed-width level markers and wrapped continuation indentation.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  timestamp/level formatting, continuation indentation, and log-mode table output.
+- Marked `RQ-104` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for narrow-width wrap coverage
+  and INFO/WARN/ERROR level-width normalization checks.
 - Added and fulfilled RQ-114 by expanding the built-in sample catalog used by
   the explorer runtime so local browsing has more inventory breadth.
 - Added failing-first coverage in `cmd/hypersphere/main_test.go` to assert
