@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-070 by adding plugin registry config loading
+  and schema validation (required `name`, `command`, and non-empty `scopes`)
+  before plugin entries are considered active.
+- Added failing-first coverage in `cmd/hypersphere/plugin_registry_test.go` for
+  missing-file behavior, valid-entry loading, invalid-entry field-path errors,
+  and environment override path resolution.
 - Implemented and fulfilled RQ-069 by loading aliases config at runtime startup
   into a cached alias registry and using it for prompt command resolution.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for

@@ -634,6 +634,7 @@
 ### RQ-070: Add plugins config file support
 - vSphere mapping: external command integration.
 - Acceptance: plugin entries validate against schema before being activated.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-071: Add skins/themes config support
 - vSphere mapping: terminal visual customization.
