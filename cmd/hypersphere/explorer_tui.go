@@ -14,6 +14,7 @@ import (
 )
 
 const defaultPromptHistorySize = 200
+const minAutosizeColumnWidth = 3
 
 type explorerRuntime struct {
 	app          *tview.Application
@@ -38,6 +39,7 @@ type explorerRuntime struct {
 	helpOpen     bool
 	aliasOpen    bool
 	helpText     string
+	lastWidth    int
 }
 
 type runtimeActionExecutor struct {
@@ -239,9 +241,24 @@ func (r *explorerRuntime) configureWidgets() {
 
 func (r *explorerRuntime) configureHandlers() {
 	r.app.SetInputCapture(r.handleGlobalKey)
+	r.app.SetBeforeDrawFunc(r.handleScreenResize)
 	r.prompt.SetDoneFunc(r.handlePromptDone)
 	r.prompt.SetInputCapture(r.handlePromptHistory)
 	r.prompt.SetChangedFunc(r.handlePromptChanged)
+}
+
+func (r *explorerRuntime) handleScreenResize(screen tcell.Screen) bool {
+	width, _ := screen.Size()
+	if width <= 0 || width == r.lastWidth {
+		return false
+	}
+	r.lastWidth = width
+	tableWidth := tableAvailableWidth(r.body)
+	if tableWidth <= 0 {
+		tableWidth = width
+	}
+	r.renderTableWithWidth(tableWidth)
+	return false
 }
 
 func (r *explorerRuntime) run() error {
@@ -443,12 +460,20 @@ func (r *explorerRuntime) renderBreadcrumb() {
 }
 
 func (r *explorerRuntime) renderTable() {
+	r.renderTableWithWidth(tableAvailableWidth(r.body))
+}
+
+func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	includeHeader := !r.headless
 	rows := tableRows(r.session.CurrentView(), r.session.IsMarked, includeHeader)
+	widths := autosizedColumnWidths(r.session.CurrentView(), rows, availableWidth)
 	r.body.Clear()
 	for rowIndex, row := range rows {
 		for columnIndex, value := range row {
 			cell := tview.NewTableCell(value)
+			if columnIndex < len(widths) {
+				cell.SetMaxWidth(widths[columnIndex])
+			}
 			if includeHeader && rowIndex == 0 {
 				cell.SetSelectable(false)
 				cell.SetTextColor(r.theme.HeaderText)
@@ -462,6 +487,11 @@ func (r *explorerRuntime) renderTable() {
 	}
 	selectedRow, selectedColumn := selectionForTable(r.session, includeHeader)
 	r.body.Select(selectedRow, selectedColumn)
+}
+
+func tableAvailableWidth(table *tview.Table) int {
+	_, _, width, _ := table.GetInnerRect()
+	return width
 }
 
 func tableRows(
@@ -487,6 +517,89 @@ func tableRows(
 		rows = append(rows, row)
 	}
 	return rows
+}
+
+func autosizedColumnWidths(
+	view tui.ResourceView,
+	rows [][]string,
+	availableWidth int,
+) []int {
+	widths := naturalColumnWidths(rows)
+	if availableWidth <= 0 || tableRenderWidth(widths) <= availableWidth {
+		return widths
+	}
+	fixed := fixedPriorityColumnIndexes(view)
+	shrinkable := shrinkableColumnIndexes(widths, fixed)
+	for tableRenderWidth(widths) > availableWidth && len(shrinkable) > 0 {
+		if !shrinkOneStep(widths, shrinkable) {
+			break
+		}
+	}
+	return widths
+}
+
+func naturalColumnWidths(rows [][]string) []int {
+	if len(rows) == 0 {
+		return nil
+	}
+	widths := make([]int, len(rows[0]))
+	for _, row := range rows {
+		updateNaturalWidths(widths, row)
+	}
+	return widths
+}
+
+func updateNaturalWidths(widths []int, row []string) {
+	for index, value := range row {
+		if index < len(widths) && len(value) > widths[index] {
+			widths[index] = len(value)
+		}
+	}
+}
+
+func fixedPriorityColumnIndexes(
+	view tui.ResourceView,
+) map[int]struct{} {
+	fixed := map[int]struct{}{0: {}}
+	for index, column := range view.Columns {
+		if strings.EqualFold(column, "NAME") {
+			fixed[index+1] = struct{}{}
+			break
+		}
+	}
+	return fixed
+}
+
+func shrinkableColumnIndexes(widths []int, fixed map[int]struct{}) []int {
+	indexes := make([]int, 0, len(widths))
+	for index := len(widths) - 1; index >= 0; index-- {
+		if _, ok := fixed[index]; ok {
+			continue
+		}
+		indexes = append(indexes, index)
+	}
+	return indexes
+}
+
+func shrinkOneStep(widths []int, shrinkable []int) bool {
+	for _, index := range shrinkable {
+		if widths[index] > minAutosizeColumnWidth {
+			widths[index]--
+			return true
+		}
+	}
+	return false
+}
+
+func tableRenderWidth(widths []int) int {
+	if len(widths) == 0 {
+		return 0
+	}
+	total := len(widths) - 1
+	for _, width := range widths {
+		total += width
+	}
+	return total
 }
 
 func selectionForTable(session tui.Session, includeHeader bool) (int, int) {

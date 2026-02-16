@@ -37,6 +37,11 @@
   integration coverage.
 
 ## 2026-02-15
+- Implemented RQ-021 terminal-resize column autosizing parity in the full-screen explorer table.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to verify fixed-priority column widths remain intact (`SEL` and `NAME`) while non-priority columns shrink to fit narrow widths.
+- Added autosizing width helpers and runtime rendering integration in `cmd/hypersphere/explorer_tui.go`, including resize-aware redraw wiring through the `tview` before-draw hook.
+- Marked `RQ-021` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed autosizing roadmap item and adding follow-on subtasks for overflow indicators and repeated-resize integration coverage.
 - Implemented RQ-020 selected-column sort glyph parity so sorted headers show
   `↑` and `↓` and flip deterministically with sort direction changes.
 - Added failing-first coverage in `internal/tui/runtime_test.go` to assert the

@@ -126,6 +126,7 @@
 ### RQ-021: Add autosized columns on terminal resize
 - vSphere mapping: maintain readability across narrow/wide terminals.
 - Acceptance: terminal resize recalculates column widths without truncating fixed-priority columns.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-022: Add overflow indicators for hidden columns
 - vSphere mapping: horizontal navigation discoverability.
@@ -488,6 +489,50 @@
 - Acceptance: active endpoint loads endpoint-specific aliases/plugins/hotkeys
   before global defaults.
 
+## vSphere API Connectivity and Authentication
+
+### RQ-113: Replace toy catalog with live vSphere inventory adapters
+- vSphere mapping: production data source parity with vCenter inventory APIs.
+- Acceptance: VM/host/cluster/datastore/task/event/alarm views read from vSphere
+  API adapters instead of static in-memory demo rows when connection is configured.
+- Acceptance: adapter contract supports refresh and stable object identity fields
+  used by selection/mark/sort state.
+- Acceptance: if live adapter fails, UI shows explicit adapter error state and
+  does not silently fall back to toy data.
+
+### RQ-114: Add vSphere credential resolution precedence
+- vSphere mapping: deterministic startup credential behavior across automation
+  and interactive terminals.
+- Acceptance: connection fields resolve in this strict order:
+  1) CLI flags, 2) environment variables, 3) interactive prompt.
+- Acceptance: supported fields include vCenter endpoint, username, password,
+  and optional insecure TLS toggle.
+- Acceptance: resolved values are surfaced in debug diagnostics with secret
+  values redacted.
+
+### RQ-115: Add interactive credential prompt flow
+- vSphere mapping: first-run operator experience without preconfigured secrets.
+- Acceptance: if required fields are missing after env and CLI resolution,
+  terminal prompts request missing fields only.
+- Acceptance: password input is hidden (no echo) and never printed back to logs
+  or status panes.
+- Acceptance: prompt flow supports cancellation, returning a deterministic
+  startup error without partial connection state.
+
+### RQ-116: Add non-interactive auth failure behavior
+- vSphere mapping: CI/automation-safe startup semantics.
+- Acceptance: in non-interactive/headless mode, missing required connection
+  fields fail fast with an actionable error listing missing field names.
+- Acceptance: non-interactive mode must never block waiting for stdin prompts.
+
+### RQ-117: Add authenticated session bootstrap and reuse
+- vSphere mapping: efficient vCenter API usage and reduced login churn.
+- Acceptance: successful authentication creates a reusable session/context used
+  by all active view adapters.
+- Acceptance: session expiry or auth faults trigger deterministic reconnect
+  behavior with surfaced status transitions (`CONNECTED`, `DEGRADED`, `DISCONNECTED`).
+- Acceptance: session cookies/tokens are never logged in plaintext.
+
 ## Plugin and Extensibility Parity
 
 ### RQ-074: Add plugin command runner with environment contract
@@ -578,3 +623,4 @@
 - Phase 4: RQ-047 to RQ-065 (action pipeline + observability).
 - Phase 5: RQ-066 to RQ-078 (config/customization/plugins).
 - Phase 6: RQ-079 to RQ-091 (security/perf/integration/release hardening).
+- Phase 7: RQ-107 to RQ-117 (describe UX, Unicode/emoji, and live API/auth integration).

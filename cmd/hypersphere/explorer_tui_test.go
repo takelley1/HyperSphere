@@ -50,6 +50,63 @@ func TestSelectionForTableOffsetsHeaderAndMarkerColumns(t *testing.T) {
 	}
 }
 
+func TestAutosizedColumnWidthsPreserveFixedPriorityColumns(t *testing.T) {
+	view := tui.ResourceView{
+		Resource: tui.ResourceVM,
+		Columns:  []string{"NAME", "TAGS", "CLUSTER", "POWER"},
+		Rows: [][]string{
+			{"vm-super-long-name", "prod,critical", "cluster-east", "poweredOn"},
+		},
+		IDs: []string{"vm-super-long-name"},
+	}
+	rows := tableRows(view, func(string) bool { return false }, true)
+	natural := naturalColumnWidths(rows)
+	available := natural[0] + natural[1]
+	available += (len(natural)-2)*minAutosizeColumnWidth + (len(natural) - 1)
+
+	widths := autosizedColumnWidths(view, rows, available)
+
+	if widths[0] != natural[0] {
+		t.Fatalf("expected selection column width to remain fixed at %d, got %d", natural[0], widths[0])
+	}
+	if widths[1] != natural[1] {
+		t.Fatalf("expected name column width to remain fixed at %d, got %d", natural[1], widths[1])
+	}
+	if widths[2] >= natural[2] {
+		t.Fatalf("expected non-priority tags column to shrink from %d, got %d", natural[2], widths[2])
+	}
+	if tableRenderWidth(widths) > available {
+		t.Fatalf("expected autosized widths to fit available width %d, got %d", available, tableRenderWidth(widths))
+	}
+}
+
+func TestRenderTableWithWidthRecalculatesAndPreservesFixedColumns(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	rows := tableRows(runtime.session.CurrentView(), runtime.session.IsMarked, true)
+	natural := naturalColumnWidths(rows)
+	available := natural[0] + natural[1]
+	available += (len(natural)-2)*minAutosizeColumnWidth + (len(natural) - 1)
+
+	runtime.renderTableWithWidth(available)
+
+	nameHeader := runtime.body.GetCell(0, 1)
+	tagsHeader := runtime.body.GetCell(0, 2)
+	if nameHeader.MaxWidth != natural[1] {
+		t.Fatalf(
+			"expected fixed name header width %d after render, got %d",
+			natural[1],
+			nameHeader.MaxWidth,
+		)
+	}
+	if tagsHeader.MaxWidth >= natural[2] {
+		t.Fatalf(
+			"expected non-priority tags header width to shrink from %d, got %d",
+			natural[2],
+			tagsHeader.MaxWidth,
+		)
+	}
+}
+
 func TestEmitStatusWritesErrorsOnly(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.emitStatus(nil)
