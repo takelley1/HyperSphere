@@ -471,6 +471,7 @@
 ### RQ-040: Add namespace warp analog for tags/folders
 - vSphere mapping: fast scope jump by common partition key.
 - Acceptance: warp key on selected folder/tag opens filtered view scoped to selected key.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-041: Add search result jump list
 - vSphere mapping: next/previous navigation through matched rows.

@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-040 by adding `Shift+W` namespace warp from
+  folder/tag rows into VM view with scoped filtering from the selected key.
+- Added failing-first coverage in `internal/tui/runtime_test.go` for folder/tag
+  warp success flows and for unsupported/empty-scope/error branches.
 - Implemented and fulfilled RQ-039 by adding `Shift+J` owner-jump behavior
   from VM rows to owning host rows, with fallback to resource pool owners.
 - Added failing-first coverage in `internal/tui/runtime_test.go` for host-owner

@@ -529,6 +529,9 @@ func (s *Session) HandleKey(key string) error {
 	if normalized == "SHIFT+J" {
 		return s.jumpToOwner()
 	}
+	if normalized == "SHIFT+W" {
+		return s.warpToScopedVMView()
+	}
 	column, ok := s.view.SortHotKeys[normalized]
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrUnsupportedHotKey, key)
@@ -1665,6 +1668,46 @@ func indexOfID(ids []string, target string) int {
 		}
 	}
 	return -1
+}
+
+func (s *Session) warpToScopedVMView() error {
+	key, err := s.warpKeyFromSelection()
+	if err != nil {
+		return err
+	}
+	if err := s.ExecuteCommand(":vm"); err != nil {
+		return err
+	}
+	s.ApplyFilter(key)
+	return nil
+}
+
+func (s *Session) warpKeyFromSelection() (string, error) {
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return "", err
+	}
+	switch s.view.Resource {
+	case ResourceFolder:
+		key := folderScopeKey(id)
+		if key != "" {
+			return key, nil
+		}
+	case ResourceTag:
+		if strings.TrimSpace(id) != "" {
+			return id, nil
+		}
+	}
+	return "", fmt.Errorf("%w: SHIFT+W", ErrUnsupportedHotKey)
+}
+
+func folderScopeKey(path string) string {
+	trimmed := strings.Trim(strings.TrimSpace(path), "/")
+	if trimmed == "" {
+		return ""
+	}
+	parts := strings.Split(trimmed, "/")
+	return parts[len(parts)-1]
 }
 
 func (s *Session) sortBySelectedColumn() error {

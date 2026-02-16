@@ -273,6 +273,100 @@ func TestOwnerJumpHelperBranches(t *testing.T) {
 	}
 }
 
+func TestSessionShiftWWarpFromFolderToScopedVMView(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{Name: "vm-prod-a", Tags: "prod"},
+				{Name: "vm-dev-a", Tags: "dev"},
+			},
+			Folders: []FolderRow{
+				{Path: "/Datacenters/dc-1/vm/Prod", Type: "vm-folder", Children: 2, VMCount: 1},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":folder"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+W"); err != nil {
+		t.Fatalf("HandleKey SHIFT+W error: %v", err)
+	}
+	if session.CurrentView().Resource != ResourceVM {
+		t.Fatalf("expected warp to open vm view, got %s", session.CurrentView().Resource)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "vm-prod-a" {
+		t.Fatalf("expected folder warp to scope vm rows by selected key")
+	}
+}
+
+func TestSessionShiftWWarpFromTagToScopedVMView(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{Name: "vm-prod-a", Tags: "prod"},
+				{Name: "vm-dev-a", Tags: "dev"},
+			},
+			Tags: []TagRow{
+				{Tag: "prod", Category: "environment", Cardinality: "single", AttachedObjects: 1},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":tag"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+W"); err != nil {
+		t.Fatalf("HandleKey SHIFT+W error: %v", err)
+	}
+	if session.CurrentView().Resource != ResourceVM {
+		t.Fatalf("expected warp to open vm view, got %s", session.CurrentView().Resource)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "vm-prod-a" {
+		t.Fatalf("expected tag warp to scope vm rows by selected key")
+	}
+}
+
+func TestSessionShiftWWarpErrorBranches(t *testing.T) {
+	notSupported := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := notSupported.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := notSupported.HandleKey("SHIFT+W"); err == nil {
+		t.Fatalf("expected shift+w error outside folder/tag views")
+	}
+
+	emptyFolder := NewSession(Catalog{Folders: []FolderRow{{Path: "/", Type: "vm-folder"}}})
+	if err := emptyFolder.ExecuteCommand(":folder"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := emptyFolder.HandleKey("SHIFT+W"); err == nil {
+		t.Fatalf("expected shift+w error for folder selection with empty scope key")
+	}
+
+	noRows := NewSession(Catalog{})
+	if err := noRows.ExecuteCommand(":folder"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := noRows.HandleKey("SHIFT+W"); err == nil {
+		t.Fatalf("expected shift+w error for folder view without selected rows")
+	}
+}
+
+func TestSessionShiftWWarpReturnsExecuteErrorWhenVMViewCannotBeBuilt(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:     []VMRow{{Name: "vm-a", Tags: "prod"}},
+			Folders: []FolderRow{{Path: "/Datacenters/dc-1/vm/Prod", Type: "vm-folder"}},
+		},
+	)
+	if err := session.ExecuteCommand(":folder"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.columnSelection[ResourceVM] = []string{"NOT_REAL"}
+	if err := session.HandleKey("SHIFT+W"); err == nil {
+		t.Fatalf("expected shift+w to return vm execute error for invalid stored vm columns")
+	}
+}
+
 func TestSessionLastViewFailsWithoutHistory(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.LastView(); err == nil {
