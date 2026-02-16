@@ -537,6 +537,7 @@
 ### RQ-052: Add action preview summary panel
 - vSphere mapping: bulk operation impact preview.
 - Acceptance: preview lists target count, target IDs, and expected side effects before execution.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-053: Add consistent action error presentation
 - vSphere mapping: operator triage consistency.

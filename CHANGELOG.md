@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-052 by adding action preview summaries with
+  target count, target IDs, and expected side-effect hints before execution.
+- Added failing-first coverage in `internal/tui/session_test.go` for preview
+  target/impact summary content.
 - Implemented and fulfilled RQ-051 by adding destructive-action confirmation
   gating in action execution (`power-off`, `delete`, `revert`) with explicit
   deny/reset support.

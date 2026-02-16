@@ -323,6 +323,15 @@ type ActionTransition struct {
 	Timestamp string
 }
 
+// ActionPreview summarizes target and impact details before execution.
+type ActionPreview struct {
+	Resource    Resource
+	Action      string
+	TargetCount int
+	TargetIDs   []string
+	SideEffects []string
+}
+
 // ActionExecutor applies bulk actions through a VMware API adapter.
 type ActionExecutor interface {
 	Execute(resource Resource, action string, ids []string) error
@@ -637,6 +646,25 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 // ActionTransitions returns the recorded action lifecycle transitions.
 func (s *Session) ActionTransitions() []ActionTransition {
 	return append([]ActionTransition{}, s.transitions...)
+}
+
+// PreviewAction returns target and side-effect summary for an action.
+func (s *Session) PreviewAction(action string) (ActionPreview, error) {
+	normalized := strings.ToLower(strings.TrimSpace(action))
+	if !containsAction(s.view.Actions, normalized) {
+		return ActionPreview{}, fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+	ids := s.selectedIDs()
+	if len(ids) == 0 {
+		return ActionPreview{}, fmt.Errorf("%w: no selected rows", ErrInvalidAction)
+	}
+	return ActionPreview{
+		Resource:    s.view.Resource,
+		Action:      normalized,
+		TargetCount: len(ids),
+		TargetIDs:   append([]string{}, ids...),
+		SideEffects: actionSideEffects(normalized),
+	}, nil
 }
 
 // CancelLastAction requests cancellation for the most recent action.
@@ -1882,6 +1910,19 @@ func isRetriableError(err error) bool {
 	}
 	var retriable retriableError
 	return errors.As(err, &retriable) && retriable.Retriable()
+}
+
+func actionSideEffects(action string) []string {
+	switch action {
+	case "power-off":
+		return []string{"workloads stop", "guest sessions terminate"}
+	case "power-on":
+		return []string{"workloads start", "resource consumption increases"}
+	case "migrate":
+		return []string{"placement changes", "short-lived migration overhead"}
+	default:
+		return []string{"resource state may change"}
+	}
 }
 
 func isDestructiveAction(action string) bool {

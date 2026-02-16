@@ -498,6 +498,62 @@ func TestSameActionRequestMismatchBranches(t *testing.T) {
 	}
 }
 
+func TestSessionPreviewActionIncludesTargetCountIDsAndSideEffects(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	preview, err := session.PreviewAction("power-off")
+	if err != nil {
+		t.Fatalf("PreviewAction returned error: %v", err)
+	}
+	if preview.TargetCount != 2 {
+		t.Fatalf("expected target count 2, got %d", preview.TargetCount)
+	}
+	wantIDs := []string{"vm-a", "vm-b"}
+	if !reflect.DeepEqual(preview.TargetIDs, wantIDs) {
+		t.Fatalf("unexpected preview target ids: got %v want %v", preview.TargetIDs, wantIDs)
+	}
+	if len(preview.SideEffects) == 0 {
+		t.Fatalf("expected preview side effects to be populated")
+	}
+}
+
+func TestSessionPreviewActionErrorBranches(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if _, err := session.PreviewAction("not-real"); err == nil {
+		t.Fatalf("expected invalid action preview error")
+	}
+	session.ApplyFilter("missing")
+	if _, err := session.PreviewAction("power-on"); err == nil {
+		t.Fatalf("expected preview error with no selected rows")
+	}
+}
+
+func TestActionSideEffectsBranchCoverage(t *testing.T) {
+	if len(actionSideEffects("power-on")) == 0 {
+		t.Fatalf("expected power-on side effects")
+	}
+	if len(actionSideEffects("migrate")) == 0 {
+		t.Fatalf("expected migrate side effects")
+	}
+	if len(actionSideEffects("unknown-action")) == 0 {
+		t.Fatalf("expected default side effects")
+	}
+}
+
 func TestSessionCancelLastActionReturnsErrorWhenUnsupported(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
 	canceler := &fakeCanceler{}

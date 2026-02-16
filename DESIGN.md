@@ -24,7 +24,7 @@
 - [ ] Sub-task: add coverage for full-row highlight behavior when table width is narrower than content.
 - [ ] Sub-task: persist per-view selected columns to config so chooser state survives restart.
 - [ ] Sub-task: add explicit top-help hint for sort inversion (`Shift+I`) alongside primary sort key.
-- [ ] Sub-task: add action preview summary fixtures for targets/side effects (`RQ-052`).
+- [ ] Sub-task: add standardized action error payload fixtures (`RQ-053`).
 
 ### Demo Dataset Quality
 - [ ] Add sample inventory variants for dense environments (50+ rows) to validate scrolling ergonomics.
