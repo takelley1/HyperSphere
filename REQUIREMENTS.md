@@ -244,6 +244,7 @@
 - vSphere mapping: context-aware hints for inventory vs log view.
 - Acceptance: switching to log view replaces center legend with log-navigation
   keys and restores table keys when returning.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-103: Add logs view title format parity
 - vSphere mapping: identify object and sub-target for streamed logs.

@@ -363,7 +363,7 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 }
 
 func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
-	lines := strings.Split(renderTopHeaderCenter(), "\n")
+	lines := strings.Split(renderTopHeaderCenter(false), "\n")
 	want := []string{
 		"<:> Command",
 		"</> Filter",
@@ -381,6 +381,47 @@ func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
 				lines[index],
 			)
 		}
+	}
+}
+
+func TestRenderTopHeaderCenterUsesLogNavigationLegendInLogView(t *testing.T) {
+	lines := strings.Split(renderTopHeaderCenter(true), "\n")
+	want := []string{
+		"<g> Top",
+		"<G> Bottom",
+		"<PgUp/PgDn> Scroll",
+	}
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d log legend lines, got %d (%q)", len(want), len(lines), lines)
+	}
+	for index, expected := range want {
+		if lines[index] != expected {
+			t.Fatalf("expected log legend line %d to be %q, got %q", index, expected, lines[index])
+		}
+	}
+}
+
+func TestHandlePromptDoneSwitchesHeaderLegendForLogViewAndRestoresTableLegend(t *testing.T) {
+	runtime := newExplorerRuntime()
+
+	runtime.startPrompt(":log")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	if !runtime.logMode {
+		t.Fatalf("expected runtime to enter log view mode")
+	}
+	runtime.renderTopHeaderWithWidth(120)
+	if !strings.Contains(runtime.topHeader.GetText(false), "<PgUp/PgDn> Scroll") {
+		t.Fatalf("expected log-view legend after :log command")
+	}
+
+	runtime.startPrompt(":table")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	if runtime.logMode {
+		t.Fatalf("expected runtime to leave log view mode")
+	}
+	runtime.renderTopHeaderWithWidth(120)
+	if !strings.Contains(runtime.topHeader.GetText(false), "<:> Command") {
+		t.Fatalf("expected table legend after :table command")
 	}
 }
 

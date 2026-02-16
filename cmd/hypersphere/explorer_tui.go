@@ -62,6 +62,7 @@ type explorerRuntime struct {
 	lastWidth     int
 	wideColumns   bool
 	headerVisible bool
+	logMode       bool
 }
 
 type runtimeActionExecutor struct {
@@ -489,6 +490,11 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 	if key != tcell.KeyEnter {
 		return
 	}
+	if message, handled := r.handleLocalPromptCommand(strings.TrimSpace(r.prompt.GetText())); handled {
+		r.endPrompt()
+		r.render(message)
+		return
+	}
 	message, keepRunning := executePromptCommand(
 		&r.session,
 		&r.promptState,
@@ -501,6 +507,19 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 	r.render(message)
 	if !keepRunning {
 		r.app.Stop()
+	}
+}
+
+func (r *explorerRuntime) handleLocalPromptCommand(line string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case ":log", ":logs":
+		r.logMode = true
+		return "view: logs", true
+	case ":table":
+		r.logMode = false
+		return fmt.Sprintf("view: %s", r.session.CurrentView().Resource), true
+	default:
+		return "", false
 	}
 }
 
@@ -600,7 +619,7 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
 		strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n"),
-		strings.Split(renderTopHeaderCenter(), "\n"),
+		strings.Split(renderTopHeaderCenter(r.logMode), "\n"),
 		strings.Split(renderTopHeaderRight(), "\n"),
 		r.theme,
 	)
@@ -1191,10 +1210,18 @@ func promptValidationMessage(text string) string {
 	if isPendingPromptInput(text, trimmed) {
 		return ""
 	}
+	if isLocalPromptCommand(trimmed) {
+		return ""
+	}
 	if _, err := tui.ParseExplorerInput(text); err != nil {
 		return fmt.Sprintf("[red]command error: %s", err.Error())
 	}
 	return ""
+}
+
+func isLocalPromptCommand(trimmed string) bool {
+	value := strings.ToLower(strings.TrimSpace(trimmed))
+	return value == ":log" || value == ":logs" || value == ":table"
 }
 
 func isPendingPromptInput(raw string, trimmed string) bool {
@@ -1350,7 +1377,17 @@ func formatMetricWithTrend(percent int, trend int) string {
 	}
 }
 
-func renderTopHeaderCenter() string {
+func renderTopHeaderCenter(logMode bool) string {
+	if logMode {
+		return strings.Join(
+			[]string{
+				"<g> Top",
+				"<G> Bottom",
+				"<PgUp/PgDn> Scroll",
+			},
+			"\n",
+		)
+	}
 	return strings.Join(
 		[]string{
 			"<:> Command",

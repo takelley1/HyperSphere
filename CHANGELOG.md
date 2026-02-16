@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-102 view-specific legend switching by adding prompt-driven log
+  mode (`:log`/`:logs`) and table mode (`:table`) toggles that swap center
+  header legends between table commands and log-navigation keys.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  log-view legend content and legend restore behavior when returning to table mode.
+- Marked `RQ-102` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for `:log`/`:table` integration
+  coverage and runtime wiring of log navigation actions.
 - Implemented RQ-101 top-metrics parity by rendering `CPU` and `MEM` metadata
   values in percent format with trend suffix support (`(+)` / `(-)`).
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
