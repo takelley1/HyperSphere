@@ -93,3 +93,11 @@ func TestPromptSuggestionHelpers(t *testing.T) {
 		t.Fatalf("expected duplicate-filtered suggestions, got %v", filtered)
 	}
 }
+
+func TestPromptSuggestionsIncludeLastViewToggleCommand(t *testing.T) {
+	state := NewPromptState(10)
+	suggestions := state.Suggest(":-", ResourceView{})
+	if len(suggestions) != 1 || suggestions[0] != ":-" {
+		t.Fatalf("expected suggestions to include last-view toggle, got %v", suggestions)
+	}
+}

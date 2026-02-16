@@ -104,6 +104,7 @@
 ### RQ-017: Add `:-` previous-view toggle in prompt mode
 - vSphere mapping: k9s back navigation behavior.
 - Acceptance: issuing `:-` swaps current and previous resource views.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-018: Add command `:ctx` analog for vCenter targets
 - vSphere mapping: switch active vCenter endpoint profile.

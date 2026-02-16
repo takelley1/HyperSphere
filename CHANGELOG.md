@@ -37,6 +37,11 @@
   integration coverage.
 
 ## 2026-02-15
+- Implemented RQ-017 prompt-mode discoverability parity by adding `:-` to command suggestions.
+- Added failing-first coverage in `internal/tui/prompt_test.go` to verify `:-` suggestion matching.
+- Updated `internal/tui/prompt.go` suggestion candidates to include the last-view toggle command.
+- Marked `RQ-017` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with a follow-on integration sub-task for repeated `:-` prompt-toggle coverage.
 - Marked `RQ-016` as fulfilled in `REQUIREMENTS.md`.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to verify invalid
   trailing-space prompt input still shows inline validation errors before submit.

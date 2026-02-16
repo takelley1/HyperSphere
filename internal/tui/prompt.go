@@ -87,7 +87,17 @@ func suggestionCandidates(view ResourceView) []string {
 
 func resourceCommandAliases() []string {
 	candidates := append([]string{}, ResourceCommandAliases()...)
-	return append(candidates, ":help", ":q", ":readonly", ":ro", ":history up", ":history down", ":ctx")
+	return append(
+		candidates,
+		":help",
+		":q",
+		":readonly",
+		":ro",
+		":history up",
+		":history down",
+		":ctx",
+		":-",
+	)
 }
 
 func sortedMapKeys(values map[string]string) []string {

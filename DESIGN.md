@@ -49,6 +49,7 @@
 - [ ] Add prompt validation for unknown `:ctx` endpoint names before submit.
 - [ ] Add integration coverage for alias-palette lifecycle (`ctrl-a`, `Esc`, alias execution).
 - [ ] Add prompt validation style parity between label and input field in color and NO_COLOR modes.
+- [ ] Add integration coverage for `:-` last-view toggle behavior across repeated prompt invocations.
 - [ ] Sub-task: add focused tests for prompt validation reset when exiting prompt mode.
 - [ ] Sub-task: add focused tests for pending-input states with trailing spaces across valid commands.
 
