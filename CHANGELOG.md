@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-113 by replacing the top-right ASCII text mark with a
+  multiline 4D hypersphere-style logo projection in the explorer header.
+- Updated failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert the new hypersphere ASCII lines while keeping right-zone clipping tests.
+- Updated `DESIGN.md` with follow-on short-term sub-tasks for low-width
+  hypersphere variants and symmetry/clipping checks during resize.
 - Implemented RQ-098 screenshot palette preset parity by mapping header accents
   to yellow/cyan/magenta, table header background to cyan, and canvas background
   to black in the explorer theme.

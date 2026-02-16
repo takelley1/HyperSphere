@@ -39,6 +39,8 @@
 - [ ] Sub-task: add integration coverage for center legend one-entry-per-line rendering.
 - [ ] Sub-task: add integration coverage for centered `ViewName(scope)[count]` title updates.
 - [ ] Sub-task: add overflow-indicator placement tests in divider titles (`[◀]`, `[▶]`, `[◀▶]`).
+- [ ] Sub-task: add alternate hypersphere logo variants for low-width terminals.
+- [ ] Sub-task: add ASCII hypersphere symmetry checks for clipped 1-column resize steps.
 - [ ] Sub-task: replace placeholder metadata values with live cluster/user/vCenter stats.
 - [ ] Sub-task: add metadata trend suffix rendering for CPU and MEM values.
 - [ ] Sub-task: add integration coverage for multiline logo rendering during live resize.

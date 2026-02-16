@@ -195,6 +195,15 @@
   header area and stays clipped within panel bounds.
 - Status: fulfilled (2026-02-16).
 
+### RQ-113: Replace top-right ASCII mark with a 4D hypersphere logo design
+- vSphere mapping: visual identity should represent HyperSphere semantics rather
+  than plain project text.
+- Acceptance: top-right header logo renders as a multiline ASCII projection of
+  a hypersphere (4D sphere), not text lettering.
+- Acceptance: logo remains right-aligned, clipped to the right header zone, and
+  stable across redraw/resize flows.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

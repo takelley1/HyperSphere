@@ -317,13 +317,13 @@ func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
 func TestRenderTopHeaderRightUsesMultilineASCIILogoBlock(t *testing.T) {
 	lines := strings.Split(renderTopHeaderRight(), "\n")
 	want := []string{
-		" _   _                        ",
-		"| | | |_   _ _ __   ___ _ __ ",
-		"| |_| | | | | '_ \\ / _ \\ '__|",
-		"|  _  | |_| | |_) |  __/ |   ",
-		"|_| |_|\\__, | .__/ \\___|_|   ",
-		"        __/ | |              ",
-		"       |___/|_|              ",
+		"          .-''''''''-.          ",
+		"      .-''  .-''''-.  ''-.      ",
+		"    .'    .'  .--.  '.    '.    ",
+		"   /    .'   ( () )   '.    \\   ",
+		"  ;    |   .-\\_  _/-.   |    ;  ",
+		"  |    |  (___/\\___)    |    |  ",
+		"  ';    '.   '--'    .'    ;'   ",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d logo lines, got %d (%q)", len(want), len(lines), lines)
