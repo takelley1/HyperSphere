@@ -580,6 +580,7 @@
 ### RQ-060: Add tag assign/unassign actions
 - vSphere mapping: metadata management parity.
 - Acceptance: bulk assign/unassign operates on marked objects and reports per-object failures.
+- Status: fulfilled (2026-02-16).
 
 ## Observability and Health Parity
 

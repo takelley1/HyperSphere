@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-060 by adding per-object execution support for
+  tag `assign`/`unassign` bulk actions so marked-object operations can report
+  failed object IDs instead of only coarse action-level errors.
+- Added failing-first coverage in `internal/tui/session_test.go` to validate
+  marked target selection and per-object failure reporting for tag assignment.
 - Implemented and fulfilled RQ-059 by updating datastore actions to include
   maintenance and `evacuate`, enforcing destructive confirmation on evacuation,
   and reporting `migrated_vm_count` in runtime action status output.

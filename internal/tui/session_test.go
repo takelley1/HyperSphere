@@ -5,6 +5,7 @@ package tui
 import (
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -55,6 +56,31 @@ func (f *fakeCanceler) Cancel(resource Resource, action string, ids []string) er
 	f.action = action
 	f.ids = append([]string{}, ids...)
 	return f.err
+}
+
+type fakePerObjectExecutor struct {
+	resource Resource
+	action   string
+	ids      []string
+	failures map[string]error
+}
+
+func (f *fakePerObjectExecutor) Execute(resource Resource, action string, ids []string) error {
+	f.resource = resource
+	f.action = action
+	f.ids = append([]string{}, ids...)
+	return nil
+}
+
+func (f *fakePerObjectExecutor) ExecuteEach(
+	resource Resource,
+	action string,
+	ids []string,
+) map[string]error {
+	f.resource = resource
+	f.action = action
+	f.ids = append([]string{}, ids...)
+	return f.failures
 }
 
 func TestVMViewColumnsAreRelevant(t *testing.T) {
@@ -652,6 +678,91 @@ func TestSessionApplyActionDatastoreEvacuateRequiresConfirmation(t *testing.T) {
 	}
 	if executor.action != "evacuate" {
 		t.Fatalf("expected evacuate action payload, got %q", executor.action)
+	}
+}
+
+func TestSessionApplyActionTagAssignReportsPerObjectFailures(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Tags: []TagRow{
+				{Tag: "tag-a", Category: "env"},
+				{Tag: "tag-b", Category: "env"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":tag"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	executor := &fakePerObjectExecutor{
+		failures: map[string]error{"tag-b": errors.New("assign failed")},
+	}
+	err := session.ApplyAction("assign", executor)
+	if err == nil {
+		t.Fatalf("expected per-object failure to return an error")
+	}
+	if !strings.Contains(err.Error(), "tag-b") {
+		t.Fatalf("expected failure report to mention failed id, got %v", err)
+	}
+	wantIDs := []string{"tag-a", "tag-b"}
+	if !reflect.DeepEqual(executor.ids, wantIDs) {
+		t.Fatalf("expected assign action to operate on marked ids, got %v", executor.ids)
+	}
+}
+
+func TestSessionApplyActionTagAssignPerObjectSuccessAndUnassignBranch(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Tags: []TagRow{
+				{Tag: "tag-a", Category: "env"},
+				{Tag: "tag-b", Category: "env"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":tag"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	executor := &fakePerObjectExecutor{failures: map[string]error{}}
+	if err := session.ApplyAction("assign", executor); err != nil {
+		t.Fatalf("expected per-object assign success, got %v", err)
+	}
+	if err := session.ApplyAction("unassign", executor); err != nil {
+		t.Fatalf("expected per-object unassign success, got %v", err)
+	}
+}
+
+func TestSessionApplyActionTagAssignFallsBackWithoutPerObjectExecutor(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Tags: []TagRow{{Tag: "tag-a", Category: "env"}},
+		},
+	)
+	if err := session.ExecuteCommand(":tag"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("assign", executor); err != nil {
+		t.Fatalf("expected assign to fall back to Execute path, got %v", err)
+	}
+	if executor.action != "assign" {
+		t.Fatalf("expected assign action payload, got %q", executor.action)
 	}
 }
 

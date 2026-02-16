@@ -348,6 +348,11 @@ type ActionExecutor interface {
 	Execute(resource Resource, action string, ids []string) error
 }
 
+// PerObjectActionExecutor reports per-target failures for bulk tag actions.
+type PerObjectActionExecutor interface {
+	ExecuteEach(resource Resource, action string, ids []string) map[string]error
+}
+
 // ActionCanceler cancels a previously started action when supported by backend.
 type ActionCanceler interface {
 	Cancel(resource Resource, action string, ids []string) error
@@ -656,6 +661,20 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	s.hasLastAction = true
 	s.recordTransition(actionName, "queued")
 	s.recordTransition(actionName, "running")
+	if failedIDs, handled := executePerObjectTagAction(executor, s.view.Resource, actionName, ids); handled {
+		if len(failedIDs) > 0 {
+			s.recordTransition(actionName, "failure")
+			s.recordAudit(actionName, ids, "failure", failedIDs)
+			return fmt.Errorf(
+				"%w: per-object failures: %s",
+				ErrInvalidAction,
+				strings.Join(failedIDs, ","),
+			)
+		}
+		s.recordTransition(actionName, "success")
+		s.recordAudit(actionName, ids, "success", nil)
+		return nil
+	}
 	retryLimit := s.actionRetryLimit(actionName)
 	for attempt := 0; ; attempt++ {
 		started := s.now()
@@ -2163,6 +2182,30 @@ func containsSnapshotID(rows []SnapshotRow, snapshotID string) bool {
 		}
 	}
 	return false
+}
+
+func executePerObjectTagAction(
+	executor ActionExecutor,
+	resource Resource,
+	action string,
+	ids []string,
+) ([]string, bool) {
+	if resource != ResourceTag || (action != "assign" && action != "unassign") {
+		return nil, false
+	}
+	perObjectExecutor, ok := executor.(PerObjectActionExecutor)
+	if !ok {
+		return nil, false
+	}
+	failures := perObjectExecutor.ExecuteEach(resource, action, ids)
+	failedIDs := make([]string, 0, len(failures))
+	for id, err := range failures {
+		if err != nil {
+			failedIDs = append(failedIDs, id)
+		}
+	}
+	sort.Strings(failedIDs)
+	return failedIDs, true
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {
