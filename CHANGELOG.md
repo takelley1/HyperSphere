@@ -9,6 +9,7 @@
 - Updated `cmd/hypersphere/explorer_tui.go` to add a dedicated top-header
   widget, resize-aware redraw wiring, and canonical zone-format helper
   functions.
+- Marked `RQ-092` as fulfilled in `REQUIREMENTS.md`.
 - Updated `DESIGN.md` by removing the completed three-zone header item and
   adding follow-on top-header clipping and resize integration sub-tasks.
 - Implemented RQ-027 `ctrl-e` header-visibility toggle parity in the explorer

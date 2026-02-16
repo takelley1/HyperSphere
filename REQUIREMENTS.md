@@ -174,6 +174,7 @@
 - vSphere mapping: k9s-like information density for operators.
 - Acceptance: top bar renders left metadata, center hotkeys, and right ASCII logo
   in fixed zones with no overlap at 120-column width.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-093: Add left metadata panel with fixed label order
 - vSphere mapping: current vCenter operational context visibility.
