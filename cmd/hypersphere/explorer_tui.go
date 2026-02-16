@@ -1646,7 +1646,7 @@ func readTheme() explorerTheme {
 		RowDegraded:        tcell.ColorYellow,
 		RowFaulted:         tcell.ColorRed,
 		RowSelected:        tcell.ColorYellow,
-		RowMarked:          tcell.ColorYellow,
+		RowMarked:          tcell.ColorDarkCyan,
 		RowMarkedSelected:  tcell.ColorYellow,
 		StatusError:        "[red]",
 	}

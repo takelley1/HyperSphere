@@ -1,10 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
-- Added and fulfilled RQ-126 by changing selected/marked row highlight colors
-  in the explorer table theme to yellow in color mode.
+- Added and fulfilled RQ-127 by differentiating hovered/selected row highlight
+  color from marked-row highlight color.
+- Updated RQ-126 implementation so selected-row highlight remains yellow while
+  marked rows use a distinct non-yellow color in color mode.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
-  assert yellow selection and marked highlight colors from `readTheme()`.
+  assert selected and marked highlight colors are not the same.
 - Added RQ-125 to `REQUIREMENTS.md` to track per-view column selection controls,
   including per-view persistence and restore behavior for hidden columns.
 - Added and fulfilled RQ-124 by extending VM view with `SNAPSHOT_COUNT` and

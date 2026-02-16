@@ -817,8 +817,11 @@ func TestReadThemeUsesYellowSelectionHighlights(t *testing.T) {
 	if theme.RowSelected != tcell.ColorYellow {
 		t.Fatalf("expected selected row highlight yellow, got %v", theme.RowSelected)
 	}
-	if theme.RowMarked != tcell.ColorYellow {
-		t.Fatalf("expected marked row highlight yellow, got %v", theme.RowMarked)
+	if theme.RowMarked == theme.RowSelected {
+		t.Fatalf(
+			"expected marked row highlight to differ from selected row highlight, got %v",
+			theme.RowMarked,
+		)
 	}
 }
 

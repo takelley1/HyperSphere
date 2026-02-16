@@ -319,8 +319,13 @@
 - vSphere mapping: selected-row visibility should be high-contrast without
   muddy dark-green tones during active navigation and marking.
 - Acceptance: selected-row highlight color is yellow in color mode.
-- Acceptance: marked-row highlight also uses yellow to avoid dark-green
-  selection styling.
+- Status: fulfilled (2026-02-16).
+
+### RQ-127: Differentiate hover row color from marked row color
+- vSphere mapping: cursor focus and explicit multi-select marks should remain
+  visually distinct to avoid ambiguous table state.
+- Acceptance: hovered/selected row highlight color differs from marked-row
+  highlight color.
 - Status: fulfilled (2026-02-16).
 
 ### RQ-096: Add cyan framed content border style
