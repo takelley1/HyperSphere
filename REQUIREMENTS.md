@@ -199,6 +199,7 @@
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame
   with consistent corner and edge glyphs.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-097: Add cyan title divider with centered view name
 - vSphere mapping: explicit active view identity.

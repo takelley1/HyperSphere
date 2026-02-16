@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-096 cyan content-frame parity by applying a canonical cyan
+  border style to the active explorer table frame.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert the active content view border color and frame-color helper behavior.
+- Marked `RQ-096` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on frame-visibility and border-consistency
+  sub-tasks for screenshot and table-mode coverage.
 - Implemented RQ-095 right-side ASCII logo parity by rendering a canonical
   seven-line HyperSphere ASCII block in the top-right header zone.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

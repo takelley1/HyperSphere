@@ -216,6 +216,30 @@ func TestRenderFooterIncludesPromptMode(t *testing.T) {
 	}
 }
 
+func TestNewExplorerRuntimeUsesCyanFrameForActiveContentView(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	runtime := newExplorerRuntime()
+	if runtime.body.GetBorderColor() != tcell.ColorAqua {
+		t.Fatalf(
+			"expected active content frame border color %v, got %v",
+			tcell.ColorAqua,
+			runtime.body.GetBorderColor(),
+		)
+	}
+}
+
+func TestContentFrameColorUsesWhiteWhenColorDisabled(t *testing.T) {
+	if color := contentFrameColor(explorerTheme{UseColor: false}); color != tcell.ColorWhite {
+		t.Fatalf("expected white border when color is disabled, got %v", color)
+	}
+}
+
+func TestContentFrameColorUsesCyanWhenColorEnabled(t *testing.T) {
+	if color := contentFrameColor(explorerTheme{UseColor: true}); color != tcell.ColorAqua {
+		t.Fatalf("expected cyan border when color is enabled, got %v", color)
+	}
+}
+
 func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *testing.T) {
 	line := renderTopHeaderLine(
 		120,

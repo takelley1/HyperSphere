@@ -225,6 +225,7 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetBorders(false)
 	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
+	r.body.SetBorderColor(contentFrameColor(r.theme))
 	r.body.SetTitle(composeTableTitle(false, false))
 	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
 	r.breadcrumb.SetDynamicColors(true)
@@ -1092,6 +1093,13 @@ func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
 		return theme.EvenRowText
 	}
 	return theme.OddRowText
+}
+
+func contentFrameColor(theme explorerTheme) tcell.Color {
+	if !theme.UseColor {
+		return tcell.ColorWhite
+	}
+	return tcell.ColorAqua
 }
 
 func renderTopHeaderLine(width int, left string, center string, right string) string {

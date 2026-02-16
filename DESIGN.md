@@ -28,6 +28,8 @@
 - [ ] Add screenshot-baseline palette preset (black canvas, cyan frames, yellow/cyan accents).
 - [ ] Add selected-row inversion style for dense table readability.
 - [ ] Add status color mapping for healthy/degraded/faulted rows.
+- [ ] Sub-task: add screenshot-baseline tests that assert the cyan content frame remains visible.
+- [ ] Sub-task: add frame-style tests for border consistency across table modes (`ctrl-w`, compact mode).
 
 ### Header Layout Parity
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
