@@ -14,8 +14,9 @@
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
 - [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
 - [ ] Add per-resource status badges in the header line.
-- [ ] Sub-task: add overflow indicators that react to autosized/truncated columns.
 - [ ] Sub-task: add integration coverage for repeated terminal resize width changes.
+- [ ] Sub-task: add integration coverage for overflow markers across column-offset transitions.
+- [ ] Sub-task: surface overflow markers in screenshot-baseline frame/title styling.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

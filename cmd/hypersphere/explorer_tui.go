@@ -15,6 +15,8 @@ import (
 
 const defaultPromptHistorySize = 200
 const minAutosizeColumnWidth = 3
+const explorerTableTitle = "HyperSphere Explorer"
+const fixedTableColumns = 1
 
 type explorerRuntime struct {
 	app          *tview.Application
@@ -198,11 +200,11 @@ func startupCommandStatus(session *tui.Session, startupCommand string) string {
 
 func (r *explorerRuntime) configureWidgets() {
 	r.body.SetSelectable(true, true)
-	r.body.SetFixed(fixedHeaderRows(r.headless), 1)
+	r.body.SetFixed(fixedHeaderRows(r.headless), fixedTableColumns)
 	r.body.SetBorders(false)
 	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
-	r.body.SetTitle(" HyperSphere Explorer ")
+	r.body.SetTitle(composeTableTitle(false, false))
 	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
 	r.breadcrumb.SetDynamicColors(true)
 	r.breadcrumb.SetBorder(true)
@@ -467,6 +469,14 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	includeHeader := !r.headless
 	rows := tableRows(r.session.CurrentView(), r.session.IsMarked, includeHeader)
 	widths := autosizedColumnWidths(r.session.CurrentView(), rows, availableWidth)
+	_, columnOffset := r.body.GetOffset()
+	leftOverflow, rightOverflow := tableOverflowMarkers(
+		widths,
+		availableWidth,
+		columnOffset,
+		fixedTableColumns,
+	)
+	r.body.SetTitle(composeTableTitle(leftOverflow, rightOverflow))
 	r.body.Clear()
 	for rowIndex, row := range rows {
 		for columnIndex, value := range row {
@@ -600,6 +610,91 @@ func tableRenderWidth(widths []int) int {
 		total += width
 	}
 	return total
+}
+
+func composeTableTitle(leftOverflow bool, rightOverflow bool) string {
+	indicators := ""
+	if leftOverflow {
+		indicators += "◀"
+	}
+	if rightOverflow {
+		indicators += "▶"
+	}
+	if indicators == "" {
+		return " " + explorerTableTitle + " "
+	}
+	return fmt.Sprintf(" %s [%s] ", explorerTableTitle, indicators)
+}
+
+func tableOverflowMarkers(
+	widths []int,
+	availableWidth int,
+	columnOffset int,
+	fixedColumns int,
+) (bool, bool) {
+	if len(widths) == 0 || availableWidth <= 0 {
+		return false, len(widths) > 0
+	}
+	fixed := clampFixedColumns(fixedColumns, len(widths))
+	start := fixed + maxInt(columnOffset, 0)
+	if start > len(widths) {
+		start = len(widths)
+	}
+	left := columnOffset > 0 && start > fixed
+	visible := visibleScrollableColumns(widths, availableWidth, start, fixed)
+	right := start+visible < len(widths)
+	return left, right
+}
+
+func clampFixedColumns(value int, max int) int {
+	if value < 0 {
+		return 0
+	}
+	if value > max {
+		return max
+	}
+	return value
+}
+
+func visibleScrollableColumns(
+	widths []int,
+	availableWidth int,
+	scrollStart int,
+	fixedColumns int,
+) int {
+	visible := fixedColumns
+	for index := scrollStart; index < len(widths); index++ {
+		if renderWidthForVisibleCount(widths, visible+1, scrollStart) > availableWidth {
+			break
+		}
+		visible++
+	}
+	return visible - fixedColumns
+}
+
+func renderWidthForVisibleCount(widths []int, visibleCount int, scrollStart int) int {
+	if visibleCount <= 0 {
+		return 0
+	}
+	lastFixed := visibleCount
+	if lastFixed > scrollStart {
+		lastFixed = scrollStart
+	}
+	total := 0
+	for index := 0; index < lastFixed; index++ {
+		total += widths[index]
+	}
+	for index := scrollStart; index < scrollStart+visibleCount-lastFixed; index++ {
+		total += widths[index]
+	}
+	return total + visibleCount - 1
+}
+
+func maxInt(left int, right int) int {
+	if left > right {
+		return left
+	}
+	return right
 }
 
 func selectionForTable(session tui.Session, includeHeader bool) (int, int) {

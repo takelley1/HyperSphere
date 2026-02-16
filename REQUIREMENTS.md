@@ -131,6 +131,7 @@
 ### RQ-022: Add overflow indicators for hidden columns
 - vSphere mapping: horizontal navigation discoverability.
 - Acceptance: left/right overflow markers appear only when additional columns exist off-screen.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-023: Add compact mode for narrow terminals
 - vSphere mapping: prioritized columns for VM/host/datastore views.

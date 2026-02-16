@@ -107,6 +107,38 @@ func TestRenderTableWithWidthRecalculatesAndPreservesFixedColumns(t *testing.T) 
 	}
 }
 
+func TestRenderTableWithWidthShowsOverflowMarkersForHiddenColumns(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	runtime.renderTableWithWidth(16)
+
+	title := runtime.body.GetTitle()
+	if strings.Contains(title, "◀") {
+		t.Fatalf("did not expect left overflow marker at initial offset, got %q", title)
+	}
+	if !strings.Contains(title, "▶") {
+		t.Fatalf("expected right overflow marker when columns are hidden, got %q", title)
+	}
+
+	runtime.body.SetOffset(0, 1)
+	runtime.renderTableWithWidth(16)
+	title = runtime.body.GetTitle()
+	if !strings.Contains(title, "◀") || !strings.Contains(title, "▶") {
+		t.Fatalf("expected left and right overflow markers after horizontal offset, got %q", title)
+	}
+}
+
+func TestRenderTableWithWidthHidesOverflowMarkersWhenAllColumnsVisible(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	rows := tableRows(runtime.session.CurrentView(), runtime.session.IsMarked, true)
+	widths := naturalColumnWidths(rows)
+	runtime.renderTableWithWidth(tableRenderWidth(widths))
+
+	title := runtime.body.GetTitle()
+	if strings.Contains(title, "◀") || strings.Contains(title, "▶") {
+		t.Fatalf("did not expect overflow markers when all columns fit, got %q", title)
+	}
+}
+
 func TestEmitStatusWritesErrorsOnly(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.emitStatus(nil)

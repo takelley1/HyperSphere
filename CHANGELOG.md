@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-022 overflow indicator parity so the explorer table title renders
+  left/right markers (`◀`/`▶`) only when additional columns are off-screen.
+- Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`
+  for right-only overflow at initial offset, both-side overflow after horizontal
+  offset, and no markers when all columns fit.
+- Added overflow marker helpers in `cmd/hypersphere/explorer_tui.go` that compute
+  hidden-column state from autosized widths, available render width, and current
+  table column offset.
+- Marked `RQ-022` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed overflow-indicator sub-task and
+  adding follow-on integration/style sub-tasks for overflow marker behavior.
 - Implemented RQ-016 inline prompt validation state so invalid command syntax is reported before command execution.
 - Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go` to validate pre-submit error status and prompt highlight/reset behavior.
 - Wired prompt changed-event handling in `cmd/hypersphere/explorer_tui.go` to parse command input live and surface deterministic `[red]command error: ...` status output.
