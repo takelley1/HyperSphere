@@ -597,6 +597,7 @@
 ### RQ-063: Add fault/error toggle hotkey
 - vSphere mapping: show only objects with alarms or degraded state.
 - Acceptance: toggle filters table to faulted rows and restores full set on second toggle.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-064: Add benchmark/perf panel for heavy operations
 - vSphere mapping: action duration and throughput metrics.

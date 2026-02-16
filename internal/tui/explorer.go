@@ -406,6 +406,7 @@ type Session struct {
 	audits           []ActionAudit
 	actor            string
 	xrayDepth        int
+	faultMode        bool
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -435,6 +436,7 @@ func NewSession(catalog Catalog) Session {
 		audits:           []ActionAudit{},
 		actor:            "operator",
 		xrayDepth:        1,
+		faultMode:        false,
 	}
 }
 
@@ -527,6 +529,7 @@ func (s *Session) ExecuteCommand(command string) error {
 	s.filterText = ""
 	s.marks = map[string]struct{}{}
 	s.markAnchor = -1
+	s.faultMode = false
 	return nil
 }
 
@@ -624,6 +627,10 @@ func (s *Session) HandleKey(key string) error {
 	}
 	if normalized == "SHIFT+W" {
 		return s.warpToScopedVMView()
+	}
+	if normalized == "SHIFT+F" {
+		s.toggleFaultMode()
+		return nil
 	}
 	column, ok := s.view.SortHotKeys[normalized]
 	if !ok {
@@ -2373,6 +2380,18 @@ func (s *Session) expandXRayOneLevel() {
 	s.clampSelectedRow()
 }
 
+func (s *Session) toggleFaultMode() {
+	if s.faultMode {
+		s.view = s.baseView
+		s.faultMode = false
+		s.clampSelectedRow()
+		return
+	}
+	s.view = filterFaultRows(s.baseView)
+	s.faultMode = true
+	s.clampSelectedRow()
+}
+
 func (s *Session) warpToScopedVMView() error {
 	key, err := s.warpKeyFromSelection()
 	if err != nil {
@@ -2616,6 +2635,37 @@ func filterViewFuzzy(view ResourceView, query string) ResourceView {
 		filtered.IDs = append(filtered.IDs, row.id)
 	}
 	return filtered
+}
+
+func filterFaultRows(view ResourceView) ResourceView {
+	filteredRows := make([][]string, 0, len(view.Rows))
+	filteredIDs := make([]string, 0, len(view.Rows))
+	for index, row := range view.Rows {
+		if rowHasFaultSignal(row) {
+			filteredRows = append(filteredRows, append([]string{}, row...))
+			if index < len(view.IDs) {
+				filteredIDs = append(filteredIDs, view.IDs[index])
+			}
+		}
+	}
+	filtered := view
+	filtered.Rows = filteredRows
+	filtered.IDs = filteredIDs
+	return filtered
+}
+
+func rowHasFaultSignal(row []string) bool {
+	for _, value := range row {
+		cell := strings.ToLower(strings.TrimSpace(value))
+		switch cell {
+		case "red", "yellow", "error", "degraded", "maintenance", "disconnected", "suspended":
+			return true
+		}
+		if strings.Contains(cell, "fault") || strings.Contains(cell, "fail") {
+			return true
+		}
+	}
+	return false
 }
 
 func clampSelectionIndex(value int, length int) int {

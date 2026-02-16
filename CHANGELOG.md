@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-063 by adding a `Shift+F` fault toggle hotkey
+  that filters current tables to degraded/fault-signaled rows and restores the
+  full row set on the next toggle.
+- Added failing-first coverage in `internal/tui/session_test.go` for fault-mode
+  toggle behavior and full-table restoration semantics.
 - Implemented and fulfilled RQ-062 by adding an `:xray` dependency view for VM
   path relationships and a local `expand` action that grows the graph one level
   at a time without backend execution.

@@ -303,6 +303,48 @@ func TestXRayViewHandlesEmptyInventory(t *testing.T) {
 	}
 }
 
+func TestSessionFaultToggleFiltersAndRestoresRows(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Hosts: []HostRow{
+				{Name: "esxi-01", ConnectionState: "connected"},
+				{Name: "esxi-02", ConnectionState: "maintenance"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected full host row count before fault toggle")
+	}
+	if err := session.HandleKey("SHIFT+F"); err != nil {
+		t.Fatalf("expected fault toggle hotkey to be supported: %v", err)
+	}
+	filtered := session.CurrentView()
+	if len(filtered.Rows) != 1 || filtered.Rows[0][0] != "esxi-02" {
+		t.Fatalf("expected fault toggle to keep only faulted host rows, got %v", filtered.Rows)
+	}
+	if err := session.HandleKey("SHIFT+F"); err != nil {
+		t.Fatalf("expected second fault toggle hotkey to restore rows: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected second fault toggle to restore full row set")
+	}
+}
+
+func TestRowHasFaultSignalMatchesKeywordsAndCleanRows(t *testing.T) {
+	if !rowHasFaultSignal([]string{"disk failure detected"}) {
+		t.Fatalf("expected fault substring to be detected")
+	}
+	if !rowHasFaultSignal([]string{"warning", "faulted"}) {
+		t.Fatalf("expected fault keyword to be detected")
+	}
+	if rowHasFaultSignal([]string{"connected", "green", "healthy"}) {
+		t.Fatalf("expected clean row to be excluded from fault mode")
+	}
+}
+
 func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
