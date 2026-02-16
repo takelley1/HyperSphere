@@ -1,0 +1,28 @@
+# CHANGELOG
+
+## 2026-02-15
+- Added a greenfield Go TUI architecture inspired by k9s layering with `cmd`, `internal/app`, and workflow-focused internal packages.
+- Implemented canonical datastore migration planning and execution logic with threshold checks, source exclusion, candidate re-ranking, fallback tiers, skip-reason taxonomy, dry-run gating, and retry behavior.
+- Implemented canonical pending-deletion lifecycle logic with VM metadata fields (`pd_pending_since`, `pd_delete_on`, `pd_owner_email`, `pd_initial_notice_sent`, `pd_reminder_notice_sent`, `pd_original_name`) and idempotent mark/remind/purge/reset behavior.
+- Implemented terminal renderers for migration and deletion action plans to support non-GUI TUI flows.
+- Added an executable CLI at `cmd/hypersphere/main.go` with workflow selection and example data flows.
+- Added comprehensive unit tests for config precedence, migration planning/execution, lifecycle behavior, TUI rendering, and app orchestration.
+- Achieved 100% statement coverage across `internal/...` packages and added script-enforced coverage gating.
+- Added `scripts/lint.sh` and `scripts/test.sh` for repeatable formatting, vetting, and test execution.
+- Added a k9s-style command-mode explorer flow where users can enter `:vm`, `:lun`, or `:cluster` to switch active resource views and render tabular results.
+- Implemented `internal/tui` navigator and resource-table renderer with colon-command parsing, active view state, and formatted column output.
+- Added app-level command execution integration via `RunExplorerCommand` and wired CLI `--workflow explorer` interactive input handling with `:q`/`:quit` exit commands.
+- Added unit tests for command parsing, unknown resource handling, table rendering, app integration, and all branch paths while keeping `internal/...` coverage at 100%.
+- Added interactive table session state with k9s-style row marking semantics: `Space` toggles marks, marked rows are preserved by object identity, and bulk actions target marks or fallback to the current row.
+- Added VMware action mapping per resource (`vm`, `lun`, `cluster`) and bulk action execution via an API adapter interface to support actions like VM power operations, migration, and tag edits.
+- Expanded resource views with object-relevant columns (for example VM `NAME/TAGS/CLUSTER/POWER/DATASTORE/OWNER`) and added sort hotkeys per resource plus `Shift+O` selected-column sorting.
+- Updated explorer CLI loop to support command-mode view switching (`:vm/:lun/:cluster`), hotkey-driven table interactions, and action execution (`!<action>`).
+- Added comprehensive branch tests for session navigation, selection, sorting, rendering, action execution, and helper behaviors, preserving 100% internal coverage.
+- Added command parser parity layer for explorer mode with typed commands (`view`, `action`, `hotkey`, `filter`, `last-view`, `help`, `quit`) and alias support (for example `:vms`, `:ds`, `:hosts`).
+- Added additional resource domains to mirror broader k9s-style surface area in vSphere semantics: `host` and `datastore` views with resource-specific columns, sort hotkeys, and supported action sets.
+- Added session runtime parity features inspired by k9s interaction flow: previous-view toggle (`:-`), filter mode (`/text`), sort inversion (`SHIFT+I`), and read-only action blocking.
+- Extended mark mechanics with range marking (`CTRL+SPACE`) and mark clearing (`CTRL+\\`) alongside existing `SPACE` toggles.
+- Updated explorer command loop to use canonical parsed command kinds, reducing ad-hoc branching and centralizing command behavior.
+- Added comprehensive tests for parser semantics, new resources, mark controls, filter behavior, last-view toggling, sort inversion, and read-only gating while preserving 100% internal coverage.
+- Added a `DESIGN.md` goal tracker for ongoing k9s-to-vSphere parity work; fulfilled goals are removed as completed.
+- Updated project workflow to keep `.scratchpad.txt` for active execution notes and commit in regular validated increments.
