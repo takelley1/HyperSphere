@@ -37,6 +37,13 @@
   integration coverage.
 
 ## 2026-02-15
+- Marked `RQ-016` as fulfilled in `REQUIREMENTS.md`.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to verify invalid
+  trailing-space prompt input still shows inline validation errors before submit.
+- Updated `cmd/hypersphere/explorer_tui.go` pending-input detection so trailing spaces only
+  suppress validation when required arguments are still being entered.
+- Updated `DESIGN.md` Prompt UX parity sub-tasks with a follow-on focused trailing-space
+  pending-input test target.
 - Implemented RQ-015 Tab completion parity so pressing `Tab` in prompt mode
   always applies the first suggestion when suggestions exist, including
   whitespace-normalization cases.

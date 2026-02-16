@@ -572,7 +572,23 @@ func isPendingPromptInput(raw string, trimmed string) bool {
 	if trimmed == "" || trimmed == ":" || trimmed == "!" || trimmed == "/" {
 		return true
 	}
-	return strings.HasSuffix(raw, " ")
+	if !strings.HasSuffix(raw, " ") {
+		return false
+	}
+	return hasPendingCommandArgument(trimmed)
+}
+
+func hasPendingCommandArgument(trimmed string) bool {
+	if strings.HasPrefix(trimmed, ":") {
+		return len(strings.Fields(strings.TrimPrefix(trimmed, ":"))) <= 1
+	}
+	if strings.HasPrefix(trimmed, "!") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "!")) == ""
+	}
+	if strings.HasPrefix(trimmed, "/") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "/")) == ""
+	}
+	return false
 }
 
 func applyPromptValidationState(prompt *tview.InputField, message string) {

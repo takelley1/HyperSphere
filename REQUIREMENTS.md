@@ -99,6 +99,7 @@
 ### RQ-016: Add inline prompt validation state
 - vSphere mapping: immediate feedback for invalid view/action/filter syntax.
 - Acceptance: invalid command highlights prompt with error message before execution.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-017: Add `:-` previous-view toggle in prompt mode
 - vSphere mapping: k9s back navigation behavior.

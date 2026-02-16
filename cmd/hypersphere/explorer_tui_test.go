@@ -178,6 +178,23 @@ func TestHandlePromptChangedShowsValidationBeforeExecution(t *testing.T) {
 	}
 }
 
+func TestHandlePromptChangedInvalidCommandWithTrailingSpaceShowsValidationError(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.promptMode = true
+
+	runtime.handlePromptChanged(":readonly maybe ")
+	if !strings.Contains(runtime.status.GetText(true), "command error: invalid action") {
+		t.Fatalf(
+			"expected prompt validation error with trailing space, got %q",
+			runtime.status.GetText(true),
+		)
+	}
+	labelColor, _, _ := runtime.prompt.GetLabelStyle().Decompose()
+	if labelColor != tcell.ColorRed {
+		t.Fatalf("expected prompt label to highlight trailing-space validation error, got %v", labelColor)
+	}
+}
+
 func TestHelpModalToggleWithQuestionAndEscape(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone))
