@@ -39,6 +39,7 @@ const (
 	ResourceNetwork    Resource = "network"
 	ResourceTemplate   Resource = "template"
 	ResourceSnapshot   Resource = "snapshot"
+	ResourceTask       Resource = "task"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -67,6 +68,8 @@ var resourceAliasMap = map[string]Resource{
 	"snap":          ResourceSnapshot,
 	"snapshot":      ResourceSnapshot,
 	"snapshots":     ResourceSnapshot,
+	"task":          ResourceTask,
+	"tasks":         ResourceTask,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -184,6 +187,16 @@ type SnapshotRow struct {
 	Owner    string
 }
 
+// TaskRow represents one vCenter task stream row in the resource table.
+type TaskRow struct {
+	Entity   string
+	Action   string
+	State    string
+	Started  string
+	Duration string
+	Owner    string
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -219,6 +232,7 @@ type Catalog struct {
 	Networks      []NetworkRow
 	Templates     []TemplateRow
 	Snapshots     []SnapshotRow
+	Tasks         []TaskRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -335,6 +349,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return templateView(n.catalog.Templates), true
 	case ResourceSnapshot:
 		return snapshotView(n.catalog.Snapshots), true
+	case ResourceTask:
+		return taskView(n.catalog.Tasks), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -834,6 +850,11 @@ func snapshotView(rows []SnapshotRow) ResourceView {
 	)
 }
 
+func taskView(rows []TaskRow) ResourceView {
+	columns := []string{"ENTITY", "ACTION", "STATE", "STARTED", "DURATION", "OWNER"}
+	return buildView(ResourceTask, columns, taskSortHotKeys(), taskActions(), rows, taskCells)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{
 		"NAME",
@@ -1019,6 +1040,18 @@ func snapshotCells(row SnapshotRow) (string, []string) {
 	}
 }
 
+func taskCells(row TaskRow) (string, []string) {
+	id := defaultCell(row.Entity) + ":" + defaultCell(row.Action) + ":" + defaultCell(row.Started)
+	return id, []string{
+		defaultCell(row.Entity),
+		defaultCell(row.Action),
+		defaultCell(row.State),
+		defaultCell(row.Started),
+		defaultCell(row.Duration),
+		defaultCell(row.Owner),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{
 		row.Name,
@@ -1161,6 +1194,17 @@ func snapshotSortHotKeys() map[string]string {
 	}
 }
 
+func taskSortHotKeys() map[string]string {
+	return map[string]string{
+		"E": "ENTITY",
+		"A": "ACTION",
+		"S": "STATE",
+		"T": "STARTED",
+		"D": "DURATION",
+		"O": "OWNER",
+	}
+}
+
 func hostSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
@@ -1222,6 +1266,10 @@ func templateActions() []string {
 
 func snapshotActions() []string {
 	return []string{"revert", "delete", "edit-tags"}
+}
+
+func taskActions() []string {
+	return []string{"cancel", "retry"}
 }
 
 func datastoreActions() []string {

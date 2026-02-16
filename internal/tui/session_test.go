@@ -163,6 +163,24 @@ func TestSnapshotViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestTaskViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Tasks: []TaskRow{
+				{Entity: "vm-a", Action: "power-off", State: "success", Started: "2026-02-16T00:00:00Z", Duration: "31s", Owner: "ops@example.com"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":task")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"ENTITY", "ACTION", "STATE", "STARTED", "DURATION", "OWNER"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected task columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 	navigator := NewNavigator(Catalog{
 		VMs:           []VMRow{{Name: "vm-a"}},
@@ -173,6 +191,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		Networks:      []NetworkRow{{Name: "nw-a", MTU: 9000, Uplinks: 2}},
 		Templates:     []TemplateRow{{Name: "tpl-a", CPUCount: 2, MemoryMB: 4096}},
 		Snapshots:     []SnapshotRow{{VM: "vm-a", Snapshot: "snap-a", Owner: "ops@example.com"}},
+		Tasks:         []TaskRow{{Entity: "vm-a", Action: "power-off", State: "running", Started: "2026-02-16T00:00:00Z", Duration: "5s", Owner: "ops@example.com"}},
 		Hosts:         []HostRow{{Name: "host-a", CoreCount: 24, ThreadCount: 48, VMCount: 50}},
 		Datastores:    []DatastoreRow{{Name: "ds-a", CapacityGB: 1000, UsedGB: 600, FreeGB: 400, Type: "vsan", LatencyMS: 3}},
 	})
@@ -188,6 +207,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		{command: ":nw", column: "MTU"},
 		{command: ":tp", column: "CPU_COUNT"},
 		{command: ":ss", column: "OWNER"},
+		{command: ":task", column: "DURATION"},
 		{command: ":host", column: "THREADS"},
 		{command: ":datastore", column: "LATENCY_MS"},
 	}

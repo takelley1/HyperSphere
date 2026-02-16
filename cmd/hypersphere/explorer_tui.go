@@ -33,6 +33,7 @@ var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "ATTACHED_STORAGE"},
 	tui.ResourceLUN:       {"NAME", "DATASTORE", "USED_GB"},
 	tui.ResourceCluster:   {"NAME", "HOSTS", "VMS"},
+	tui.ResourceTask:      {"ENTITY", "ACTION", "STATE"},
 	tui.ResourceHost:      {"NAME", "CLUSTER", "CONNECTION"},
 	tui.ResourceDatastore: {"NAME", "CLUSTER", "FREE_GB"},
 }
@@ -1296,6 +1297,8 @@ func titleResourceLabel(resource tui.Resource) string {
 		return "LUN"
 	case tui.ResourceCluster:
 		return "CLUSTER"
+	case tui.ResourceTask:
+		return "TASK"
 	case tui.ResourceHost:
 		return "HOST"
 	case tui.ResourceDatastore:

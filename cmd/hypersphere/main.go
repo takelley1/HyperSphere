@@ -336,6 +336,7 @@ func defaultCatalog() tui.Catalog {
 		Networks:      defaultNetworkRows(),
 		Templates:     defaultTemplateRows(),
 		Snapshots:     defaultSnapshotRows(),
+		Tasks:         defaultTaskRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -423,6 +424,17 @@ func defaultSnapshotRows() []tui.SnapshotRow {
 		{VM: "vm-d", Snapshot: "pre-maintenance", Size: "6G", Created: "2026-02-14T03:05:00Z", Age: "2d", Quiesced: "no", Owner: "d@example.com"},
 		{VM: "vm-e", Snapshot: "schema-change", Size: "10G", Created: "2026-02-12T18:20:00Z", Age: "4d", Quiesced: "yes", Owner: "e@example.com"},
 		{VM: "vm-f", Snapshot: "pre-hotfix", Size: "5G", Created: "2026-02-15T07:55:00Z", Age: "1d", Quiesced: "no", Owner: "f@example.com"},
+	}
+}
+
+func defaultTaskRows() []tui.TaskRow {
+	return []tui.TaskRow{
+		{Entity: "vm-a", Action: "power-off", State: "success", Started: "2026-02-16T08:10:00Z", Duration: "24s", Owner: "ops@example.com"},
+		{Entity: "vm-b", Action: "clone", State: "running", Started: "2026-02-16T08:16:00Z", Duration: "2m14s", Owner: "dev@example.com"},
+		{Entity: "esxi-01", Action: "enter-maintenance", State: "queued", Started: "2026-02-16T08:20:00Z", Duration: "0s", Owner: "infra@example.com"},
+		{Entity: "ds-7", Action: "rescan", State: "success", Started: "2026-02-16T08:01:00Z", Duration: "11s", Owner: "storage@example.com"},
+		{Entity: "vm-c", Action: "snapshot-create", State: "failed", Started: "2026-02-16T07:55:00Z", Duration: "38s", Owner: "dba@example.com"},
+		{Entity: "cluster-west", Action: "rebalance", State: "running", Started: "2026-02-16T08:05:00Z", Duration: "6m02s", Owner: "sre@example.com"},
 	}
 }
 

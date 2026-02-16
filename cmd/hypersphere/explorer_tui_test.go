@@ -178,6 +178,17 @@ func TestComposeTableTitleAddsDividerSegmentsOnBothSides(t *testing.T) {
 	}
 }
 
+func TestComposeTableTitleUsesTaskResourceLabel(t *testing.T) {
+	view := tui.ResourceView{
+		Resource: tui.ResourceTask,
+		Rows:     [][]string{{"vm-a"}},
+	}
+	title := composeTableTitle(view, false, false)
+	if !strings.Contains(title, "TASK(all)[1]") {
+		t.Fatalf("expected task resource label in title, got %q", title)
+	}
+}
+
 func TestComposeLogTitleIncludesObjectPathAndTarget(t *testing.T) {
 	title := composeLogTitle("vm/vm-a", "vmware.log")
 	if !strings.Contains(title, "Logs vm/vm-a (target=vmware.log)") {
@@ -238,6 +249,7 @@ func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing
 		{command: "vm", want: []string{"NAME", "POWER", "ATTACHED_STORAGE"}},
 		{command: "lun", want: []string{"NAME", "DATASTORE", "USED_GB"}},
 		{command: "cluster", want: []string{"NAME", "HOSTS", "VMS"}},
+		{command: "task", want: []string{"ENTITY", "ACTION", "STATE"}},
 		{command: "host", want: []string{"NAME", "CLUSTER", "CONNECTION"}},
 		{command: "datastore", want: []string{"NAME", "CLUSTER", "FREE_GB"}},
 	}

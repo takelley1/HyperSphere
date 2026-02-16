@@ -433,6 +433,7 @@
 ### RQ-033: Add `:task` view
 - vSphere mapping: vCenter task execution stream.
 - Acceptance: view columns include `ENTITY`, `ACTION`, `STATE`, `STARTED`, `DURATION`, `OWNER`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-034: Add `:event` view
 - vSphere mapping: inventory event chronology.

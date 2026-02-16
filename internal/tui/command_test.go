@@ -30,6 +30,7 @@ func TestParseExplorerInputKinds(t *testing.T) {
 		{line: ":ss", kind: CommandView, value: "snapshot"},
 		{line: ":snap", kind: CommandView, value: "snapshot"},
 		{line: ":snapshot", kind: CommandView, value: "snapshot"},
+		{line: ":task", kind: CommandView, value: "task"},
 		{line: ":ds", kind: CommandView, value: "datastore"},
 		{line: "!power-off", kind: CommandAction, value: "power-off"},
 		{line: "shift+o", kind: CommandHotKey, value: "SHIFT+O"},

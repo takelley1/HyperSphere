@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-033 by adding the `:task`/`:tasks` view with
+  columns `ENTITY`, `ACTION`, `STATE`, `STARTED`, `DURATION`, and `OWNER`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for task alias parsing and task view column
+  rendering.
+- Extended `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded task
+  rows and added dataset assertions plus compact/task-title coverage in
+  `cmd/hypersphere/main_test.go` and `cmd/hypersphere/explorer_tui_test.go`.
 - Implemented and fulfilled RQ-125 by adding per-view column selection controls
   (`:cols set ...`, `:cols list`, `:cols reset`) with in-session persistence
   across view switches.
