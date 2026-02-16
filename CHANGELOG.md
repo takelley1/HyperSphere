@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-097 centered title-divider parity for the active content frame
+  using `ViewName(scope)[count]` formatting and divider segments on both sides.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert the `ViewName(scope)[count]` payload and divider-segment title format.
+- Marked `RQ-097` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for divider-title update and
+  overflow-indicator placement integration coverage.
 - Implemented RQ-096 cyan content-frame parity by applying a canonical cyan
   border style to the active explorer table frame.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

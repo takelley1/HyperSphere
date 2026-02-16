@@ -156,6 +156,28 @@ func TestRenderTableWithWidthHidesOverflowMarkersWhenAllColumnsVisible(t *testin
 	}
 }
 
+func TestComposeTableTitleUsesCenteredViewNameScopeCountFormat(t *testing.T) {
+	view := tui.ResourceView{
+		Resource: tui.ResourceVM,
+		Rows:     [][]string{{"vm-a"}, {"vm-b"}},
+	}
+	title := composeTableTitle(view, false, false)
+	if !strings.Contains(title, "VM(all)[2]") {
+		t.Fatalf("expected ViewName(scope)[count] title format, got %q", title)
+	}
+}
+
+func TestComposeTableTitleAddsDividerSegmentsOnBothSides(t *testing.T) {
+	view := tui.ResourceView{
+		Resource: tui.ResourceHost,
+		Rows:     [][]string{{"host-a"}},
+	}
+	title := composeTableTitle(view, false, false)
+	if !strings.Contains(title, "─ HOST(all)[1] ─") {
+		t.Fatalf("expected divider segments around centered title, got %q", title)
+	}
+}
+
 func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing.T) {
 	testCases := []struct {
 		command string

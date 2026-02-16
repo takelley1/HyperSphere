@@ -205,6 +205,7 @@
 - vSphere mapping: explicit active view identity.
 - Acceptance: view title appears centered on the top border line as
   `ViewName(scope)[count]` with cyan divider segments on both sides.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-098: Add screenshot palette preset
 - vSphere mapping: recognizable k9s-inspired look-and-feel.

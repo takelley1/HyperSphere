@@ -16,7 +16,6 @@ import (
 const defaultPromptHistorySize = 200
 const minAutosizeColumnWidth = 3
 const compactModeWidthThreshold = 15
-const explorerTableTitle = "HyperSphere Explorer"
 const fixedTableColumns = 1
 const defaultTopHeaderWidth = 120
 const topHeaderPanelHeight = 7
@@ -226,7 +225,9 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
 	r.body.SetBorderColor(contentFrameColor(r.theme))
-	r.body.SetTitle(composeTableTitle(false, false))
+	r.body.SetTitleAlign(tview.AlignCenter)
+	r.body.SetTitleColor(contentFrameColor(r.theme))
+	r.body.SetTitle(composeTableTitle(r.session.CurrentView(), false, false))
 	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
 	r.breadcrumb.SetDynamicColors(true)
 	r.breadcrumb.SetBorder(true)
@@ -611,7 +612,7 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 		columnOffset,
 		fixedTableColumns,
 	)
-	r.body.SetTitle(composeTableTitle(leftOverflow, rightOverflow))
+	r.body.SetTitle(composeTableTitle(view, leftOverflow, rightOverflow))
 	r.body.Clear()
 	for rowIndex, row := range rows {
 		for columnIndex, value := range row {
@@ -845,7 +846,11 @@ func tableRenderWidth(widths []int) int {
 	return total
 }
 
-func composeTableTitle(leftOverflow bool, rightOverflow bool) string {
+func composeTableTitle(
+	view tui.ResourceView,
+	leftOverflow bool,
+	rightOverflow bool,
+) string {
 	indicators := ""
 	if leftOverflow {
 		indicators += "◀"
@@ -853,10 +858,69 @@ func composeTableTitle(leftOverflow bool, rightOverflow bool) string {
 	if rightOverflow {
 		indicators += "▶"
 	}
-	if indicators == "" {
-		return " " + explorerTableTitle + " "
+	title := fmt.Sprintf("%s(all)[%d]", titleResourceLabel(view.Resource), len(view.Rows))
+	if indicators != "" {
+		title += fmt.Sprintf(" [%s]", indicators)
 	}
-	return fmt.Sprintf(" %s [%s] ", explorerTableTitle, indicators)
+	return fmt.Sprintf(" ─ %s ─ ", title)
+}
+
+func titleResourceLabel(resource tui.Resource) string {
+	switch resource {
+	case tui.ResourceVM:
+		return "VM"
+	case tui.ResourceLUN:
+		return "LUN"
+	case tui.ResourceCluster:
+		return "CLUSTER"
+	case tui.ResourceHost:
+		return "HOST"
+	case tui.ResourceDatastore:
+		return "DATASTORE"
+	default:
+		return strings.ToUpper(string(resource))
+	}
+}
+
+func contentFrameColor(theme explorerTheme) tcell.Color {
+	if !theme.UseColor {
+		return tcell.ColorWhite
+	}
+	return tcell.ColorAqua
+}
+
+func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
+	if !theme.UseColor {
+		return tcell.ColorWhite
+	}
+	if rowIndex%2 == 0 {
+		return theme.EvenRowText
+	}
+	return theme.OddRowText
+}
+
+func renderTopHeaderLine(width int, left string, center string, right string) string {
+	leftWidth, centerWidth, rightWidth := topHeaderZoneWidths(width)
+	return fitHeaderLeft(left, leftWidth) +
+		fitHeaderCenter(center, centerWidth) +
+		fitHeaderRight(right, rightWidth)
+}
+
+func renderTopHeaderLines(width int, left []string, center []string, right []string) []string {
+	lineCount := maxHeaderLineCount(left, center, right)
+	lines := make([]string, 0, lineCount)
+	for index := 0; index < lineCount; index++ {
+		lines = append(
+			lines,
+			renderTopHeaderLine(
+				width,
+				topHeaderLineAt(left, index),
+				topHeaderLineAt(center, index),
+				topHeaderLineAt(right, index),
+			),
+		)
+	}
+	return lines
 }
 
 func tableOverflowMarkers(
@@ -1083,47 +1147,6 @@ func readTheme() explorerTheme {
 		theme.StatusError = ""
 	}
 	return theme
-}
-
-func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
-	if !theme.UseColor {
-		return tcell.ColorWhite
-	}
-	if rowIndex%2 == 0 {
-		return theme.EvenRowText
-	}
-	return theme.OddRowText
-}
-
-func contentFrameColor(theme explorerTheme) tcell.Color {
-	if !theme.UseColor {
-		return tcell.ColorWhite
-	}
-	return tcell.ColorAqua
-}
-
-func renderTopHeaderLine(width int, left string, center string, right string) string {
-	leftWidth, centerWidth, rightWidth := topHeaderZoneWidths(width)
-	return fitHeaderLeft(left, leftWidth) +
-		fitHeaderCenter(center, centerWidth) +
-		fitHeaderRight(right, rightWidth)
-}
-
-func renderTopHeaderLines(width int, left []string, center []string, right []string) []string {
-	lineCount := maxHeaderLineCount(left, center, right)
-	lines := make([]string, 0, lineCount)
-	for index := 0; index < lineCount; index++ {
-		lines = append(
-			lines,
-			renderTopHeaderLine(
-				width,
-				topHeaderLineAt(left, index),
-				topHeaderLineAt(center, index),
-				topHeaderLineAt(right, index),
-			),
-		)
-	}
-	return lines
 }
 
 func maxHeaderLineCount(left []string, center []string, right []string) int {
