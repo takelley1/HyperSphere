@@ -26,6 +26,7 @@ type cliFlags struct {
 	threshold      int
 	refreshSeconds float64
 	logLevel       logLevel
+	logFile        string
 }
 
 type logLevel string
@@ -53,6 +54,10 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 	flags, err := parseFlags(args)
 	if err != nil {
 		_, _ = fmt.Fprintf(errOutput, "flag parsing failed: %v\n", err)
+		return 1
+	}
+	if err := writeStartupLog(flags.logFile, flags.logLevel); err != nil {
+		_, _ = fmt.Fprintf(errOutput, "log setup failed: %v\n", err)
 		return 1
 	}
 	if flags.command == "version" {
@@ -88,6 +93,7 @@ func parseFlags(args []string) (cliFlags, error) {
 	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
 	refresh := flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds")
 	level := flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error")
+	logFile := flagSet.String("log-file", "", "path to runtime log output file")
 	if err := flagSet.Parse(args); err != nil {
 		return cliFlags{}, err
 	}
@@ -111,6 +117,7 @@ func parseFlags(args []string) (cliFlags, error) {
 		threshold:      *threshold,
 		refreshSeconds: clampRefreshSeconds(*refresh),
 		logLevel:       resolvedLevel,
+		logFile:        strings.TrimSpace(*logFile),
 	}, nil
 }
 
@@ -127,6 +134,27 @@ func parseLogLevel(value string) (logLevel, error) {
 		return level, nil
 	}
 	return "", fmt.Errorf("invalid log level %q", value)
+}
+
+func writeStartupLog(logPath string, level logLevel) error {
+	trimmedPath := strings.TrimSpace(logPath)
+	if trimmedPath == "" {
+		return nil
+	}
+	logFile, err := os.OpenFile(trimmedPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = logFile.Close()
+	}()
+	_, err = fmt.Fprintf(
+		logFile,
+		"time=%s level=%s message=\"startup\"\n",
+		time.Now().UTC().Format(time.RFC3339),
+		level,
+	)
+	return err
 }
 
 func parseSubcommand(args []string) (string, error) {

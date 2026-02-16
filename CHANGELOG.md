@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-005 `--log-file` startup flag support to write runtime logs
+  to an operator-defined file path.
+- Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to assert
+  custom log-file creation and startup record content.
+- Added canonical startup log emission in `cmd/hypersphere/main.go` with a
+  structured `time/level/message` log line.
+- Marked `RQ-005` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `--log-file` parity tasks and
+  adding the next startup safety sub-task for `--readonly`.
 - Implemented RQ-004 `--log-level` startup flag parsing with canonical
   `debug|info|warn|error` mapping.
 - Added failing-first CLI tests in `cmd/hypersphere/main_test.go` for valid

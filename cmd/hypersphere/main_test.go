@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -108,5 +109,26 @@ func TestParseFlagsLogLevelRejectsInvalidValue(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "invalid log level") {
 		t.Fatalf("expected invalid log level error, got %v", err)
+	}
+}
+
+func TestRunWritesLogsToCustomPathWhenLogFileFlagSet(t *testing.T) {
+	logPath := filepath.Join(t.TempDir(), "hypersphere.log")
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	exitCode := run([]string{"--workflow", "migration", "--log-file", logPath}, stdout, stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with stderr %q", exitCode, stderr.String())
+	}
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("expected log file to be created, got error: %v", err)
+	}
+	logOutput := string(content)
+	if !strings.Contains(logOutput, "level=info") {
+		t.Fatalf("expected log output to include level, got %q", logOutput)
+	}
+	if !strings.Contains(logOutput, "message=\"startup\"") {
+		t.Fatalf("expected startup log message, got %q", logOutput)
 	}
 }

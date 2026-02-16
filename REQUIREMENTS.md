@@ -40,6 +40,7 @@
 ### RQ-005: Add `--log-file` startup flag
 - vSphere mapping: Operator-defined destination for runtime logs.
 - Acceptance: log records are written to custom path when flag is set.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-006: Add `--readonly` startup flag
 - vSphere mapping: Block write actions for inventory safety.
