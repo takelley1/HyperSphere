@@ -89,6 +89,9 @@ type explorerTheme struct {
 	HeaderAccentRight  string
 	EvenRowText        tcell.Color
 	OddRowText         tcell.Color
+	RowHealthy         tcell.Color
+	RowDegraded        tcell.Color
+	RowFaulted         tcell.Color
 	StatusError        string
 }
 
@@ -639,7 +642,11 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 				cell.SetBackgroundColor(r.theme.HeaderBackground)
 				cell.SetAttributes(tcell.AttrBold)
 			} else {
-				cell.SetTextColor(tableRowColor(r.theme, rowIndex))
+				dataRowIndex := rowIndex
+				if includeHeader {
+					dataRowIndex--
+				}
+				cell.SetTextColor(tableRowColor(r.theme, view, dataRowIndex))
 			}
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
@@ -902,14 +909,59 @@ func contentFrameColor(theme explorerTheme) tcell.Color {
 	return tcell.ColorAqua
 }
 
-func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
+func tableRowColor(theme explorerTheme, view tui.ResourceView, rowIndex int) tcell.Color {
 	if !theme.UseColor {
 		return tcell.ColorWhite
+	}
+	status := rowStatusAt(view, rowIndex)
+	switch classifyStatusLevel(status) {
+	case "healthy":
+		return theme.RowHealthy
+	case "degraded":
+		return theme.RowDegraded
+	case "faulted":
+		return theme.RowFaulted
 	}
 	if rowIndex%2 == 0 {
 		return theme.EvenRowText
 	}
 	return theme.OddRowText
+}
+
+func rowStatusAt(view tui.ResourceView, rowIndex int) string {
+	if rowIndex < 0 || rowIndex >= len(view.Rows) {
+		return ""
+	}
+	columnIndex := statusColumnIndex(view.Columns)
+	if columnIndex < 0 || columnIndex >= len(view.Rows[rowIndex]) {
+		return ""
+	}
+	return strings.TrimSpace(strings.ToLower(view.Rows[rowIndex][columnIndex]))
+}
+
+func statusColumnIndex(columns []string) int {
+	priority := []string{"STATUS", "CONNECTION", "POWER", "STATE"}
+	for _, target := range priority {
+		for index, column := range columns {
+			if strings.EqualFold(column, target) {
+				return index
+			}
+		}
+	}
+	return -1
+}
+
+func classifyStatusLevel(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "healthy", "ok", "connected", "on", "running", "ready", "success":
+		return "healthy"
+	case "degraded", "warn", "warning", "maintenance", "suspended":
+		return "degraded"
+	case "faulted", "error", "failed", "disconnected", "down", "critical":
+		return "faulted"
+	default:
+		return ""
+	}
 }
 
 func renderTopHeaderLine(width int, left string, center string, right string) string {
@@ -1182,6 +1234,9 @@ func readTheme() explorerTheme {
 		HeaderAccentRight:  "fuchsia",
 		EvenRowText:        tcell.ColorWhite,
 		OddRowText:         tcell.ColorLightGray,
+		RowHealthy:         tcell.ColorGreen,
+		RowDegraded:        tcell.ColorYellow,
+		RowFaulted:         tcell.ColorRed,
 		StatusError:        "[red]",
 	}
 	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
@@ -1194,6 +1249,9 @@ func readTheme() explorerTheme {
 		theme.HeaderAccentRight = ""
 		theme.EvenRowText = tcell.ColorWhite
 		theme.OddRowText = tcell.ColorWhite
+		theme.RowHealthy = tcell.ColorWhite
+		theme.RowDegraded = tcell.ColorWhite
+		theme.RowFaulted = tcell.ColorWhite
 		theme.StatusError = ""
 	}
 	return theme

@@ -226,6 +226,7 @@
 - vSphere mapping: fast health scan of vSphere objects.
 - Acceptance: healthy rows render green emphasis, degraded rows yellow, and
   faulted rows red according to canonical status field mapping.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-100: Add selected-row inversion style
 - vSphere mapping: cursor clarity in dense inventories.

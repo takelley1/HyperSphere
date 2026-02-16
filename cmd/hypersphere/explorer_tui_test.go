@@ -229,6 +229,58 @@ func TestEmitStatusWritesErrorsOnly(t *testing.T) {
 	}
 }
 
+func TestTableRowColorMapsCanonicalStatusValues(t *testing.T) {
+	theme := explorerTheme{
+		UseColor:    true,
+		EvenRowText: tcell.ColorWhite,
+		OddRowText:  tcell.ColorLightGray,
+		RowHealthy:  tcell.ColorGreen,
+		RowDegraded: tcell.ColorYellow,
+		RowFaulted:  tcell.ColorRed,
+	}
+	view := tui.ResourceView{
+		Columns: []string{"NAME", "STATUS"},
+		Rows: [][]string{
+			{"obj-a", "healthy"},
+			{"obj-b", "degraded"},
+			{"obj-c", "faulted"},
+		},
+	}
+	if color := tableRowColor(theme, view, 0); color != tcell.ColorGreen {
+		t.Fatalf("expected healthy row to render green, got %v", color)
+	}
+	if color := tableRowColor(theme, view, 1); color != tcell.ColorYellow {
+		t.Fatalf("expected degraded row to render yellow, got %v", color)
+	}
+	if color := tableRowColor(theme, view, 2); color != tcell.ColorRed {
+		t.Fatalf("expected faulted row to render red, got %v", color)
+	}
+}
+
+func TestTableRowColorFallsBackToAlternatingPaletteForUnknownStatus(t *testing.T) {
+	theme := explorerTheme{
+		UseColor:    true,
+		EvenRowText: tcell.ColorWhite,
+		OddRowText:  tcell.ColorLightGray,
+		RowHealthy:  tcell.ColorGreen,
+		RowDegraded: tcell.ColorYellow,
+		RowFaulted:  tcell.ColorRed,
+	}
+	view := tui.ResourceView{
+		Columns: []string{"NAME", "STATUS"},
+		Rows: [][]string{
+			{"obj-a", "unknown"},
+			{"obj-b", "n/a"},
+		},
+	}
+	if color := tableRowColor(theme, view, 0); color != tcell.ColorWhite {
+		t.Fatalf("expected unknown even row to use even fallback color, got %v", color)
+	}
+	if color := tableRowColor(theme, view, 1); color != tcell.ColorLightGray {
+		t.Fatalf("expected unknown odd row to use odd fallback color, got %v", color)
+	}
+}
+
 func TestRenderFooterIncludesPromptMode(t *testing.T) {
 	if !strings.Contains(renderFooter(true), "Prompt: ON") {
 		t.Fatalf("expected prompt-on indicator in footer")

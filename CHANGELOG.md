@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-099 status-color parity by adding canonical status mapping for
+  table rows: healthy (green), degraded (yellow), and faulted (red), with
+  deterministic fallback to alternating row colors when status is unknown.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  canonical status mapping and fallback row-color behavior.
+- Marked `RQ-099` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for `CONNECTION`/`POWER` status
+  mapping coverage and severity-legend hints.
 - Added and fulfilled RQ-113 by replacing the top-right ASCII text mark with a
   multiline 4D hypersphere-style logo projection in the explorer header.
 - Updated failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
