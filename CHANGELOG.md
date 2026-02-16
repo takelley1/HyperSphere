@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-009 `--headless` startup flag to hide the explorer table header row.
+- Added failing-first tests in `cmd/hypersphere/main_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` to validate CLI parsing and headerless
+  first-frame rendering behavior.
+- Wired `--headless` parsing in `cmd/hypersphere/main.go` and startup runtime
+  rendering behavior in `cmd/hypersphere/explorer_tui.go`, including row
+  selection offset and fixed-row handling without a header line.
+- Updated `DESIGN.md` by removing completed startup headless tasks and adding
+  follow-on integration coverage for headless view switching.
 - Implemented RQ-008 `--command` startup flag to route explorer directly into
   the requested resource view on first render.
 - Added failing-first tests in `cmd/hypersphere/main_test.go` and

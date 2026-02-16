@@ -194,3 +194,13 @@ func TestParseFlagsAcceptsStartupCommand(t *testing.T) {
 		t.Fatalf("expected startup command host, got %q", flags.startupCommand)
 	}
 }
+
+func TestParseFlagsHeadlessEnablesHeaderlessStartup(t *testing.T) {
+	flags, err := parseFlags([]string{"--headless"})
+	if err != nil {
+		t.Fatalf("expected --headless to parse, got error: %v", err)
+	}
+	if !flags.headless {
+		t.Fatalf("expected headless=true when --headless is passed")
+	}
+}

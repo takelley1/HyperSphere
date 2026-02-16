@@ -3,10 +3,11 @@
 ## Short-Term Goals
 
 ### CLI Startup Parity
-- [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
-- [ ] Sub-task: add startup rendering tests for `--headless` and `--crumbsless` toggles.
+- [ ] Add startup routing flag for `--crumbsless`.
+- [ ] Sub-task: add startup rendering tests for `--crumbsless` toggle behavior.
 - [ ] Sub-task: add startup command validation status when `--command` is unknown.
 - [ ] Sub-task: add startup alias coverage for `--command` values (`vm`, `vms`, `ds`).
+- [ ] Sub-task: add integration coverage for `--headless` with in-session view switching.
 
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.

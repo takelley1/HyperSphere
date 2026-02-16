@@ -20,7 +20,7 @@ func TestTableRowsIncludesMarkerColumnAndMarks(t *testing.T) {
 	}
 	rows := tableRows(view, func(id string) bool {
 		return id == "vm-b"
-	})
+	}, true)
 	if len(rows) != 3 {
 		t.Fatalf("expected header + 2 rows, got %d", len(rows))
 	}
@@ -43,7 +43,7 @@ func TestSelectionForTableOffsetsHeaderAndMarkerColumns(t *testing.T) {
 	if err := session.HandleKey("SHIFT+RIGHT"); err != nil {
 		t.Fatalf("HandleKey error: %v", err)
 	}
-	row, column := selectionForTable(session)
+	row, column := selectionForTable(session, true)
 	if row != 2 || column != 2 {
 		t.Fatalf("expected selected table position 2,2 got %d,%d", row, column)
 	}
@@ -235,5 +235,15 @@ func TestNewExplorerRuntimeWithStartupCommandSelectsInitialView(t *testing.T) {
 	}
 	if runtime.body.GetCell(0, 2).Text != "TAGS" {
 		t.Fatalf("expected host table to render immediately for startup command")
+	}
+}
+
+func TestNewExplorerRuntimeHeadlessOmitsTableHeader(t *testing.T) {
+	runtime := newExplorerRuntimeWithOptions(false, "host", true)
+	if runtime.body.GetCell(0, 0).Text != " " {
+		t.Fatalf("expected first row to start with selection marker when headless")
+	}
+	if runtime.body.GetCell(0, 1).Text != "esxi-01" {
+		t.Fatalf("expected first row to render host data when headless")
 	}
 }

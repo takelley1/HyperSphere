@@ -22,6 +22,7 @@ import (
 type cliFlags struct {
 	command        string
 	startupCommand string
+	headless       bool
 	workflow       string
 	mode           string
 	execute        bool
@@ -51,6 +52,7 @@ var (
 
 type startupFlagValues struct {
 	startupCommand *string
+	headless       *bool
 	workflow       *string
 	mode           *string
 	execute        *bool
@@ -93,7 +95,7 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 	case "deletion":
 		runDeletionWorkflow(application, cfg)
 	case "explorer":
-		runExplorerWorkflow(os.Stdout, flags.readOnly, flags.startupCommand)
+		runExplorerWorkflow(os.Stdout, flags.readOnly, flags.startupCommand, flags.headless)
 	default:
 		runMigrationWorkflow(application, cfg)
 	}
@@ -124,6 +126,7 @@ func parseFlags(args []string) (cliFlags, error) {
 	return cliFlags{
 		command:        command,
 		startupCommand: normalizeStartupCommand(*values.startupCommand),
+		headless:       *values.headless,
 		workflow:       workflow,
 		mode:           strings.TrimSpace(*values.mode),
 		execute:        *values.execute,
@@ -140,6 +143,7 @@ func newStartupFlagSet() (*flag.FlagSet, startupFlagValues) {
 	flagSet.SetOutput(io.Discard)
 	values := startupFlagValues{
 		startupCommand: flagSet.String("command", "", "startup resource view command"),
+		headless:       flagSet.Bool("headless", false, "hide table header line"),
 		workflow:       flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion"),
 		mode:           flagSet.String("mode", "all", "mode: mark, purge, or all"),
 		execute:        flagSet.Bool("execute", false, "execute mutating actions"),

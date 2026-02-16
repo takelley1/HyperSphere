@@ -21,6 +21,7 @@ type explorerRuntime struct {
 	promptState tui.PromptState
 	actionExec  *runtimeActionExecutor
 	contexts    runtimeContextManager
+	headless    bool
 	theme       explorerTheme
 	body        *tview.Table
 	status      *tview.TextView
@@ -107,28 +108,37 @@ func (c *inMemoryContextConnector) Switch(name string) error {
 	return fmt.Errorf("unknown context: %s", name)
 }
 
-func runExplorerWorkflow(output io.Writer, readOnly bool, startupCommand string) {
-	runtime := newExplorerRuntimeWithStartupCommand(readOnly, startupCommand)
+func runExplorerWorkflow(output io.Writer, readOnly bool, startupCommand string, headless bool) {
+	runtime := newExplorerRuntimeWithOptions(readOnly, startupCommand, headless)
 	if err := runtime.run(); err != nil {
 		_, _ = fmt.Fprintf(output, "tui error: %v\n", err)
 	}
 }
 
 func newExplorerRuntime() explorerRuntime {
-	return newExplorerRuntimeWithStartupCommand(false, "")
+	return newExplorerRuntimeWithOptions(false, "", false)
 }
 
 func newExplorerRuntimeWithReadOnly(readOnly bool) explorerRuntime {
-	return newExplorerRuntimeWithStartupCommand(readOnly, "")
+	return newExplorerRuntimeWithOptions(readOnly, "", false)
 }
 
 func newExplorerRuntimeWithStartupCommand(readOnly bool, startupCommand string) explorerRuntime {
+	return newExplorerRuntimeWithOptions(readOnly, startupCommand, false)
+}
+
+func newExplorerRuntimeWithOptions(
+	readOnly bool,
+	startupCommand string,
+	headless bool,
+) explorerRuntime {
 	runtime := explorerRuntime{
 		app:         tview.NewApplication(),
 		session:     tui.NewSession(defaultCatalog()),
 		promptState: tui.NewPromptState(defaultPromptHistorySize),
 		actionExec:  &runtimeActionExecutor{},
 		contexts:    newRuntimeContextManager(),
+		headless:    headless,
 		theme:       readTheme(),
 		body:        tview.NewTable(),
 		status:      tview.NewTextView(),
@@ -156,7 +166,7 @@ func startupCommandStatus(session *tui.Session, startupCommand string) string {
 
 func (r *explorerRuntime) configureWidgets() {
 	r.body.SetSelectable(true, true)
-	r.body.SetFixed(1, 1)
+	r.body.SetFixed(fixedHeaderRows(r.headless), 1)
 	r.body.SetBorders(false)
 	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
@@ -301,12 +311,13 @@ func (r *explorerRuntime) render(message string) {
 }
 
 func (r *explorerRuntime) renderTable() {
-	rows := tableRows(r.session.CurrentView(), r.session.IsMarked)
+	includeHeader := !r.headless
+	rows := tableRows(r.session.CurrentView(), r.session.IsMarked, includeHeader)
 	r.body.Clear()
 	for rowIndex, row := range rows {
 		for columnIndex, value := range row {
 			cell := tview.NewTableCell(value)
-			if rowIndex == 0 {
+			if includeHeader && rowIndex == 0 {
 				cell.SetSelectable(false)
 				cell.SetTextColor(r.theme.HeaderText)
 				cell.SetBackgroundColor(r.theme.HeaderBackground)
@@ -317,14 +328,24 @@ func (r *explorerRuntime) renderTable() {
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
 	}
-	selectedRow, selectedColumn := selectionForTable(r.session)
+	selectedRow, selectedColumn := selectionForTable(r.session, includeHeader)
 	r.body.Select(selectedRow, selectedColumn)
 }
 
-func tableRows(view tui.ResourceView, isMarked func(string) bool) [][]string {
-	rows := make([][]string, 0, len(view.Rows)+1)
-	headers := append([]string{"SEL"}, view.Columns...)
-	rows = append(rows, headers)
+func tableRows(
+	view tui.ResourceView,
+	isMarked func(string) bool,
+	includeHeader bool,
+) [][]string {
+	size := len(view.Rows)
+	if includeHeader {
+		size++
+	}
+	rows := make([][]string, 0, size)
+	if includeHeader {
+		headers := append([]string{"SEL"}, view.Columns...)
+		rows = append(rows, headers)
+	}
 	for index := 0; index < len(view.Rows); index++ {
 		marker := " "
 		if index < len(view.IDs) && isMarked(view.IDs[index]) {
@@ -336,9 +357,12 @@ func tableRows(view tui.ResourceView, isMarked func(string) bool) [][]string {
 	return rows
 }
 
-func selectionForTable(session tui.Session) (int, int) {
+func selectionForTable(session tui.Session, includeHeader bool) (int, int) {
 	view := session.CurrentView()
-	row := session.SelectedRow() + 1
+	row := session.SelectedRow()
+	if includeHeader {
+		row++
+	}
 	column := session.SelectedColumn() + 1
 	maxColumn := len(view.Columns)
 	if column > maxColumn {
@@ -354,6 +378,13 @@ func selectionForTable(session tui.Session) (int, int) {
 		row = len(view.Rows)
 	}
 	return row, column
+}
+
+func fixedHeaderRows(headless bool) int {
+	if headless {
+		return 0
+	}
+	return 1
 }
 
 func renderFooter(promptMode bool) string {
