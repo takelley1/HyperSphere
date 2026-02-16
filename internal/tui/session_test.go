@@ -392,6 +392,106 @@ func TestSessionActionFallsBackToCurrentRow(t *testing.T) {
 	}
 }
 
+func TestSessionApplyActionMigrateRequiresPlacementTarget(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("migrate", executor); err == nil {
+		t.Fatalf("expected migrate action to require a target host or datastore")
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected executor not to run when migrate target is missing")
+	}
+}
+
+func TestSessionApplyActionMigrateValidatesHostTarget(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:   []VMRow{{Name: "vm-a"}},
+			Hosts: []HostRow{{Name: "esxi-01"}},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("migrate host=missing", executor); err == nil {
+		t.Fatalf("expected migrate action to reject unknown host target")
+	}
+	if err := session.ApplyAction("migrate host=esxi-01", executor); err != nil {
+		t.Fatalf("expected known host target to pass validation: %v", err)
+	}
+	if executor.action != "migrate host=esxi-01" {
+		t.Fatalf("expected migrate action to carry placement target, got %q", executor.action)
+	}
+}
+
+func TestSessionApplyActionMigrateValidatesDatastoreTarget(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:        []VMRow{{Name: "vm-a"}},
+			Datastores: []DatastoreRow{{Name: "ds-01"}},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("migrate datastore=missing", executor); err == nil {
+		t.Fatalf("expected migrate action to reject unknown datastore target")
+	}
+	if err := session.ApplyAction("migrate datastore=ds-01", executor); err != nil {
+		t.Fatalf("expected known datastore target to pass validation: %v", err)
+	}
+	if executor.action != "migrate datastore=ds-01" {
+		t.Fatalf("expected migrate action to carry datastore target, got %q", executor.action)
+	}
+}
+
+func TestSessionApplyActionRejectsUnsupportedOptionsForNonMigrate(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on host=esxi-01", executor); err == nil {
+		t.Fatalf("expected non-migrate action options to be rejected")
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected executor not to run for invalid option usage")
+	}
+}
+
+func TestParseActionInputRejectsInvalidShapes(t *testing.T) {
+	cases := []string{
+		"",
+		"power-on invalid",
+		"power-on host=",
+		"power-on =value",
+	}
+	for _, value := range cases {
+		if _, _, err := parseActionInput(value); err == nil {
+			t.Fatalf("expected parseActionInput to reject %q", value)
+		}
+	}
+}
+
+func TestSessionApplyActionRejectsEmptyActionString(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("   ", executor); err == nil {
+		t.Fatalf("expected empty action string to return parse error")
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected executor not to run for empty action input")
+	}
+}
+
 func TestSessionApplyActionRecordsQueuedRunningAndSuccessTransitions(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

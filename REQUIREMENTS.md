@@ -560,6 +560,7 @@
 ### RQ-056: Add VM migrate action with placement target
 - vSphere mapping: live/cold migration.
 - Acceptance: migrate action requires target host or datastore and validates target existence.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-057: Add snapshot create/remove/revert actions
 - vSphere mapping: snapshot lifecycle parity.

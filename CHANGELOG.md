@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-056 by requiring VM migrate actions to include
+  exactly one placement target (`host=<name>` or `datastore=<name>`) and
+  validating target existence against known inventory rows.
+- Added failing-first coverage in `internal/tui/session_test.go` for migrate
+  target required, unknown target rejection, and successful host/datastore
+  target routing to executor action payloads.
 - Implemented and fulfilled RQ-055 by adding VM lifecycle actions (`power-on`,
   `power-off`, `reset`, `suspend`) and routing each to a distinct VM backend
   method path in runtime execution.

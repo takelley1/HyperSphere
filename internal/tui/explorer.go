@@ -620,41 +620,53 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	if s.readOnly {
 		return ErrReadOnly
 	}
-	normalized := strings.ToLower(strings.TrimSpace(action))
-	if !containsAction(s.view.Actions, normalized) {
+	actionName, options, err := parseActionInput(action)
+	if err != nil {
+		return err
+	}
+	if !containsAction(s.view.Actions, actionName) {
 		return fmt.Errorf("%w: %s", ErrInvalidAction, action)
+	}
+	executorAction := actionName
+	if actionName == "migrate" {
+		executorAction, err = s.validatedMigrateAction(options)
+		if err != nil {
+			return err
+		}
+	} else if len(options) > 0 {
+		return fmt.Errorf("%w: unsupported options for %s", ErrInvalidAction, actionName)
 	}
 	ids := s.selectedIDs()
 	if len(ids) == 0 {
 		return fmt.Errorf("%w: no selected rows", ErrInvalidAction)
 	}
-	if isDestructiveAction(normalized) && !s.consumeActionConfirmation(normalized, ids) {
+	if isDestructiveAction(actionName) && !s.consumeActionConfirmation(actionName, ids) {
 		return ErrConfirmationRequired
 	}
 	s.lastAction = actionRequest{
 		resource: s.view.Resource,
-		action:   normalized,
+		action:   executorAction,
 		ids:      append([]string{}, ids...),
 	}
 	s.hasLastAction = true
-	s.recordTransition(normalized, "queued")
-	s.recordTransition(normalized, "running")
-	retryLimit := s.actionRetryLimit(normalized)
+	s.recordTransition(actionName, "queued")
+	s.recordTransition(actionName, "running")
+	retryLimit := s.actionRetryLimit(actionName)
 	for attempt := 0; ; attempt++ {
 		started := s.now()
-		execErr := executor.Execute(s.view.Resource, normalized, ids)
+		execErr := executor.Execute(s.view.Resource, executorAction, ids)
 		if execErr == nil {
-			if timeout, ok := s.actionTimeout(normalized); ok && s.now().Sub(started) > timeout {
-				execErr = fmt.Errorf("%w: %s", ErrActionTimeout, normalized)
+			if timeout, ok := s.actionTimeout(actionName); ok && s.now().Sub(started) > timeout {
+				execErr = fmt.Errorf("%w: %s", ErrActionTimeout, actionName)
 			} else {
-				s.recordTransition(normalized, "success")
-				s.recordAudit(normalized, ids, "success", nil)
+				s.recordTransition(actionName, "success")
+				s.recordAudit(actionName, ids, "success", nil)
 				return nil
 			}
 		}
 		if !isRetriableError(execErr) || attempt >= retryLimit {
-			s.recordTransition(normalized, "failure")
-			s.recordAudit(normalized, ids, "failure", ids)
+			s.recordTransition(actionName, "failure")
+			s.recordAudit(actionName, ids, "failure", ids)
 			return execErr
 		}
 	}
@@ -1893,6 +1905,15 @@ func containsHostName(rows []HostRow, host string) bool {
 	return false
 }
 
+func containsDatastoreName(rows []DatastoreRow, datastore string) bool {
+	for _, row := range rows {
+		if row.Name == datastore {
+			return true
+		}
+	}
+	return false
+}
+
 func firstResourcePoolForCluster(rows []ResourcePoolRow, cluster string) (string, bool) {
 	for _, row := range rows {
 		if row.Cluster == cluster {
@@ -2009,6 +2030,49 @@ func sameActionRequest(left actionRequest, right actionRequest) bool {
 		}
 	}
 	return true
+}
+
+func parseActionInput(action string) (string, map[string]string, error) {
+	fields := strings.Fields(strings.TrimSpace(action))
+	if len(fields) == 0 {
+		return "", nil, fmt.Errorf("%w: empty action", ErrInvalidAction)
+	}
+	name := strings.ToLower(strings.TrimSpace(fields[0]))
+	options := map[string]string{}
+	for _, token := range fields[1:] {
+		parts := strings.SplitN(token, "=", 2)
+		if len(parts) != 2 {
+			return "", nil, fmt.Errorf("%w: invalid option %s", ErrInvalidAction, token)
+		}
+		key := strings.ToLower(strings.TrimSpace(parts[0]))
+		value := strings.TrimSpace(parts[1])
+		if key == "" || value == "" {
+			return "", nil, fmt.Errorf("%w: invalid option %s", ErrInvalidAction, token)
+		}
+		options[key] = value
+	}
+	return name, options, nil
+}
+
+func (s *Session) validatedMigrateAction(options map[string]string) (string, error) {
+	host, hasHost := options["host"]
+	datastore, hasDatastore := options["datastore"]
+	if hasHost == hasDatastore {
+		return "", fmt.Errorf(
+			"%w: migrate requires exactly one of host=<name> or datastore=<name>",
+			ErrInvalidAction,
+		)
+	}
+	if hasHost {
+		if !containsHostName(s.navigator.catalog.Hosts, host) {
+			return "", fmt.Errorf("%w: unknown host %s", ErrInvalidAction, host)
+		}
+		return fmt.Sprintf("migrate host=%s", host), nil
+	}
+	if !containsDatastoreName(s.navigator.catalog.Datastores, datastore) {
+		return "", fmt.Errorf("%w: unknown datastore %s", ErrInvalidAction, datastore)
+	}
+	return fmt.Sprintf("migrate datastore=%s", datastore), nil
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {
