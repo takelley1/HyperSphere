@@ -532,6 +532,7 @@
 ### RQ-051: Add destructive-action confirmation dialogs
 - vSphere mapping: power-off/delete/snapshot-remove safeguards.
 - Acceptance: destructive key path requires explicit confirm; deny path leaves object unchanged.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-052: Add action preview summary panel
 - vSphere mapping: bulk operation impact preview.

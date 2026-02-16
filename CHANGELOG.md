@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-051 by adding destructive-action confirmation
+  gating in action execution (`power-off`, `delete`, `revert`) with explicit
+  deny/reset support.
+- Added failing-first coverage in `internal/tui/session_test.go` for
+  confirmation-required, confirm-to-execute, and deny-path behavior.
 - Implemented and fulfilled RQ-050 by wiring per-action retry policies for
   retriable errors, while keeping non-retriable failures immediate.
 - Added failing-first coverage in `internal/tui/session_test.go` for retry

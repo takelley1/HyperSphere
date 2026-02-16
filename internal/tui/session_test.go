@@ -354,10 +354,10 @@ func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 		t.Fatalf("HandleKey returned error: %v", err)
 	}
 	executor := &fakeExecutor{}
-	if err := session.ApplyAction("power-off", executor); err != nil {
+	if err := session.ApplyAction("power-on", executor); err != nil {
 		t.Fatalf("ApplyAction returned error: %v", err)
 	}
-	if executor.resource != ResourceVM || executor.action != "power-off" {
+	if executor.resource != ResourceVM || executor.action != "power-on" {
 		t.Fatalf("unexpected execution context: %+v", executor)
 	}
 	wantIDs := []string{"vm-a", "vm-b"}
@@ -441,6 +441,60 @@ func TestSessionCancelLastActionRecordsCancelledTransition(t *testing.T) {
 	}
 	if canceler.action != "power-on" || len(canceler.ids) != 1 || canceler.ids[0] != "vm-a" {
 		t.Fatalf("expected cancel request context to match last action")
+	}
+}
+
+func TestSessionApplyActionRequiresConfirmationForDestructiveAction(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-off", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected destructive action confirmation error, got %v", err)
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected executor to not run before confirmation")
+	}
+	if err := session.ApplyAction("power-off", executor); err != nil {
+		t.Fatalf("expected second destructive action call to confirm and execute: %v", err)
+	}
+	if executor.calls != 1 {
+		t.Fatalf("expected executor to run once after confirmation")
+	}
+}
+
+func TestSessionDenyPendingActionClearsDestructiveConfirmation(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-off", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected destructive action confirmation error, got %v", err)
+	}
+	session.DenyPendingAction()
+	if err := session.ApplyAction("power-off", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected destructive action to require confirmation again after deny, got %v", err)
+	}
+	if executor.calls != 0 {
+		t.Fatalf("expected executor to remain uncalled after deny path")
+	}
+}
+
+func TestSameActionRequestMismatchBranches(t *testing.T) {
+	left := actionRequest{resource: ResourceVM, action: "power-off", ids: []string{"vm-a"}}
+	if sameActionRequest(left, actionRequest{resource: ResourceHost, action: "power-off", ids: []string{"vm-a"}}) {
+		t.Fatalf("expected resource mismatch to be false")
+	}
+	if sameActionRequest(left, actionRequest{resource: ResourceVM, action: "delete", ids: []string{"vm-a"}}) {
+		t.Fatalf("expected action mismatch to be false")
+	}
+	if sameActionRequest(left, actionRequest{resource: ResourceVM, action: "power-off", ids: []string{"vm-a", "vm-b"}}) {
+		t.Fatalf("expected id length mismatch to be false")
+	}
+	if sameActionRequest(left, actionRequest{resource: ResourceVM, action: "power-off", ids: []string{"vm-b"}}) {
+		t.Fatalf("expected id value mismatch to be false")
 	}
 }
 

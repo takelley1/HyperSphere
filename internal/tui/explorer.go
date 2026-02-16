@@ -29,6 +29,8 @@ var (
 	ErrInvalidColumns = errors.New("invalid columns")
 	// ErrActionTimeout indicates action execution exceeded configured timeout.
 	ErrActionTimeout = errors.New("action timed out")
+	// ErrConfirmationRequired indicates destructive action needs explicit confirmation.
+	ErrConfirmationRequired = errors.New("confirmation required")
 )
 
 // Resource identifies a table view namespace.
@@ -349,25 +351,27 @@ type actionRequest struct {
 
 // Session tracks interactive table state for one active view.
 type Session struct {
-	navigator       Navigator
-	view            ResourceView
-	baseView        ResourceView
-	previousView    Resource
-	selectedRow     int
-	selectedColumn  int
-	sortColumn      string
-	sortAsc         bool
-	filterText      string
-	readOnly        bool
-	marks           map[string]struct{}
-	markAnchor      int
-	columnSelection map[Resource][]string
-	transitions     []ActionTransition
-	now             func() time.Time
-	lastAction      actionRequest
-	hasLastAction   bool
-	actionTimeouts  map[string]time.Duration
-	actionRetries   map[string]int
+	navigator        Navigator
+	view             ResourceView
+	baseView         ResourceView
+	previousView     Resource
+	selectedRow      int
+	selectedColumn   int
+	sortColumn       string
+	sortAsc          bool
+	filterText       string
+	readOnly         bool
+	marks            map[string]struct{}
+	markAnchor       int
+	columnSelection  map[Resource][]string
+	transitions      []ActionTransition
+	now              func() time.Time
+	lastAction       actionRequest
+	hasLastAction    bool
+	actionTimeouts   map[string]time.Duration
+	actionRetries    map[string]int
+	pendingAction    actionRequest
+	hasPendingAction bool
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -380,18 +384,20 @@ func NewSession(catalog Catalog) Session {
 	navigator := NewNavigator(catalog)
 	view, _ := navigator.TableFor(ResourceVM)
 	return Session{
-		navigator:       navigator,
-		view:            view,
-		baseView:        view,
-		marks:           map[string]struct{}{},
-		markAnchor:      -1,
-		columnSelection: map[Resource][]string{},
-		transitions:     []ActionTransition{},
-		now:             time.Now,
-		lastAction:      actionRequest{},
-		hasLastAction:   false,
-		actionTimeouts:  map[string]time.Duration{},
-		actionRetries:   map[string]int{},
+		navigator:        navigator,
+		view:             view,
+		baseView:         view,
+		marks:            map[string]struct{}{},
+		markAnchor:       -1,
+		columnSelection:  map[Resource][]string{},
+		transitions:      []ActionTransition{},
+		now:              time.Now,
+		lastAction:       actionRequest{},
+		hasLastAction:    false,
+		actionTimeouts:   map[string]time.Duration{},
+		actionRetries:    map[string]int{},
+		pendingAction:    actionRequest{},
+		hasPendingAction: false,
 	}
 }
 
@@ -598,6 +604,9 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	if len(ids) == 0 {
 		return fmt.Errorf("%w: no selected rows", ErrInvalidAction)
 	}
+	if isDestructiveAction(normalized) && !s.consumeActionConfirmation(normalized, ids) {
+		return ErrConfirmationRequired
+	}
 	s.lastAction = actionRequest{
 		resource: s.view.Resource,
 		action:   normalized,
@@ -670,6 +679,12 @@ func (s *Session) SetActionRetryLimit(action string, retries int) {
 		return
 	}
 	s.actionRetries[normalized] = retries
+}
+
+// DenyPendingAction clears any pending destructive action confirmation.
+func (s *Session) DenyPendingAction() {
+	s.pendingAction = actionRequest{}
+	s.hasPendingAction = false
 }
 
 // CurrentView returns the current table snapshot.
@@ -1867,6 +1882,46 @@ func isRetriableError(err error) bool {
 	}
 	var retriable retriableError
 	return errors.As(err, &retriable) && retriable.Retriable()
+}
+
+func isDestructiveAction(action string) bool {
+	switch action {
+	case "power-off", "delete", "revert":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *Session) consumeActionConfirmation(action string, ids []string) bool {
+	request := actionRequest{
+		resource: s.view.Resource,
+		action:   action,
+		ids:      append([]string{}, ids...),
+	}
+	if s.hasPendingAction && sameActionRequest(s.pendingAction, request) {
+		s.pendingAction = actionRequest{}
+		s.hasPendingAction = false
+		return true
+	}
+	s.pendingAction = request
+	s.hasPendingAction = true
+	return false
+}
+
+func sameActionRequest(left actionRequest, right actionRequest) bool {
+	if left.resource != right.resource || left.action != right.action {
+		return false
+	}
+	if len(left.ids) != len(right.ids) {
+		return false
+	}
+	for index, id := range left.ids {
+		if id != right.ids[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {
