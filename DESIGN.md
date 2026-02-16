@@ -45,11 +45,12 @@
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
 - [ ] Sub-task: add compact help-line rotation when top-center hint set exceeds available lines.
 - [ ] Sub-task: add top-center help alignment checks for 80-column and 100-column terminals.
-- [ ] Sub-task: add log-mode legend wiring for `Top`/`Bottom`/paging runtime actions.
 - [ ] Sub-task: add integration coverage for `:log <object-path> target=<value>` title transitions.
 - [ ] Sub-task: add default log object-path derivation tests from selected row identity.
 - [ ] Sub-task: add log-line wrap coverage across narrow widths and long message tokens.
 - [ ] Sub-task: add level-width normalization coverage for INFO/WARN/ERROR markers.
+- [ ] Sub-task: add cross-check coverage so log legend and active scroll key bindings never drift.
+- [ ] Sub-task: add log viewport offset persistence checks across resize redraws.
 - [ ] Sub-task: add integration coverage for centered `ViewName(scope)[count]` title updates.
 - [ ] Sub-task: add overflow-indicator placement tests in divider titles (`[◀]`, `[▶]`, `[◀▶]`).
 - [ ] Sub-task: add alternate hypersphere logo variants for low-width terminals.

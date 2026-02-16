@@ -374,6 +374,9 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 		r.app.Stop()
 		return nil
 	}
+	if r.handleLogViewportControl(evt) {
+		return nil
+	}
 	command, ok := eventToHotKey(evt)
 	if !ok {
 		return evt
@@ -384,6 +387,46 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	r.emitStatus(r.session.HandleKey(command))
 	r.render("")
 	return nil
+}
+
+func (r *explorerRuntime) handleLogViewportControl(evt *tcell.EventKey) bool {
+	command, ok := logViewportCommand(evt)
+	if !ok || !r.logMode {
+		return false
+	}
+	rowOffset, columnOffset := r.body.GetOffset()
+	availableWidth := tableAvailableWidth(r.body)
+	nextOffset := computeLogViewportOffset(
+		rowOffset,
+		r.logScrollableRowCount(availableWidth),
+		r.logViewportPageSize(),
+		command,
+	)
+	r.body.SetOffset(nextOffset, columnOffset)
+	return true
+}
+
+func logViewportCommand(evt *tcell.EventKey) (string, bool) {
+	if evt == nil {
+		return "", false
+	}
+	switch evt.Key() {
+	case tcell.KeyPgUp:
+		return "pageup", true
+	case tcell.KeyPgDn:
+		return "pagedown", true
+	case tcell.KeyHome:
+		return "top", true
+	case tcell.KeyEnd:
+		return "bottom", true
+	}
+	if evt.Key() == tcell.KeyRune && evt.Modifiers() == tcell.ModNone && evt.Rune() == 'g' {
+		return "top", true
+	}
+	if evt.Key() == tcell.KeyRune && evt.Rune() == 'G' {
+		return "bottom", true
+	}
+	return "", false
 }
 
 func (r *explorerRuntime) handleRuntimeToggle(command string) bool {
@@ -1067,6 +1110,66 @@ func computeLogMessageWidth(availableWidth int) int {
 	return width
 }
 
+func (r *explorerRuntime) logScrollableRowCount(availableWidth int) int {
+	view := logResourceView(r.logEntries, availableWidth)
+	rows := tableRows(view, r.session.IsMarked, r.tableHeaderVisible())
+	scrollable := len(rows) - fixedHeaderRows(r.tableHeaderVisible())
+	if scrollable < 0 {
+		return 0
+	}
+	return scrollable
+}
+
+func (r *explorerRuntime) logViewportPageSize() int {
+	_, _, _, height := r.body.GetInnerRect()
+	pageSize := height - fixedHeaderRows(r.tableHeaderVisible())
+	if pageSize < 1 {
+		return 1
+	}
+	return pageSize
+}
+
+func (r *explorerRuntime) logViewportMaxOffset(availableWidth int) int {
+	return maxInt(
+		0,
+		r.logScrollableRowCount(availableWidth)-r.logViewportPageSize(),
+	)
+}
+
+func computeLogViewportOffset(
+	currentOffset int,
+	totalRows int,
+	pageSize int,
+	command string,
+) int {
+	if totalRows <= 0 {
+		return 0
+	}
+	if pageSize < 1 {
+		pageSize = 1
+	}
+	maxOffset := maxInt(0, totalRows-pageSize)
+	offset := currentOffset
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > maxOffset {
+		offset = maxOffset
+	}
+	switch command {
+	case "top":
+		return 0
+	case "bottom":
+		return maxOffset
+	case "pageup":
+		return maxInt(0, offset-pageSize)
+	case "pagedown":
+		return minInt(maxOffset, offset+pageSize)
+	default:
+		return offset
+	}
+}
+
 func titleResourceLabel(resource tui.Resource) string {
 	switch resource {
 	case tui.ResourceVM:
@@ -1265,6 +1368,13 @@ func renderWidthForVisibleCount(widths []int, visibleCount int, scrollStart int)
 
 func maxInt(left int, right int) int {
 	if left > right {
+		return left
+	}
+	return right
+}
+
+func minInt(left int, right int) int {
+	if left < right {
 		return left
 	}
 	return right

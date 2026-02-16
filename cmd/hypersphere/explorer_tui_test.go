@@ -595,6 +595,70 @@ func TestEventToHotKeyVimColumnMovement(t *testing.T) {
 	}
 }
 
+func TestComputeLogViewportOffsetSupportsTopBottomAndPaging(t *testing.T) {
+	totalRows := 18
+	pageSize := 5
+	if offset := computeLogViewportOffset(7, totalRows, pageSize, "top"); offset != 0 {
+		t.Fatalf("expected top to move offset to 0, got %d", offset)
+	}
+	if offset := computeLogViewportOffset(0, totalRows, pageSize, "bottom"); offset != 13 {
+		t.Fatalf("expected bottom to move offset to 13, got %d", offset)
+	}
+	if offset := computeLogViewportOffset(0, totalRows, pageSize, "pagedown"); offset != 5 {
+		t.Fatalf("expected pagedown from 0 to move offset to 5, got %d", offset)
+	}
+	if offset := computeLogViewportOffset(12, totalRows, pageSize, "pagedown"); offset != 13 {
+		t.Fatalf("expected pagedown to clamp at bottom offset 13, got %d", offset)
+	}
+	if offset := computeLogViewportOffset(13, totalRows, pageSize, "pageup"); offset != 8 {
+		t.Fatalf("expected pageup from bottom to move offset to 8, got %d", offset)
+	}
+	if offset := computeLogViewportOffset(3, totalRows, pageSize, "pageup"); offset != 0 {
+		t.Fatalf("expected pageup to clamp at top offset 0, got %d", offset)
+	}
+}
+
+func TestHandleGlobalKeyLogViewportControlsMoveToExpectedOffsets(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.startPrompt(":log")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	runtime.logEntries = make([]runtimeLogEntry, 24)
+	for index := range runtime.logEntries {
+		runtime.logEntries[index] = runtimeLogEntry{
+			Timestamp: "2026-02-16T12:00:00Z",
+			Level:     "INFO",
+			Message:   "log row",
+		}
+	}
+	runtime.body.SetRect(0, 0, 120, 10)
+	runtime.renderTableWithWidth(120)
+
+	maxOffset := runtime.logViewportMaxOffset(120)
+	pageSize := runtime.logViewportPageSize()
+	if maxOffset <= 0 || pageSize <= 0 {
+		t.Fatalf("expected positive viewport size and max offset, got max=%d page=%d", maxOffset, pageSize)
+	}
+
+	runtime.body.SetOffset(0, 0)
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyPgDn, 0, tcell.ModNone))
+	downOffset, _ := runtime.body.GetOffset()
+	if downOffset != minInt(pageSize, maxOffset) {
+		t.Fatalf("expected pagedown offset %d, got %d", minInt(pageSize, maxOffset), downOffset)
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone))
+	bottomOffset, _ := runtime.body.GetOffset()
+	if bottomOffset != maxOffset {
+		t.Fatalf("expected end key to jump to bottom offset %d, got %d", maxOffset, bottomOffset)
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone))
+	topOffset, _ := runtime.body.GetOffset()
+	if topOffset != 0 {
+		t.Fatalf("expected home key to jump to top offset 0, got %d", topOffset)
+	}
+}
+
 func TestHandleGlobalKeyCtrlWTogglesWideColumnsAndPreservesSelectedIdentity(t *testing.T) {
 	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
 	if err := runtime.session.HandleKey("DOWN"); err != nil {

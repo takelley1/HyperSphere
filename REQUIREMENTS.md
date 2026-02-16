@@ -281,6 +281,7 @@
 - vSphere mapping: navigate high-volume logs with deterministic shortcuts.
 - Acceptance: `Top`, `Bottom`, `PageUp`, and `PageDown` controls move the
   visible log window to exact expected offsets.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-106: Add compact header degradation behavior
 - vSphere mapping: preserve usability on smaller terminals.

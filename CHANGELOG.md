@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-105 log viewport controls with deterministic shortcuts for
+  `Top`, `Bottom`, `PageUp`, and `PageDown` in log mode.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  viewport offset math and runtime key-driven offset changes.
+- Marked `RQ-105` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for legend/keybinding drift
+  checks and offset persistence across resize redraws.
 - Added and fulfilled RQ-115 by removing the bottom help bar and moving
   actionable help hints into the top-center header in cyan-accented lines.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
