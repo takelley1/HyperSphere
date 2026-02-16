@@ -23,6 +23,7 @@
 - vSphere mapping: Runtime path introspection for config/log/plugins/skins files.
 - Acceptance: `info` output lists absolute paths for config, logs, dumps, skins,
   plugins, and hotkeys.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-003: Add `--refresh` startup flag
 - vSphere mapping: UI polling interval for vCenter inventory refresh.

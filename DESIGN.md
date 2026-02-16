@@ -3,10 +3,12 @@
 ## Short-Term Goals
 
 ### CLI Startup Parity
-- [ ] Add `hypersphere info` command for path introspection parity.
 - [ ] Add startup flag parity for `--refresh`, `--log-level`, and `--log-file`.
 - [ ] Add safety mode startup parity for `--readonly` and `--write`.
 - [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
+- [ ] Sub-task: implement `--refresh` parsing and minimum clamp behavior.
+- [ ] Sub-task: implement `--log-level` validation and logger mapping.
+- [ ] Sub-task: implement `--log-file` sink wiring and write-path tests.
 
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.
@@ -55,6 +57,8 @@
 - [ ] Add watch/refresh adapters for periodic updates and row identity stability.
 - [ ] Normalize model shaping so all table views share one canonical row pipeline.
 - [ ] Add data-source health state and stale-data indicators.
+- [ ] Sub-task: define canonical adapter errors for disconnected and permission-denied states.
+- [ ] Sub-task: add fake adapter fixtures for deterministic watch/update tests.
 
 ### Action Execution Pipeline
 - [ ] Add async task execution model for queued/running/success/failure states.
@@ -104,3 +108,5 @@
 - [ ] Add release criteria and acceptance checklist for k9s-parity milestones.
 - [ ] Add parity matrix mapping k9s features to vSphere analogs with completion state.
 - [ ] Add a canonical requirements ledger linking parity items to failing-test IDs.
+- [ ] Sub-task: emit machine-readable parity matrix artifact from `REQUIREMENTS.md`.
+- [ ] Sub-task: gate release checklist on parity matrix `done|validated` thresholds.

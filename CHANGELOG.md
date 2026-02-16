@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-002 `hypersphere info` command parity with runtime path introspection output.
+- Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to assert required
+  `config/logs/dumps/skins/plugins/hotkeys` keys and absolute path values.
+- Added `info` subcommand wiring in `cmd/hypersphere/main.go` plus canonical path
+  resolution under `~/.hypersphere`.
+- Marked `RQ-002` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed info-command item and adding new
+  short/medium/long-term parity subtasks.
 - Implemented RQ-001 `hypersphere version` command parity with fielded build output.
 - Added test-first CLI coverage in `cmd/hypersphere/main_test.go` to assert semantic version, commit SHA, and build date fields.
 - Refactored top-level CLI startup path into a testable `run(args, stdout, stderr)` entrypoint and isolated subcommand parsing.

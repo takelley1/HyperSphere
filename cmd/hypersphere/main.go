@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -43,6 +44,13 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 	}
 	if flags.command == "version" {
 		writeVersion(output)
+		return 0
+	}
+	if flags.command == "info" {
+		if err := writeInfo(output); err != nil {
+			_, _ = fmt.Fprintf(errOutput, "info command failed: %v\n", err)
+			return 1
+		}
 		return 0
 	}
 	cfg := config.Config{Mode: flags.mode, Execute: flags.execute, ThresholdPercent: flags.threshold}
@@ -90,7 +98,7 @@ func parseSubcommand(args []string) (string, error) {
 		return "", nil
 	}
 	command := strings.ToLower(strings.TrimSpace(args[0]))
-	if command == "version" {
+	if command == "version" || command == "info" {
 		return command, nil
 	}
 	return "", fmt.Errorf("unsupported command %q", args[0])
@@ -104,6 +112,37 @@ func writeVersion(output io.Writer) {
 		buildCommit,
 		buildDate,
 	)
+}
+
+func writeInfo(output io.Writer) error {
+	paths, err := infoPaths()
+	if err != nil {
+		return err
+	}
+	keys := []string{"config", "logs", "dumps", "skins", "plugins", "hotkeys"}
+	for _, key := range keys {
+		_, _ = fmt.Fprintf(output, "%s=%s\n", key, paths[key])
+	}
+	return nil
+}
+
+func infoPaths() (map[string]string, error) {
+	homePath, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	configRoot, err := filepath.Abs(filepath.Join(homePath, ".hypersphere"))
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{
+		"config":  filepath.Join(configRoot, "config.yaml"),
+		"logs":    filepath.Join(configRoot, "logs"),
+		"dumps":   filepath.Join(configRoot, "dumps"),
+		"skins":   filepath.Join(configRoot, "skins.yaml"),
+		"plugins": filepath.Join(configRoot, "plugins.yaml"),
+		"hotkeys": filepath.Join(configRoot, "hotkeys.yaml"),
+	}, nil
 }
 
 func runMigrationWorkflow(application app.App, cfg config.Config) {
