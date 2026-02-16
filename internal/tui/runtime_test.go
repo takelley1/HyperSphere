@@ -183,6 +183,37 @@ func TestSessionSelectionAndMarkAccessors(t *testing.T) {
 	}
 }
 
+func TestMarkCountBadgeUpdatesForMarkUnmarkAndClear(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if !strings.Contains(session.Render(), "Marks[0]") {
+		t.Fatalf("expected zero mark badge in header")
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("unexpected mark key error: %v", err)
+	}
+	if !strings.Contains(session.Render(), "Marks[1]") {
+		t.Fatalf("expected one mark badge after marking")
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("unexpected unmark key error: %v", err)
+	}
+	if !strings.Contains(session.Render(), "Marks[0]") {
+		t.Fatalf("expected zero mark badge after unmarking")
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("unexpected mark key error: %v", err)
+	}
+	if err := session.HandleKey("CTRL+\\"); err != nil {
+		t.Fatalf("unexpected clear marks key error: %v", err)
+	}
+	if !strings.Contains(session.Render(), "Marks[0]") {
+		t.Fatalf("expected zero mark badge after clear")
+	}
+}
+
 func TestArrowColumnMovementWithoutShift(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Tags: "prod"}}})
 	_ = session.ExecuteCommand(":vm")

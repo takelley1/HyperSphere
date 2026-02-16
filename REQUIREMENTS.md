@@ -146,6 +146,7 @@
 ### RQ-025: Add mark count badge in header
 - vSphere mapping: bulk action confidence.
 - Acceptance: header shows exact count of marked objects and updates after mark/unmark/clear.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-026: Add `ctrl-w` wide-column toggle
 - vSphere mapping: switch between standard and extended column sets.

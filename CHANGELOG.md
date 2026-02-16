@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-025 mark-count badge parity by rendering header mark totals as
+  `Marks[n]` and updating the count after mark, unmark, and clear flows.
+- Added failing-first runtime coverage in `internal/tui/runtime_test.go` to
+  verify header badge transitions for `0 -> 1 -> 0` and clear-mark reset via
+  `CTRL+\`.
+- Marked `RQ-025` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on short-term sub-tasks for `ctrl-w`
+  wide-column toggle state wiring and selection-preservation tests.
 - Implemented RQ-024 row-focus sync parity by wiring table selection-change events to session selection state.
 - Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go` to verify click-selected rows become hotkey/action targets.
 - Added `Session.SetSelection` clamping support in `internal/tui/explorer.go` and internal coverage for in-range, negative, high, and empty-view bounds.

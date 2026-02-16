@@ -404,7 +404,7 @@ func headerLine(
 	}
 	if sortColumn == "" {
 		return fmt.Sprintf(
-			"HyperSphere :: %s | Mode: %s | Sort: - | Marked: %d\n",
+			"HyperSphere :: %s | Mode: %s | Sort: - | Marks[%d]\n",
 			resource,
 			mode,
 			marked,
@@ -415,7 +415,7 @@ func headerLine(
 		arrow = "↓"
 	}
 	return fmt.Sprintf(
-		"HyperSphere :: %s | Mode: %s | Sort: %s%s | Marked: %d\n",
+		"HyperSphere :: %s | Mode: %s | Sort: %s%s | Marks[%d]\n",
 		resource,
 		mode,
 		sortColumn,

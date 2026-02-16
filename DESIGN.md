@@ -12,6 +12,8 @@
 - [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
 - [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
+- [ ] Sub-task: add `ctrl-w` wide-column toggle state wiring per active resource view.
+- [ ] Sub-task: add `ctrl-w` tests for preserving selected object identity across schema changes.
 - [ ] Add per-resource status badges in the header line.
 - [ ] Sub-task: add integration coverage for repeated terminal resize width changes.
 - [ ] Sub-task: add integration coverage for overflow markers across column-offset transitions.
