@@ -19,6 +19,10 @@ const compactModeWidthThreshold = 15
 const fixedTableColumns = 1
 const defaultTopHeaderWidth = 120
 const topHeaderPanelHeight = 7
+const defaultCPUPercent = 63
+const defaultCPUTrend = 1
+const defaultMEMPercent = 58
+const defaultMEMTrend = -1
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
@@ -1328,11 +1332,22 @@ func renderTopHeaderLeft(context string) string {
 			"User: n/a",
 			fmt.Sprintf("HS Version: %s", buildVersion),
 			"vCenter Version: unknown",
-			"CPU: n/a",
-			"MEM: n/a",
+			"CPU: " + formatMetricWithTrend(defaultCPUPercent, defaultCPUTrend),
+			"MEM: " + formatMetricWithTrend(defaultMEMPercent, defaultMEMTrend),
 		},
 		"\n",
 	)
+}
+
+func formatMetricWithTrend(percent int, trend int) string {
+	switch {
+	case trend > 0:
+		return fmt.Sprintf("%d%%(+)", percent)
+	case trend < 0:
+		return fmt.Sprintf("%d%%(-)", percent)
+	default:
+		return fmt.Sprintf("%d%%", percent)
+	}
 }
 
 func renderTopHeaderCenter() string {

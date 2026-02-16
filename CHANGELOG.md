@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-101 top-metrics parity by rendering `CPU` and `MEM` metadata
+  values in percent format with trend suffix support (`(+)` / `(-)`).
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  top-header CPU/MEM formatting and trend formatter behavior.
+- Marked `RQ-101` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for live metric-source wiring
+  and trend derivation from sampled values.
 - Implemented RQ-100 selected-row inversion parity by applying a deterministic
   reverse attribute style to the selected table row without mutating cell text.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

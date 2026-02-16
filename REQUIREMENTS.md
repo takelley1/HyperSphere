@@ -238,6 +238,7 @@
 - vSphere mapping: quick capacity posture at glance.
 - Acceptance: CPU and MEM values render in the top-left panel with percentage
   formatting and trend suffix support `(+)`/`(-)`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-102: Add view-specific hotkey legend switching
 - vSphere mapping: context-aware hints for inventory vs log view.

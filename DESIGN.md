@@ -44,7 +44,8 @@
 - [ ] Sub-task: add alternate hypersphere logo variants for low-width terminals.
 - [ ] Sub-task: add ASCII hypersphere symmetry checks for clipped 1-column resize steps.
 - [ ] Sub-task: replace placeholder metadata values with live cluster/user/vCenter stats.
-- [ ] Sub-task: add metadata trend suffix rendering for CPU and MEM values.
+- [ ] Sub-task: add live CPU/MEM source wiring instead of static sample metrics.
+- [ ] Sub-task: add trend-direction derivation from prior sample snapshots.
 - [ ] Sub-task: add integration coverage for multiline logo rendering during live resize.
 - [ ] Sub-task: add logo clipping assertions for odd-width terminals and 1-column deltas.
 

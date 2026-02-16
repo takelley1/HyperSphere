@@ -438,8 +438,8 @@ func TestRenderTopHeaderLeftUsesFixedMetadataLabelOrder(t *testing.T) {
 		"User: n/a",
 		"HS Version: 0.0.0",
 		"vCenter Version: unknown",
-		"CPU: n/a",
-		"MEM: n/a",
+		"CPU: 63%(+)",
+		"MEM: 58%(-)",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d metadata lines, got %d (%q)", len(want), len(lines), lines)
@@ -453,6 +453,18 @@ func TestRenderTopHeaderLeftUsesFixedMetadataLabelOrder(t *testing.T) {
 				lines[index],
 			)
 		}
+	}
+}
+
+func TestFormatMetricWithTrendSupportsPositiveNegativeAndFlatValues(t *testing.T) {
+	if value := formatMetricWithTrend(63, 1); value != "63%(+)" {
+		t.Fatalf("expected positive trend value, got %q", value)
+	}
+	if value := formatMetricWithTrend(58, -1); value != "58%(-)" {
+		t.Fatalf("expected negative trend value, got %q", value)
+	}
+	if value := formatMetricWithTrend(40, 0); value != "40%" {
+		t.Fatalf("expected flat trend value, got %q", value)
 	}
 }
 
