@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-004 `--log-level` startup flag parsing with canonical
+  `debug|info|warn|error` mapping.
+- Added failing-first CLI tests in `cmd/hypersphere/main_test.go` for valid
+  log-level mapping and invalid value parse errors.
+- Added canonical log-level parsing in `cmd/hypersphere/main.go` with explicit
+  parse-time validation and error reporting.
+- Marked `RQ-003` and `RQ-004` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` to remove completed `--log-level` startup parity work and
+  keep remaining CLI startup tasks active.
 - Implemented RQ-003 `--refresh` startup flag parsing with float-seconds support.
 - Added failing-first CLI tests in `cmd/hypersphere/main_test.go` for minimum
   clamp behavior and unchanged values above the minimum.

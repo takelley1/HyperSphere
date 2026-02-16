@@ -82,3 +82,31 @@ func TestParseFlagsRefreshKeepsConfiguredValueAboveMinimum(t *testing.T) {
 		t.Fatalf("expected refresh seconds to stay 2.75, got %.2f", flags.refreshSeconds)
 	}
 }
+
+func TestParseFlagsLogLevelMapsValidValues(t *testing.T) {
+	testCases := map[string]logLevel{
+		"debug": logLevelDebug,
+		"info":  logLevelInfo,
+		"warn":  logLevelWarn,
+		"error": logLevelError,
+	}
+	for input, expected := range testCases {
+		flags, err := parseFlags([]string{"--log-level", input})
+		if err != nil {
+			t.Fatalf("expected --log-level %q to parse, got error: %v", input, err)
+		}
+		if flags.logLevel != expected {
+			t.Fatalf("expected log level %q to map to %q, got %q", input, expected, flags.logLevel)
+		}
+	}
+}
+
+func TestParseFlagsLogLevelRejectsInvalidValue(t *testing.T) {
+	_, err := parseFlags([]string{"--log-level", "verbose"})
+	if err == nil {
+		t.Fatalf("expected invalid --log-level value to fail")
+	}
+	if !strings.Contains(err.Error(), "invalid log level") {
+		t.Fatalf("expected invalid log level error, got %v", err)
+	}
+}

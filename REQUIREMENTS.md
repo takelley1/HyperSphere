@@ -29,11 +29,13 @@
 - vSphere mapping: UI polling interval for vCenter inventory refresh.
 - Acceptance: CLI accepts a float seconds value; values below minimum are clamped
   to configured minimum.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-004: Add `--log-level` startup flag
 - vSphere mapping: Operational debugging for vCenter API workflows.
 - Acceptance: valid values map to debug/info/warn/error logger levels;
   invalid value returns a parse error.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-005: Add `--log-file` startup flag
 - vSphere mapping: Operator-defined destination for runtime logs.

@@ -25,7 +25,17 @@ type cliFlags struct {
 	execute        bool
 	threshold      int
 	refreshSeconds float64
+	logLevel       logLevel
 }
+
+type logLevel string
+
+const (
+	logLevelDebug logLevel = "debug"
+	logLevelInfo  logLevel = "info"
+	logLevelWarn  logLevel = "warn"
+	logLevelError logLevel = "error"
+)
 
 var (
 	buildVersion          = "0.0.0"
@@ -77,10 +87,15 @@ func parseFlags(args []string) (cliFlags, error) {
 	execute := flagSet.Bool("execute", false, "execute mutating actions")
 	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
 	refresh := flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds")
+	level := flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error")
 	if err := flagSet.Parse(args); err != nil {
 		return cliFlags{}, err
 	}
 	command, err := parseSubcommand(flagSet.Args())
+	if err != nil {
+		return cliFlags{}, err
+	}
+	resolvedLevel, err := parseLogLevel(*level)
 	if err != nil {
 		return cliFlags{}, err
 	}
@@ -95,6 +110,7 @@ func parseFlags(args []string) (cliFlags, error) {
 		execute:        *execute,
 		threshold:      *threshold,
 		refreshSeconds: clampRefreshSeconds(*refresh),
+		logLevel:       resolvedLevel,
 	}, nil
 }
 
@@ -103,6 +119,14 @@ func clampRefreshSeconds(refreshSeconds float64) float64 {
 		return minimumRefreshSeconds
 	}
 	return refreshSeconds
+}
+
+func parseLogLevel(value string) (logLevel, error) {
+	level := logLevel(strings.ToLower(strings.TrimSpace(value)))
+	if level == logLevelDebug || level == logLevelInfo || level == logLevelWarn || level == logLevelError {
+		return level, nil
+	}
+	return "", fmt.Errorf("invalid log level %q", value)
 }
 
 func parseSubcommand(args []string) (string, error) {

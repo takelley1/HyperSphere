@@ -3,10 +3,9 @@
 ## Short-Term Goals
 
 ### CLI Startup Parity
-- [ ] Add startup flag parity for `--refresh`, `--log-level`, and `--log-file`.
+- [ ] Add startup flag parity for `--log-file`.
 - [ ] Add safety mode startup parity for `--readonly` and `--write`.
 - [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
-- [ ] Sub-task: implement `--log-level` validation and logger mapping.
 - [ ] Sub-task: implement `--log-file` sink wiring and write-path tests.
 
 ### Table Widget Parity
