@@ -186,3 +186,19 @@ func TestRemainingBranchCoverageForMovementSortAndCells(t *testing.T) {
 		t.Fatalf("expected decorated mark without cursor, got %v", row)
 	}
 }
+
+func TestViewportHelpersBranchCoverage(t *testing.T) {
+	if start, end := viewportBounds(3, 1, 0); start != 0 || end != 3 {
+		t.Fatalf("expected full range when maxRows is invalid, got %d:%d", start, end)
+	}
+	if start, end := viewportBounds(12, -1, 10); start != 0 || end != 10 {
+		t.Fatalf("expected clamped start for negative selection, got %d:%d", start, end)
+	}
+	if start, end := viewportBounds(12, 99, 10); start != 2 || end != 12 {
+		t.Fatalf("expected clamped range for oversized selection, got %d:%d", start, end)
+	}
+	rows := [][]string{{"vm-0"}, {"vm-1"}}
+	if visible := viewportRows(rows, 1); len(visible) != 2 {
+		t.Fatalf("expected all rows when under viewport limit, got %d", len(visible))
+	}
+}

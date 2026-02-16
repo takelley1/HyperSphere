@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -182,4 +183,39 @@ func TestArrowColumnMovementWithoutShift(t *testing.T) {
 	if session.SelectedColumn() != 0 {
 		t.Fatalf("expected selected column 0 after left arrow, got %d", session.SelectedColumn())
 	}
+}
+
+func TestStickyHeaderPersistsAcrossVerticalScroll(t *testing.T) {
+	session := NewSession(Catalog{VMs: manyVMRows(12)})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	topFrame := session.Render()
+	header := "M  >  [NAME]  TAGS  CLUSTER  POWER  DATASTORE  OWNER"
+	if !strings.Contains(topFrame, header) {
+		t.Fatalf("expected header row in top frame: %s", topFrame)
+	}
+	for step := 0; step < 11; step++ {
+		if err := session.HandleKey("DOWN"); err != nil {
+			t.Fatalf("unexpected down key error: %v", err)
+		}
+	}
+	bottomFrame := session.Render()
+	if !strings.Contains(bottomFrame, header) {
+		t.Fatalf("expected sticky header row in bottom frame: %s", bottomFrame)
+	}
+	if strings.Contains(bottomFrame, "vm-00") {
+		t.Fatalf("expected scrolled body rows to change: %s", bottomFrame)
+	}
+	if !strings.Contains(bottomFrame, "vm-11") {
+		t.Fatalf("expected selected row near end to be visible: %s", bottomFrame)
+	}
+}
+
+func manyVMRows(count int) []VMRow {
+	rows := make([]VMRow, 0, count)
+	for index := 0; index < count; index++ {
+		rows = append(rows, VMRow{Name: fmt.Sprintf("vm-%02d", index)})
+	}
+	return rows
 }

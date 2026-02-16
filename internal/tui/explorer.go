@@ -372,6 +372,7 @@ func RenderInteractiveView(
 	}
 	columns := append([]string{"M", ">"}, view.Columns...)
 	rows := decorateRows(view, selectedRow, marks)
+	rows = viewportRows(rows, selectedRow)
 	widths := columnWidths(columns, rows)
 	builder.WriteString(formatCells(markColumn(columns, selectedColumn+2, sortColumn), widths))
 	for _, row := range rows {
@@ -873,6 +874,8 @@ type tableRow struct {
 	cells []string
 }
 
+const defaultBodyViewportRows = 10
+
 func columnWidths(columns []string, rows [][]string) []int {
 	widths := make([]int, len(columns))
 	for index, column := range columns {
@@ -910,4 +913,30 @@ func padRight(value string, width int) string {
 		return value
 	}
 	return value + strings.Repeat(" ", padding)
+}
+
+func viewportRows(rows [][]string, selectedRow int) [][]string {
+	if len(rows) <= defaultBodyViewportRows {
+		return rows
+	}
+	start, end := viewportBounds(len(rows), selectedRow, defaultBodyViewportRows)
+	return rows[start:end]
+}
+
+func viewportBounds(totalRows int, selectedRow int, maxRows int) (int, int) {
+	if maxRows <= 0 || totalRows <= maxRows {
+		return 0, totalRows
+	}
+	normalized := selectedRow
+	if normalized < 0 {
+		normalized = 0
+	}
+	if normalized >= totalRows {
+		normalized = totalRows - 1
+	}
+	start := normalized - maxRows + 1
+	if start < 0 {
+		start = 0
+	}
+	return start, start + maxRows
 }
