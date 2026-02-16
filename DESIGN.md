@@ -41,6 +41,8 @@
 - [ ] Add inline prompt validation feedback before submit.
 - [ ] Add contextual completion list rendering for view/action/filter commands.
 - [ ] Add ghost-text suggestion preview while typing in prompt mode.
+- [ ] Add alias-registry parse error surfacing in prompt status and startup status.
+- [ ] Add alias-registry hot-reload command for iterative alias editing.
 - [ ] Add integration coverage for help-modal lifecycle across view switches.
 - [ ] Add tab-accept behavior for first prompt suggestion.
 - [ ] Add `:ctx` completion hints for configured endpoint names.
@@ -69,6 +71,7 @@
 - [ ] Add split-pane detail drawers for selected object metadata.
 - [ ] Add search result jump list with next/previous navigation.
 - [ ] Add keyboard cheatsheet modal with per-view hotkeys.
+- [ ] Add context-scoped alias overlays so aliases can vary by active vCenter target.
 - [ ] Add pulses-style health dashboard for live utilization and alarms.
 - [ ] Add xray-style dependency explorer for VM/host/datastore/network relationships.
 - [ ] Add endpoint health probing during context reconnect to classify degraded/disconnected states.
@@ -92,6 +95,7 @@
 - [ ] Add fake govmomi-backed integration tests for view routing and table refresh.
 - [ ] Add integration tests for mark semantics and bulk action execution.
 - [ ] Add integration tests for failure handling, retries, and read-only enforcement.
+- [ ] Add integration tests for alias registry loading and optional-argument expansion.
 - [ ] Add benchmark tests for large inventory rendering and sorting.
 - [ ] Add integration tests for `:ctx` switch flow and active-view refresh behavior.
 - [ ] Add integration tests for startup `--command` view routing and first-frame rendering.

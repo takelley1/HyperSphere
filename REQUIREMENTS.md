@@ -84,6 +84,7 @@
 ### RQ-013: Add command alias registry file
 - vSphere mapping: user-defined aliases for `:vm`, `:host`, `:ds`, etc.
 - Acceptance: alias file entries resolve to canonical commands with optional arguments.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-014: Add command history traversal parity
 - vSphere mapping: repeat and edit prior explorer commands.

@@ -4,6 +4,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -209,6 +210,7 @@ func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
 		&promptState,
 		executor,
 		&contexts,
+		nil,
 		":ctx",
 	)
 
@@ -220,6 +222,57 @@ func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
 	}
 	if !strings.Contains(message, "vc-primary") {
 		t.Fatalf("expected default context list to include vc-primary, got %q", message)
+	}
+}
+
+func TestExecutePromptCommandResolvesAliasFileEntriesWithOptionalArgs(t *testing.T) {
+	aliasPath := filepath.Join(t.TempDir(), "aliases.yaml")
+	content := "go-host: :host\nrepeat: :history up\n"
+	if err := os.WriteFile(aliasPath, []byte(content), 0o600); err != nil {
+		t.Fatalf("expected alias file write to succeed: %v", err)
+	}
+	registry, err := loadCommandAliasRegistry(aliasPath)
+	if err != nil {
+		t.Fatalf("expected alias registry load to succeed: %v", err)
+	}
+	session := tui.NewSession(defaultCatalog())
+	promptState := tui.NewPromptState(20)
+	promptState.Record(":vm")
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		&registry,
+		":go-host",
+	)
+
+	if !keepRunning {
+		t.Fatalf("expected alias view command to keep runtime alive")
+	}
+	if !strings.Contains(message, "view: host") {
+		t.Fatalf("expected host view status from alias command, got %q", message)
+	}
+	if session.CurrentView().Resource != tui.ResourceHost {
+		t.Fatalf("expected alias command to select host view")
+	}
+
+	message, keepRunning = executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		&registry,
+		":repeat",
+	)
+	if !keepRunning {
+		t.Fatalf("expected alias history command to keep runtime alive")
+	}
+	if message != "history: :go-host" {
+		t.Fatalf("expected alias optional-arg command to resolve history up, got %q", message)
 	}
 }
 
@@ -240,6 +293,7 @@ func TestExecutePromptCommandCtxSelectRefreshesActiveView(t *testing.T) {
 		&promptState,
 		executor,
 		&contexts,
+		nil,
 		":ctx vc-lab",
 	)
 
@@ -264,6 +318,7 @@ func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 		&runtime.promptState,
 		runtime.actionExec,
 		&runtime.contexts,
+		nil,
 		"!power-off",
 	)
 	if !keepRunning {

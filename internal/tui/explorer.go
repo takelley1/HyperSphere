@@ -473,6 +473,7 @@ func parseCommand(command string) (Resource, error) {
 		return "", ErrMissingCommandPrefix
 	}
 	name := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(trimmed, ":")))
+	name = firstField(name)
 	if name == "" {
 		return "", fmt.Errorf("%w: empty", ErrUnknownResource)
 	}
@@ -481,6 +482,14 @@ func parseCommand(command string) (Resource, error) {
 		return "", fmt.Errorf("%w: %s", ErrUnknownResource, name)
 	}
 	return resource, nil
+}
+
+func firstField(value string) string {
+	fields := strings.Fields(value)
+	if len(fields) == 0 {
+		return ""
+	}
+	return fields[0]
 }
 
 func vmView(rows []VMRow) ResourceView {

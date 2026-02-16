@@ -339,6 +339,7 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 		&r.promptState,
 		r.actionExec,
 		&r.contexts,
+		nil,
 		r.prompt.GetText(),
 	)
 	r.endPrompt()
@@ -574,9 +575,14 @@ func executePromptCommand(
 	promptState *tui.PromptState,
 	executor *runtimeActionExecutor,
 	contexts *runtimeContextManager,
+	aliasRegistry *commandAliasRegistry,
 	line string,
 ) (string, bool) {
-	parsed, err := tui.ParseExplorerInput(line)
+	resolvedLine, err := resolveCommandAliases(aliasRegistry, line)
+	if err != nil {
+		return fmt.Sprintf("[red]command error: %s", err.Error()), true
+	}
+	parsed, err := tui.ParseExplorerInput(resolvedLine)
 	if err != nil {
 		return fmt.Sprintf("[red]command error: %s", err.Error()), true
 	}
@@ -584,6 +590,17 @@ func executePromptCommand(
 		promptState.Record(line)
 	}
 	return runCommand(session, promptState, executor, contexts, parsed)
+}
+
+func resolveCommandAliases(aliasRegistry *commandAliasRegistry, line string) (string, error) {
+	if aliasRegistry != nil {
+		return aliasRegistry.Resolve(line), nil
+	}
+	registry, err := loadDefaultCommandAliasRegistry()
+	if err != nil {
+		return "", err
+	}
+	return registry.Resolve(line), nil
 }
 
 func runCommand(

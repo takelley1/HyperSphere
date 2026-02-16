@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-02-16
+- Implemented RQ-013 file-backed command alias registry support using
+  `~/.hypersphere/aliases.yaml` with `HYPERSPHERE_ALIASES_FILE` override.
+- Added failing-first alias execution coverage in
+  `cmd/hypersphere/explorer_tui_test.go` to verify alias entries resolve to
+  canonical commands, including commands with optional arguments.
+- Added focused alias loader/parser tests in
+  `cmd/hypersphere/alias_registry_test.go` for missing-file behavior, invalid
+  entry validation, and argument-appending alias expansion.
+- Wired prompt command execution through alias resolution in
+  `cmd/hypersphere/explorer_tui.go` before parsing command kinds.
+- Added parser coverage in `internal/tui/command_test.go` and parsing support in
+  `internal/tui/explorer.go` so resource view commands accept trailing optional
+  arguments (for alias-expansion compatibility).
+- Marked `RQ-013` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with new short/medium/long-term follow-on tasks for alias
+  registry status surfacing, hot reload, context-scoped overlays, and alias
+  integration coverage.
+
 ## 2026-02-15
 - Implemented RQ-012 `ctrl-a` alias palette behavior in the explorer runtime.
 - Added failing-first runtime tests in `cmd/hypersphere/explorer_tui_test.go` to validate `ctrl-a` palette open behavior, sorted alias ordering, and alias-command execution.
