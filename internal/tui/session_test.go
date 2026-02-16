@@ -26,7 +26,22 @@ func TestVMViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "TAGS", "CLUSTER", "POWER", "DATASTORE", "OWNER", "CPU_COUNT", "MEMORY_MB", "SNAPSHOTS"}
+	want := []string{
+		"NAME",
+		"POWER",
+		"USED_CPU_PERCENT",
+		"USED_MEMORY_MB",
+		"USED_STORAGE_GB",
+		"IP_ADDRESS",
+		"DNS_NAME",
+		"CLUSTER",
+		"HOST",
+		"NETWORK",
+		"TOTAL_CPU_CORES",
+		"TOTAL_RAM_MB",
+		"LARGEST_DISK_GB",
+		"ATTACHED_STORAGE",
+	}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected vm columns: got %v want %v", view.Columns, want)
 	}
@@ -163,7 +178,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		command string
 		column  string
 	}{
-		{command: ":vm", column: "CPU_COUNT"},
+		{command: ":vm", column: "TOTAL_CPU_CORES"},
 		{command: ":lun", column: "UTIL_PERCENT"},
 		{command: ":cluster", column: "RESOURCE_POOLS"},
 		{command: ":dc", column: "CPU_PERCENT"},
@@ -236,17 +251,16 @@ func TestSessionSortHotkeysMirrorK9sPattern(t *testing.T) {
 	if view.Rows[0][0] != "vm-a" {
 		t.Fatalf("expected name sort asc first row vm-a, got %s", view.Rows[0][0])
 	}
-	if err := session.HandleKey("SHIFT+RIGHT"); err != nil {
-		t.Fatalf("HandleKey returned error: %v", err)
-	}
-	if err := session.HandleKey("SHIFT+RIGHT"); err != nil {
-		t.Fatalf("HandleKey returned error: %v", err)
+	for step := 0; step < 7; step++ {
+		if err := session.HandleKey("SHIFT+RIGHT"); err != nil {
+			t.Fatalf("HandleKey returned error: %v", err)
+		}
 	}
 	if err := session.HandleKey("SHIFT+O"); err != nil {
 		t.Fatalf("HandleKey returned error: %v", err)
 	}
 	view = session.CurrentView()
-	if view.Rows[0][2] != "c1" {
+	if view.Rows[0][7] != "c1" {
 		t.Fatalf("expected selected-column sort by cluster ascending")
 	}
 }

@@ -1,6 +1,16 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-123 by expanding VM table coverage to include runtime
+  usage and placement columns: used CPU/memory/storage, IP, DNS, cluster, host,
+  network, total CPU cores, total RAM, largest disk, and attached storage.
+- Added failing-first coverage in `internal/tui/session_test.go` for the
+  expanded VM column schema and updated compact-column expectations in
+  `cmd/hypersphere/explorer_tui_test.go`.
+- Updated `internal/tui/explorer.go` VM row model, view columns, cell mapping,
+  and sort hotkeys to support the expanded VM schema.
+- Expanded `defaultVMRows()` in `cmd/hypersphere/main.go` to seed representative
+  values for all newly added VM columns.
 - Added and fulfilled RQ-122 by converting top-center help/hotkey hints from a
   single-column list to compact multi-column rows in both table and log modes.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for

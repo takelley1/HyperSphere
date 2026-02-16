@@ -74,18 +74,27 @@ var resourceAliasMap = map[string]Resource{
 
 // VMRow represents one VM row in the resource table.
 type VMRow struct {
-	Name          string
-	Tags          string
-	Cluster       string
-	PowerState    string
-	Datastore     string
-	Owner         string
-	CPUCount      int
-	MemoryMB      int
-	Comments      string
-	Description   string
-	SnapshotCount int
-	Snapshots     []VMSnapshot
+	Name            string
+	Tags            string
+	Cluster         string
+	Host            string
+	Network         string
+	PowerState      string
+	Datastore       string
+	AttachedStorage string
+	IPAddress       string
+	DNSName         string
+	CPUCount        int
+	MemoryMB        int
+	UsedCPUPercent  int
+	UsedMemoryMB    int
+	UsedStorageGB   int
+	LargestDiskGB   int
+	Owner           string
+	Comments        string
+	Description     string
+	SnapshotCount   int
+	Snapshots       []VMSnapshot
 }
 
 // VMSnapshot stores summary fields for one VM snapshot.
@@ -652,14 +661,19 @@ func firstField(value string) string {
 func vmView(rows []VMRow) ResourceView {
 	columns := []string{
 		"NAME",
-		"TAGS",
-		"CLUSTER",
 		"POWER",
-		"DATASTORE",
-		"OWNER",
-		"CPU_COUNT",
-		"MEMORY_MB",
-		"SNAPSHOTS",
+		"USED_CPU_PERCENT",
+		"USED_MEMORY_MB",
+		"USED_STORAGE_GB",
+		"IP_ADDRESS",
+		"DNS_NAME",
+		"CLUSTER",
+		"HOST",
+		"NETWORK",
+		"TOTAL_CPU_CORES",
+		"TOTAL_RAM_MB",
+		"LARGEST_DISK_GB",
+		"ATTACHED_STORAGE",
 	}
 	return buildView(ResourceVM, columns, vmSortHotKeys(), vmActions(), rows, vmCells)
 }
@@ -808,16 +822,25 @@ func buildView[T any](
 }
 
 func vmCells(row VMRow) (string, []string) {
+	attachedStorage := defaultCell(row.AttachedStorage)
+	if attachedStorage == "-" {
+		attachedStorage = defaultCell(row.Datastore)
+	}
 	return row.Name, []string{
 		row.Name,
-		defaultCell(row.Tags),
-		defaultCell(row.Cluster),
 		defaultCell(row.PowerState),
-		defaultCell(row.Datastore),
-		defaultCell(row.Owner),
+		strconv.Itoa(row.UsedCPUPercent),
+		strconv.Itoa(row.UsedMemoryMB),
+		strconv.Itoa(row.UsedStorageGB),
+		defaultCell(row.IPAddress),
+		defaultCell(row.DNSName),
+		defaultCell(row.Cluster),
+		defaultCell(row.Host),
+		defaultCell(row.Network),
 		strconv.Itoa(row.CPUCount),
 		strconv.Itoa(row.MemoryMB),
-		strconv.Itoa(vmSnapshotCount(row)),
+		strconv.Itoa(row.LargestDiskGB),
+		attachedStorage,
 	}
 }
 
@@ -964,14 +987,19 @@ func lunUtilPercent(capacityGB int, usedGB int) int {
 func vmSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
-		"T": "TAGS",
-		"C": "CLUSTER",
 		"P": "POWER",
-		"D": "DATASTORE",
-		"W": "OWNER",
-		"U": "CPU_COUNT",
-		"M": "MEMORY_MB",
-		"S": "SNAPSHOTS",
+		"U": "USED_CPU_PERCENT",
+		"M": "USED_MEMORY_MB",
+		"G": "USED_STORAGE_GB",
+		"I": "IP_ADDRESS",
+		"D": "DNS_NAME",
+		"C": "CLUSTER",
+		"H": "HOST",
+		"W": "NETWORK",
+		"T": "TOTAL_CPU_CORES",
+		"R": "TOTAL_RAM_MB",
+		"L": "LARGEST_DISK_GB",
+		"A": "ATTACHED_STORAGE",
 	}
 }
 

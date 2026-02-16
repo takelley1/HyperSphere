@@ -289,6 +289,16 @@
 - Acceptance: center legend remains cyan-accented in color mode.
 - Status: fulfilled (2026-02-16).
 
+### RQ-123: Expand VM view with runtime capacity and identity columns
+- vSphere mapping: VM operations require immediate CPU/memory/storage usage and
+  placement visibility without opening details panes.
+- Acceptance: VM table includes columns for used CPU, used memory, used storage,
+  IP address, DNS name, cluster, host, network, total CPU cores, total RAM,
+  largest hard disk size, and attached storage target.
+- Acceptance: built-in VM sample rows populate these columns with representative
+  values for local browsing.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

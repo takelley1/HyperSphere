@@ -235,7 +235,7 @@ func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing
 		command string
 		want    []string
 	}{
-		{command: "vm", want: []string{"NAME", "POWER", "DATASTORE"}},
+		{command: "vm", want: []string{"NAME", "POWER", "ATTACHED_STORAGE"}},
 		{command: "lun", want: []string{"NAME", "DATASTORE", "USED_GB"}},
 		{command: "cluster", want: []string{"NAME", "HOSTS", "VMS"}},
 		{command: "host", want: []string{"NAME", "CLUSTER", "CONNECTION"}},

@@ -343,14 +343,14 @@ func defaultCatalog() tui.Catalog {
 
 func defaultVMRows() []tui.VMRow {
 	return []tui.VMRow{
-		{Name: "vm-a", Tags: "prod,linux", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-1", Owner: "a@example.com", CPUCount: 4, MemoryMB: 8192, SnapshotCount: 2},
-		{Name: "vm-b", Tags: "dev,windows", Cluster: "cluster-west", PowerState: "off", Datastore: "ds-2", Owner: "b@example.com", CPUCount: 2, MemoryMB: 4096, SnapshotCount: 1},
-		{Name: "vm-c", Tags: "prod,db", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-3", Owner: "c@example.com", CPUCount: 8, MemoryMB: 16384, SnapshotCount: 3},
-		{Name: "vm-d", Tags: "qa,linux", Cluster: "cluster-central", PowerState: "suspended", Datastore: "ds-4", Owner: "d@example.com", CPUCount: 2, MemoryMB: 6144, SnapshotCount: 1},
-		{Name: "vm-e", Tags: "edge,linux", Cluster: "cluster-edge", PowerState: "on", Datastore: "ds-5", Owner: "e@example.com", CPUCount: 4, MemoryMB: 8192, SnapshotCount: 0},
-		{Name: "vm-f", Tags: "dev,api", Cluster: "cluster-west", PowerState: "off", Datastore: "ds-6", Owner: "f@example.com", CPUCount: 6, MemoryMB: 12288, SnapshotCount: 2},
-		{Name: "vm-g", Tags: "ops,jump", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-7", Owner: "g@example.com", CPUCount: 2, MemoryMB: 4096, SnapshotCount: 0},
-		{Name: "vm-h", Tags: "prod,cache", Cluster: "cluster-central", PowerState: "on", Datastore: "ds-8", Owner: "h@example.com", CPUCount: 4, MemoryMB: 8192, SnapshotCount: 1},
+		{Name: "vm-a", Tags: "prod,linux", Cluster: "cluster-east", Host: "esxi-01", Network: "dvpg-prod-100", PowerState: "on", Datastore: "ds-1", AttachedStorage: "vsan-east", IPAddress: "10.10.1.21", DNSName: "vm-a.prod.local", CPUCount: 4, MemoryMB: 8192, UsedCPUPercent: 63, UsedMemoryMB: 5632, UsedStorageGB: 76, LargestDiskGB: 80, Owner: "a@example.com", SnapshotCount: 2},
+		{Name: "vm-b", Tags: "dev,windows", Cluster: "cluster-west", Host: "esxi-02", Network: "dvpg-dev-200", PowerState: "off", Datastore: "ds-2", AttachedStorage: "nfs-west", IPAddress: "10.20.2.34", DNSName: "vm-b.dev.local", CPUCount: 2, MemoryMB: 4096, UsedCPUPercent: 0, UsedMemoryMB: 0, UsedStorageGB: 48, LargestDiskGB: 60, Owner: "b@example.com", SnapshotCount: 1},
+		{Name: "vm-c", Tags: "prod,db", Cluster: "cluster-east", Host: "esxi-05", Network: "dvpg-prod-100", PowerState: "on", Datastore: "ds-3", AttachedStorage: "vvol-central", IPAddress: "10.10.1.45", DNSName: "vm-c.db.local", CPUCount: 8, MemoryMB: 16384, UsedCPUPercent: 71, UsedMemoryMB: 13240, UsedStorageGB: 220, LargestDiskGB: 200, Owner: "c@example.com", SnapshotCount: 3},
+		{Name: "vm-d", Tags: "qa,linux", Cluster: "cluster-central", Host: "esxi-03", Network: "dvpg-storage-120", PowerState: "suspended", Datastore: "ds-4", AttachedStorage: "iscsi-edge", IPAddress: "10.30.3.18", DNSName: "vm-d.qa.local", CPUCount: 2, MemoryMB: 6144, UsedCPUPercent: 9, UsedMemoryMB: 840, UsedStorageGB: 32, LargestDiskGB: 40, Owner: "d@example.com", SnapshotCount: 1},
+		{Name: "vm-e", Tags: "edge,linux", Cluster: "cluster-edge", Host: "esxi-04", Network: "dvpg-edge-trunk", PowerState: "on", Datastore: "ds-5", AttachedStorage: "ds-5", IPAddress: "172.16.40.11", DNSName: "vm-e.edge.local", CPUCount: 4, MemoryMB: 8192, UsedCPUPercent: 44, UsedMemoryMB: 2980, UsedStorageGB: 54, LargestDiskGB: 64, Owner: "e@example.com", SnapshotCount: 0},
+		{Name: "vm-f", Tags: "dev,api", Cluster: "cluster-west", Host: "esxi-06", Network: "dvpg-dev-200", PowerState: "off", Datastore: "ds-6", AttachedStorage: "ds-6", IPAddress: "10.20.2.58", DNSName: "vm-f.api.local", CPUCount: 6, MemoryMB: 12288, UsedCPUPercent: 0, UsedMemoryMB: 0, UsedStorageGB: 89, LargestDiskGB: 100, Owner: "f@example.com", SnapshotCount: 2},
+		{Name: "vm-g", Tags: "ops,jump", Cluster: "cluster-east", Host: "esxi-07", Network: "vmk-mgmt", PowerState: "on", Datastore: "ds-7", AttachedStorage: "ds-7", IPAddress: "10.50.5.7", DNSName: "vm-g.ops.local", CPUCount: 2, MemoryMB: 4096, UsedCPUPercent: 37, UsedMemoryMB: 2112, UsedStorageGB: 28, LargestDiskGB: 32, Owner: "g@example.com", SnapshotCount: 0},
+		{Name: "vm-h", Tags: "prod,cache", Cluster: "cluster-central", Host: "esxi-08", Network: "dvpg-storage-120", PowerState: "on", Datastore: "ds-8", AttachedStorage: "ds-8", IPAddress: "10.30.3.88", DNSName: "vm-h.cache.local", CPUCount: 4, MemoryMB: 8192, UsedCPUPercent: 58, UsedMemoryMB: 4760, UsedStorageGB: 66, LargestDiskGB: 80, Owner: "h@example.com", SnapshotCount: 1},
 	}
 }
 

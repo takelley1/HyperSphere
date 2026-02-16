@@ -40,6 +40,7 @@
 - [ ] Sub-task: add integration coverage for startup `--command ss` with seeded snapshot rows.
 - [ ] Sub-task: add long-string samples for newly added wide columns to stress truncation behavior.
 - [ ] Sub-task: add compact-mode assertions that widened schemas degrade to stable key columns.
+- [ ] Sub-task: add VM edge samples for multi-NIC and multi-datastore attachments in wide view.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

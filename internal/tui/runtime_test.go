@@ -30,7 +30,7 @@ func TestSessionApplyFilterAndClear(t *testing.T) {
 	if err := session.ExecuteCommand(":vm"); err != nil {
 		t.Fatalf("ExecuteCommand error: %v", err)
 	}
-	session.ApplyFilter("a@example.com")
+	session.ApplyFilter("vm-a")
 	if len(session.CurrentView().Rows) != 1 {
 		t.Fatalf("expected one filtered row")
 	}
@@ -237,7 +237,7 @@ func TestStickyHeaderPersistsAcrossVerticalScroll(t *testing.T) {
 		t.Fatalf("ExecuteCommand error: %v", err)
 	}
 	topFrame := session.Render()
-	header := "M  >  [NAME]  TAGS  CLUSTER  POWER  DATASTORE  OWNER"
+	header := "M  >  [NAME]  POWER  USED_CPU_PERCENT"
 	if !strings.Contains(topFrame, header) {
 		t.Fatalf("expected header row in top frame: %s", topFrame)
 	}

@@ -30,7 +30,7 @@ const compactHeaderCollapseWidth = 100
 const compactHeaderHideLogoWidth = 80
 
 var compactColumnsByResource = map[tui.Resource][]string{
-	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
+	tui.ResourceVM:        {"NAME", "POWER", "ATTACHED_STORAGE"},
 	tui.ResourceLUN:       {"NAME", "DATASTORE", "USED_GB"},
 	tui.ResourceCluster:   {"NAME", "HOSTS", "VMS"},
 	tui.ResourceHost:      {"NAME", "CLUSTER", "CONNECTION"},
