@@ -16,6 +16,8 @@ const (
 	CommandHelp     CommandKind = "help"
 	CommandReadOnly CommandKind = "readonly"
 	CommandLastView CommandKind = "last_view"
+	CommandHistory  CommandKind = "history"
+	CommandSuggest  CommandKind = "suggest"
 	CommandFilter   CommandKind = "filter"
 	CommandView     CommandKind = "view"
 	CommandAction   CommandKind = "action"
@@ -48,6 +50,12 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 	}
 	if trimmed == ":-" {
 		return ExplorerCommand{Kind: CommandLastView}, nil
+	}
+	if strings.HasPrefix(trimmed, ":history") {
+		return parseHistoryCommand(trimmed)
+	}
+	if strings.HasPrefix(trimmed, ":suggest ") {
+		return parseSuggestCommand(trimmed)
 	}
 	if strings.HasPrefix(trimmed, "/") {
 		return ExplorerCommand{
@@ -88,4 +96,24 @@ func parseReadOnlyCommand(line string) (ExplorerCommand, error) {
 		return ExplorerCommand{}, fmt.Errorf("%w: readonly %s", ErrInvalidAction, value)
 	}
 	return ExplorerCommand{Kind: CommandReadOnly, Value: value}, nil
+}
+
+func parseHistoryCommand(line string) (ExplorerCommand, error) {
+	fields := strings.Fields(strings.TrimPrefix(line, ":"))
+	if len(fields) != 2 || fields[0] != "history" {
+		return ExplorerCommand{}, fmt.Errorf("%w: invalid history command", ErrInvalidAction)
+	}
+	value := strings.ToLower(strings.TrimSpace(fields[1]))
+	if value != "up" && value != "down" {
+		return ExplorerCommand{}, fmt.Errorf("%w: history %s", ErrInvalidAction, value)
+	}
+	return ExplorerCommand{Kind: CommandHistory, Value: value}, nil
+}
+
+func parseSuggestCommand(line string) (ExplorerCommand, error) {
+	value := strings.TrimSpace(strings.TrimPrefix(line, ":suggest"))
+	if value == "" {
+		return ExplorerCommand{}, fmt.Errorf("%w: empty suggest prefix", ErrInvalidAction)
+	}
+	return ExplorerCommand{Kind: CommandSuggest, Value: value}, nil
 }

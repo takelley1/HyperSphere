@@ -11,7 +11,6 @@
 
 ### Prompt UX Parity
 - [ ] Add command history navigation (`UP`/`DOWN`) for prompt mode.
-- [ ] Add command suggestions for resources, aliases, and actions.
 - [ ] Add tab-complete acceptance for active suggestions.
 - [ ] Add explicit prompt mode indicator in the header/status strip.
 

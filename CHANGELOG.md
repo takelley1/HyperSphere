@@ -32,3 +32,7 @@
 - Added read-only state indicator in table headers (`Mode: RO` / `Mode: RW`) for top-level explorer visibility.
 - Added read-only runtime APIs on session state and tests for parser branches, header rendering, and action gating behavior.
 - Removed fulfilled roadmap items from `DESIGN.md` and expanded remaining short/medium/long-term subtasks.
+- Updated main CLI defaults so running the app without `--workflow` now launches explorer/TUI mode.
+- Added prompt state support for bounded history and command suggestions across resources, aliases, actions, and sort keys.
+- Added command-mode parser support for `:history up/down` and `:suggest <prefix>` and wired these into explorer runtime handling.
+- Removed fulfilled prompt-suggestion roadmap items from `DESIGN.md` and kept remaining goals/subtasks active.

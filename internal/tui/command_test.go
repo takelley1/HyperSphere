@@ -61,3 +61,32 @@ func TestParseReadOnlyCommandEdgeBranches(t *testing.T) {
 		t.Fatalf("expected invalid readonly command error")
 	}
 }
+
+func TestParseExplorerInputHistoryAndSuggest(t *testing.T) {
+	up, err := ParseExplorerInput(":history up")
+	if err != nil {
+		t.Fatalf("unexpected history parse error: %v", err)
+	}
+	if up.Kind != CommandHistory || up.Value != "up" {
+		t.Fatalf("unexpected history parse: %+v", up)
+	}
+	suggest, err := ParseExplorerInput(":suggest :v")
+	if err != nil {
+		t.Fatalf("unexpected suggest parse error: %v", err)
+	}
+	if suggest.Kind != CommandSuggest || suggest.Value != ":v" {
+		t.Fatalf("unexpected suggest parse: %+v", suggest)
+	}
+	if _, err := ParseExplorerInput(":history left"); err == nil {
+		t.Fatalf("expected invalid history direction error")
+	}
+	if _, err := parseHistoryCommand(":history"); err == nil {
+		t.Fatalf("expected invalid short history command")
+	}
+	if _, err := parseHistoryCommand(":hist up"); err == nil {
+		t.Fatalf("expected invalid history keyword")
+	}
+	if _, err := parseSuggestCommand(":suggest"); err == nil {
+		t.Fatalf("expected empty suggest prefix error")
+	}
+}

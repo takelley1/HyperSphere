@@ -44,7 +44,7 @@ func main() {
 }
 
 func parseFlags() (cliFlags, error) {
-	workflow := flag.String("workflow", "migration", "workflow: migration, deletion, or explorer")
+	workflow := flag.String("workflow", "explorer", "workflow: explorer, migration, or deletion")
 	mode := flag.String("mode", "all", "mode: mark, purge, or all")
 	execute := flag.Bool("execute", false, "execute mutating actions")
 	threshold := flag.Int("threshold", 85, "target utilization threshold percent")
@@ -74,11 +74,12 @@ func runDeletionWorkflow(application app.App, cfg config.Config) {
 func runExplorerWorkflow(input io.Reader, output io.Writer) {
 	session := tui.NewSession(defaultCatalog())
 	executor := cliActionExecutor{out: output}
+	prompt := tui.NewPromptState(200)
 	printExplorerHelp(output)
 	_, _ = fmt.Fprint(output, session.Render())
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
-		if !handleExplorerLine(&session, executor, output, scanner.Text()) {
+		if !handleExplorerLine(&session, &prompt, executor, output, scanner.Text()) {
 			return
 		}
 		_, _ = fmt.Fprint(output, session.Render())
@@ -90,6 +91,7 @@ func runExplorerWorkflow(input io.Reader, output io.Writer) {
 
 func handleExplorerLine(
 	session *tui.Session,
+	prompt *tui.PromptState,
 	executor tui.ActionExecutor,
 	output io.Writer,
 	line string,
@@ -98,6 +100,9 @@ func handleExplorerLine(
 	if err != nil {
 		emitIfError(output, err)
 		return true
+	}
+	if shouldRecordHistory(parsed.Kind) {
+		prompt.Record(line)
 	}
 	switch parsed.Kind {
 	case tui.CommandNoop:
@@ -109,6 +114,12 @@ func handleExplorerLine(
 		return true
 	case tui.CommandReadOnly:
 		applyReadOnlyMode(session, parsed.Value)
+		return true
+	case tui.CommandHistory:
+		handleHistoryCommand(prompt, parsed.Value, output)
+		return true
+	case tui.CommandSuggest:
+		handleSuggestCommand(prompt, parsed.Value, session.CurrentView(), output)
 		return true
 	case tui.CommandLastView:
 		emitIfError(output, session.LastView())
@@ -128,6 +139,10 @@ func handleExplorerLine(
 	}
 }
 
+func shouldRecordHistory(kind tui.CommandKind) bool {
+	return kind != tui.CommandNoop && kind != tui.CommandHistory
+}
+
 func applyReadOnlyMode(session *tui.Session, mode string) {
 	switch mode {
 	case "on":
@@ -137,6 +152,36 @@ func applyReadOnlyMode(session *tui.Session, mode string) {
 	default:
 		session.SetReadOnly(!session.ReadOnly())
 	}
+}
+
+func handleHistoryCommand(prompt *tui.PromptState, direction string, output io.Writer) {
+	entry, ok := readHistoryEntry(prompt, direction)
+	if !ok {
+		_, _ = fmt.Fprintln(output, "history: <none>")
+		return
+	}
+	_, _ = fmt.Fprintf(output, "history: %s\n", entry)
+}
+
+func readHistoryEntry(prompt *tui.PromptState, direction string) (string, bool) {
+	if direction == "up" {
+		return prompt.Previous()
+	}
+	return prompt.Next()
+}
+
+func handleSuggestCommand(
+	prompt *tui.PromptState,
+	prefix string,
+	view tui.ResourceView,
+	output io.Writer,
+) {
+	suggestions := prompt.Suggest(prefix, view)
+	if len(suggestions) == 0 {
+		_, _ = fmt.Fprintln(output, "suggestions: <none>")
+		return
+	}
+	_, _ = fmt.Fprintf(output, "suggestions: %s\n", strings.Join(suggestions, ", "))
 }
 
 func emitIfError(output io.Writer, err error) {
@@ -152,6 +197,7 @@ func printExplorerHelp(output io.Writer) {
 	_, _ = fmt.Fprintln(output, "Aliases: :vms :luns :hosts :ds")
 	_, _ = fmt.Fprintln(output, "Filter: /text (clear with /)")
 	_, _ = fmt.Fprintln(output, "Modes: :ro [on|off|toggle] for read-only")
+	_, _ = fmt.Fprintln(output, "Prompt: :history up/down and :suggest <prefix>")
 	_, _ = fmt.Fprintln(output, "Hotkeys: SPACE, CTRL+SPACE, CTRL+\\, J/K, SHIFT+LEFT, SHIFT+RIGHT, SHIFT+O")
 	_, _ = fmt.Fprintln(output, "Actions: !<action> (for example !power-off in :vm)")
 }
