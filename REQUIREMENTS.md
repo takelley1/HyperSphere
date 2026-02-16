@@ -52,6 +52,7 @@
 - vSphere mapping: Explicit write enable even when config defaults read-only.
 - Acceptance: when both config `readOnly=true` and `--write` is passed,
   mutating actions are permitted.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-008: Add `--command` startup flag
 - vSphere mapping: Start directly in a resource view (`vm`, `host`, `datastore`, etc.).

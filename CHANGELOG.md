@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-007 `--write` startup flag override behavior for explorer mode.
+- Added failing-first CLI tests in `cmd/hypersphere/main_test.go` to validate
+  config-driven `readOnly: true` defaults and `--write` override precedence.
+- Added startup config parsing in `cmd/hypersphere/main.go` to read
+  `~/.hypersphere/config.yaml` `readOnly` values and apply canonical precedence:
+  `--write` > `--readonly` > config default.
+- Refactored CLI flag wiring into small helper functions for startup parsing.
+- Marked `RQ-007` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `--write` startup items and adding
+  follow-on startup routing sub-tasks for `--command`, `--headless`, and
+  `--crumbsless`.
 - Implemented RQ-006 `--readonly` startup flag support for explorer sessions.
 - Added failing-first tests in `cmd/hypersphere/main_test.go` and
   `cmd/hypersphere/explorer_tui_test.go` covering flag parsing and deterministic

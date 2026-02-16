@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,6 +47,18 @@ var (
 	defaultRefreshSeconds = 2.0
 	minimumRefreshSeconds = 1.0
 )
+
+type startupFlagValues struct {
+	workflow  *string
+	mode      *string
+	execute   *bool
+	readOnly  *bool
+	write     *bool
+	threshold *int
+	refresh   *float64
+	level     *string
+	logFile   *string
+}
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
@@ -86,16 +99,7 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 }
 
 func parseFlags(args []string) (cliFlags, error) {
-	flagSet := flag.NewFlagSet("hypersphere", flag.ContinueOnError)
-	flagSet.SetOutput(io.Discard)
-	workflow := flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion")
-	mode := flagSet.String("mode", "all", "mode: mark, purge, or all")
-	execute := flagSet.Bool("execute", false, "execute mutating actions")
-	readOnly := flagSet.Bool("readonly", false, "start in read-only mode")
-	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
-	refresh := flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds")
-	level := flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error")
-	logFile := flagSet.String("log-file", "", "path to runtime log output file")
+	flagSet, values := newStartupFlagSet()
 	if err := flagSet.Parse(args); err != nil {
 		return cliFlags{}, err
 	}
@@ -103,25 +107,98 @@ func parseFlags(args []string) (cliFlags, error) {
 	if err != nil {
 		return cliFlags{}, err
 	}
-	resolvedLevel, err := parseLogLevel(*level)
+	resolvedLevel, err := parseLogLevel(*values.level)
 	if err != nil {
 		return cliFlags{}, err
 	}
-	value := strings.ToLower(strings.TrimSpace(*workflow))
-	if value != "migration" && value != "deletion" && value != "explorer" {
-		return cliFlags{}, fmt.Errorf("unsupported workflow %q", *workflow)
+	workflow, err := validateWorkflow(*values.workflow)
+	if err != nil {
+		return cliFlags{}, err
+	}
+	readOnly, err := resolveStartupReadOnly(*values.readOnly, *values.write)
+	if err != nil {
+		return cliFlags{}, err
 	}
 	return cliFlags{
 		command:        command,
-		workflow:       value,
-		mode:           strings.TrimSpace(*mode),
-		execute:        *execute,
-		readOnly:       *readOnly,
-		threshold:      *threshold,
-		refreshSeconds: clampRefreshSeconds(*refresh),
+		workflow:       workflow,
+		mode:           strings.TrimSpace(*values.mode),
+		execute:        *values.execute,
+		readOnly:       readOnly,
+		threshold:      *values.threshold,
+		refreshSeconds: clampRefreshSeconds(*values.refresh),
 		logLevel:       resolvedLevel,
-		logFile:        strings.TrimSpace(*logFile),
+		logFile:        strings.TrimSpace(*values.logFile),
 	}, nil
+}
+
+func newStartupFlagSet() (*flag.FlagSet, startupFlagValues) {
+	flagSet := flag.NewFlagSet("hypersphere", flag.ContinueOnError)
+	flagSet.SetOutput(io.Discard)
+	values := startupFlagValues{
+		workflow:  flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion"),
+		mode:      flagSet.String("mode", "all", "mode: mark, purge, or all"),
+		execute:   flagSet.Bool("execute", false, "execute mutating actions"),
+		readOnly:  flagSet.Bool("readonly", false, "start in read-only mode"),
+		write:     flagSet.Bool("write", false, "override config read-only default"),
+		threshold: flagSet.Int("threshold", 85, "target utilization threshold percent"),
+		refresh:   flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds"),
+		level:     flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error"),
+		logFile:   flagSet.String("log-file", "", "path to runtime log output file"),
+	}
+	return flagSet, values
+}
+
+func validateWorkflow(value string) (string, error) {
+	workflow := strings.ToLower(strings.TrimSpace(value))
+	if workflow == "migration" || workflow == "deletion" || workflow == "explorer" {
+		return workflow, nil
+	}
+	return "", fmt.Errorf("unsupported workflow %q", value)
+}
+
+func resolveStartupReadOnly(readOnly bool, write bool) (bool, error) {
+	if write {
+		return false, nil
+	}
+	if readOnly {
+		return true, nil
+	}
+	return readOnlyConfigDefault()
+}
+
+func readOnlyConfigDefault() (bool, error) {
+	paths, err := infoPaths()
+	if err != nil {
+		return false, err
+	}
+	content, err := os.ReadFile(paths["config"])
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return parseReadOnlyConfigValue(string(content)), nil
+}
+
+func parseReadOnlyConfigValue(content string) bool {
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "#") || !strings.Contains(trimmed, ":") {
+			continue
+		}
+		fields := strings.SplitN(trimmed, ":", 2)
+		if strings.ToLower(strings.TrimSpace(fields[0])) != "readonly" {
+			continue
+		}
+		parsed, err := strconv.ParseBool(strings.ToLower(strings.TrimSpace(fields[1])))
+		if err == nil {
+			return parsed
+		}
+	}
+	return false
 }
 
 func clampRefreshSeconds(refreshSeconds float64) float64 {

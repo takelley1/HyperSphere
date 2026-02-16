@@ -3,10 +3,10 @@
 ## Short-Term Goals
 
 ### CLI Startup Parity
-- [ ] Add safety mode startup parity for `--write` override semantics.
 - [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
-- [ ] Sub-task: add startup precedence tests for config `readOnly=true` plus `--write`.
 - [ ] Sub-task: add startup `--readonly` wiring for non-interactive workflows.
+- [ ] Sub-task: wire `--command` to initial resource selection during explorer startup.
+- [ ] Sub-task: add startup rendering tests for `--headless` and `--crumbsless` toggles.
 
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.

@@ -142,3 +142,45 @@ func TestParseFlagsReadOnlyEnablesStartupSafetyMode(t *testing.T) {
 		t.Fatalf("expected readOnly=true when --readonly is passed")
 	}
 }
+
+func TestParseFlagsUsesReadOnlyConfigDefault(t *testing.T) {
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
+	configDir := filepath.Join(homeDir, ".hypersphere")
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		t.Fatalf("expected config directory create to succeed: %v", err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.WriteFile(configPath, []byte("readOnly: true\n"), 0o600); err != nil {
+		t.Fatalf("expected config file write to succeed: %v", err)
+	}
+
+	flags, err := parseFlags(nil)
+	if err != nil {
+		t.Fatalf("expected parse without args to succeed, got error: %v", err)
+	}
+	if !flags.readOnly {
+		t.Fatalf("expected config readOnly=true to set startup read-only mode")
+	}
+}
+
+func TestParseFlagsWriteOverridesReadOnlyConfigDefault(t *testing.T) {
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
+	configDir := filepath.Join(homeDir, ".hypersphere")
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		t.Fatalf("expected config directory create to succeed: %v", err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.WriteFile(configPath, []byte("readOnly: true\n"), 0o600); err != nil {
+		t.Fatalf("expected config file write to succeed: %v", err)
+	}
+
+	flags, err := parseFlags([]string{"--write"})
+	if err != nil {
+		t.Fatalf("expected --write to parse, got error: %v", err)
+	}
+	if flags.readOnly {
+		t.Fatalf("expected --write to override config readOnly=true default")
+	}
+}
