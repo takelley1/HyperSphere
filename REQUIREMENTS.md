@@ -17,6 +17,7 @@
 ### RQ-001: Add `hypersphere version` command
 - vSphere mapping: Same runtime introspection contract as `k9s version`.
 - Acceptance: `version` subcommand prints semantic version, commit SHA, and build date fields.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-002: Add `hypersphere info` command
 - vSphere mapping: Runtime path introspection for config/log/plugins/skins files.

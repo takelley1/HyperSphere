@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-001 `hypersphere version` command parity with fielded build output.
+- Added test-first CLI coverage in `cmd/hypersphere/main_test.go` to assert semantic version, commit SHA, and build date fields.
+- Refactored top-level CLI startup path into a testable `run(args, stdout, stderr)` entrypoint and isolated subcommand parsing.
+- Marked `RQ-001` as fulfilled in `REQUIREMENTS.md`.
+- Added short-term CLI startup parity follow-on tasks in `DESIGN.md`.
 - Implemented RQ-018 `:ctx` command parity in explorer prompt mode.
 - Added parser support for `:ctx` and `:ctx <endpoint>` with validation for extra arguments.
 - Added runtime context manager plumbing with configured endpoint listing and endpoint switch handling.

@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -17,20 +18,35 @@ import (
 )
 
 type cliFlags struct {
+	command   string
 	workflow  string
 	mode      string
 	execute   bool
 	threshold int
 }
 
+var (
+	buildVersion = "0.0.0"
+	buildCommit  = "unknown"
+	buildDate    = "unknown"
+)
+
 func main() {
-	flags, err := parseFlags()
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+}
+
+func run(args []string, output io.Writer, errOutput io.Writer) int {
+	flags, err := parseFlags(args)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "flag parsing failed: %v\n", err)
-		os.Exit(1)
+		_, _ = fmt.Fprintf(errOutput, "flag parsing failed: %v\n", err)
+		return 1
+	}
+	if flags.command == "version" {
+		writeVersion(output)
+		return 0
 	}
 	cfg := config.Config{Mode: flags.mode, Execute: flags.execute, ThresholdPercent: flags.threshold}
-	application := app.New(os.Stdout)
+	application := app.New(output)
 	switch flags.workflow {
 	case "deletion":
 		runDeletionWorkflow(application, cfg)
@@ -39,19 +55,55 @@ func main() {
 	default:
 		runMigrationWorkflow(application, cfg)
 	}
+	return 0
 }
 
-func parseFlags() (cliFlags, error) {
-	workflow := flag.String("workflow", "explorer", "workflow: explorer, migration, or deletion")
-	mode := flag.String("mode", "all", "mode: mark, purge, or all")
-	execute := flag.Bool("execute", false, "execute mutating actions")
-	threshold := flag.Int("threshold", 85, "target utilization threshold percent")
-	flag.Parse()
+func parseFlags(args []string) (cliFlags, error) {
+	flagSet := flag.NewFlagSet("hypersphere", flag.ContinueOnError)
+	flagSet.SetOutput(io.Discard)
+	workflow := flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion")
+	mode := flagSet.String("mode", "all", "mode: mark, purge, or all")
+	execute := flagSet.Bool("execute", false, "execute mutating actions")
+	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
+	if err := flagSet.Parse(args); err != nil {
+		return cliFlags{}, err
+	}
+	command, err := parseSubcommand(flagSet.Args())
+	if err != nil {
+		return cliFlags{}, err
+	}
 	value := strings.ToLower(strings.TrimSpace(*workflow))
 	if value != "migration" && value != "deletion" && value != "explorer" {
 		return cliFlags{}, fmt.Errorf("unsupported workflow %q", *workflow)
 	}
-	return cliFlags{workflow: value, mode: strings.TrimSpace(*mode), execute: *execute, threshold: *threshold}, nil
+	return cliFlags{
+		command:   command,
+		workflow:  value,
+		mode:      strings.TrimSpace(*mode),
+		execute:   *execute,
+		threshold: *threshold,
+	}, nil
+}
+
+func parseSubcommand(args []string) (string, error) {
+	if len(args) == 0 {
+		return "", nil
+	}
+	command := strings.ToLower(strings.TrimSpace(args[0]))
+	if command == "version" {
+		return command, nil
+	}
+	return "", fmt.Errorf("unsupported command %q", args[0])
+}
+
+func writeVersion(output io.Writer) {
+	_, _ = fmt.Fprintf(
+		output,
+		"version=%s commit=%s buildDate=%s\n",
+		buildVersion,
+		buildCommit,
+		buildDate,
+	)
 }
 
 func runMigrationWorkflow(application app.App, cfg config.Config) {

@@ -2,6 +2,12 @@
 
 ## Short-Term Goals
 
+### CLI Startup Parity
+- [ ] Add `hypersphere info` command for path introspection parity.
+- [ ] Add startup flag parity for `--refresh`, `--log-level`, and `--log-file`.
+- [ ] Add safety mode startup parity for `--readonly` and `--write`.
+- [ ] Add startup routing flags for `--command`, `--headless`, and `--crumbsless`.
+
 ### Table Widget Parity
 - [ ] Sync table focus from mouse selection back into session row/column state.
 - [ ] Add sticky multi-column headers with sort-direction glyphs.
