@@ -56,6 +56,7 @@
 - [ ] Sub-task: add severity legend hints to the top header for color semantics.
 - [ ] Sub-task: add selected-row inversion coverage for compact headers and hidden-header mode.
 - [ ] Sub-task: add inversion-style accessibility toggle for high-contrast themes.
+- [ ] Sub-task: tune yellow selection highlight contrast against status-based row text colors.
 
 ### Header Layout Parity
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.

@@ -1645,9 +1645,9 @@ func readTheme() explorerTheme {
 		RowHealthy:         tcell.ColorGreen,
 		RowDegraded:        tcell.ColorYellow,
 		RowFaulted:         tcell.ColorRed,
-		RowSelected:        tcell.ColorDarkCyan,
-		RowMarked:          tcell.ColorDarkOliveGreen,
-		RowMarkedSelected:  tcell.ColorCadetBlue,
+		RowSelected:        tcell.ColorYellow,
+		RowMarked:          tcell.ColorYellow,
+		RowMarkedSelected:  tcell.ColorYellow,
 		StatusError:        "[red]",
 	}
 	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {

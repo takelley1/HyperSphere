@@ -315,6 +315,14 @@
   views during a session.
 - Acceptance: hidden columns can be restored without restarting the explorer.
 
+### RQ-126: Change selected-row highlight to yellow
+- vSphere mapping: selected-row visibility should be high-contrast without
+  muddy dark-green tones during active navigation and marking.
+- Acceptance: selected-row highlight color is yellow in color mode.
+- Acceptance: marked-row highlight also uses yellow to avoid dark-green
+  selection styling.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

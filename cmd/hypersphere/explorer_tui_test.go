@@ -811,6 +811,17 @@ func TestReadThemeUsesScreenshotPalettePreset(t *testing.T) {
 	}
 }
 
+func TestReadThemeUsesYellowSelectionHighlights(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	theme := readTheme()
+	if theme.RowSelected != tcell.ColorYellow {
+		t.Fatalf("expected selected row highlight yellow, got %v", theme.RowSelected)
+	}
+	if theme.RowMarked != tcell.ColorYellow {
+		t.Fatalf("expected marked row highlight yellow, got %v", theme.RowMarked)
+	}
+}
+
 func TestRenderTopHeaderWithWidthUsesScreenshotAccentColors(t *testing.T) {
 	t.Setenv("NO_COLOR", "")
 	runtime := newExplorerRuntime()
