@@ -1,6 +1,16 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-093 left metadata panel parity by rendering the top-left
+  header zone as a fixed seven-line metadata panel in the required label order:
+  `Context`, `Cluster`, `User`, `HS Version`, `vCenter Version`, `CPU`, `MEM`.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert exact metadata label order and line-by-line output.
+- Updated `cmd/hypersphere/explorer_tui.go` to render multi-line top-header
+  zones and reserve fixed header panel height for metadata visibility.
+- Marked `RQ-093` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed metadata-order item and adding
+  follow-on metadata value/trend sub-tasks.
 - Implemented RQ-107 `d` describe-panel parity in explorer runtime with a
   dedicated describe modal that opens on `d` and closes on `Esc`.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

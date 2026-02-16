@@ -19,6 +19,7 @@ const compactModeWidthThreshold = 15
 const explorerTableTitle = "HyperSphere Explorer"
 const fixedTableColumns = 1
 const defaultTopHeaderWidth = 120
+const topHeaderPanelHeight = 7
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
@@ -250,7 +251,7 @@ func (r *explorerRuntime) configureWidgets() {
 	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(r.topHeader, 1, 0, false).
+		AddItem(r.topHeader, topHeaderPanelHeight, 0, false).
 		AddItem(r.body, 0, 1, true).
 		AddItem(r.prompt, 1, 0, false)
 	if !r.crumbsless {
@@ -575,14 +576,13 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	if r.topHeader == nil {
 		return
 	}
-	r.topHeader.SetText(
-		renderTopHeaderLine(
-			normalizeTopHeaderWidth(width),
-			renderTopHeaderLeft(r.contexts.Active()),
-			renderTopHeaderCenter(),
-			renderTopHeaderRight(),
-		),
+	headerLines := renderTopHeaderLines(
+		normalizeTopHeaderWidth(width),
+		strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n"),
+		strings.Split(renderTopHeaderCenter(), "\n"),
+		strings.Split(renderTopHeaderRight(), "\n"),
 	)
+	r.topHeader.SetText(strings.Join(headerLines, "\n"))
 }
 
 func (r *explorerRuntime) renderBreadcrumb() {
@@ -1101,6 +1101,41 @@ func renderTopHeaderLine(width int, left string, center string, right string) st
 		fitHeaderRight(right, rightWidth)
 }
 
+func renderTopHeaderLines(width int, left []string, center []string, right []string) []string {
+	lineCount := maxHeaderLineCount(left, center, right)
+	lines := make([]string, 0, lineCount)
+	for index := 0; index < lineCount; index++ {
+		lines = append(
+			lines,
+			renderTopHeaderLine(
+				width,
+				topHeaderLineAt(left, index),
+				topHeaderLineAt(center, index),
+				topHeaderLineAt(right, index),
+			),
+		)
+	}
+	return lines
+}
+
+func maxHeaderLineCount(left []string, center []string, right []string) int {
+	lineCount := len(left)
+	if len(center) > lineCount {
+		lineCount = len(center)
+	}
+	if len(right) > lineCount {
+		lineCount = len(right)
+	}
+	return lineCount
+}
+
+func topHeaderLineAt(lines []string, index int) string {
+	if index < 0 || index >= len(lines) {
+		return ""
+	}
+	return lines[index]
+}
+
 func topHeaderZoneWidths(width int) (int, int, int) {
 	leftWidth := width / 3
 	centerWidth := width / 3
@@ -1144,7 +1179,18 @@ func normalizeTopHeaderWidth(width int) int {
 }
 
 func renderTopHeaderLeft(context string) string {
-	return fmt.Sprintf("Context: %s", context)
+	return strings.Join(
+		[]string{
+			fmt.Sprintf("Context: %s", context),
+			"Cluster: n/a",
+			"User: n/a",
+			fmt.Sprintf("HS Version: %s", buildVersion),
+			"vCenter Version: unknown",
+			"CPU: n/a",
+			"MEM: n/a",
+		},
+		"\n",
+	)
 }
 
 func renderTopHeaderCenter() string {

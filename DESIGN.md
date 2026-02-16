@@ -30,11 +30,12 @@
 - [ ] Add status color mapping for healthy/degraded/faulted rows.
 
 ### Header Layout Parity
-- [ ] Add fixed metadata label order for context/version/capacity fields.
 - [ ] Add right-aligned ASCII logo block with safe clipping bounds.
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
+- [ ] Sub-task: replace placeholder metadata values with live cluster/user/vCenter stats.
+- [ ] Sub-task: add metadata trend suffix rendering for CPU and MEM values.
 
 ### Rendering Performance
 - [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.

@@ -246,6 +246,32 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 	}
 }
 
+func TestRenderTopHeaderLeftUsesFixedMetadataLabelOrder(t *testing.T) {
+	lines := strings.Split(renderTopHeaderLeft("vc-primary"), "\n")
+	want := []string{
+		"Context: vc-primary",
+		"Cluster: n/a",
+		"User: n/a",
+		"HS Version: 0.0.0",
+		"vCenter Version: unknown",
+		"CPU: n/a",
+		"MEM: n/a",
+	}
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d metadata lines, got %d (%q)", len(want), len(lines), lines)
+	}
+	for index, expected := range want {
+		if lines[index] != expected {
+			t.Fatalf(
+				"expected metadata line %d to be %q, got %q",
+				index,
+				expected,
+				lines[index],
+			)
+		}
+	}
+}
+
 func TestEventToHotKeyVimColumnMovement(t *testing.T) {
 	left, ok := eventToHotKey(tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone))
 	if !ok || left != "LEFT" {

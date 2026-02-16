@@ -181,6 +181,7 @@
 - vSphere mapping: current vCenter operational context visibility.
 - Acceptance: left panel shows `Context`, `Cluster`, `User`, `HS Version`,
   `vCenter Version`, `CPU`, `MEM` in that exact order.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-094: Add center hotkey legend in angle-bracket style
 - vSphere mapping: discoverable command hints matching screenshot style.
