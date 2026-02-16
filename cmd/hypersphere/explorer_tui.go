@@ -1989,6 +1989,13 @@ func handleSimpleCommandKinds(
 		return statusFromError(session.LastView(), "switched to last view"), true, true
 	case tui.CommandFilter:
 		filterValue := strings.TrimSpace(parsed.Value)
+		if strings.HasPrefix(filterValue, "-f") {
+			fuzzyQuery := strings.TrimSpace(strings.TrimPrefix(filterValue, "-f"))
+			return statusFromError(
+				session.ApplyFuzzyFilter(fuzzyQuery),
+				fmt.Sprintf("filter: %s", parsed.Value),
+			), true, true
+		}
 		if strings.HasPrefix(filterValue, "-t") {
 			tagExpression := strings.TrimSpace(strings.TrimPrefix(filterValue, "-t"))
 			return statusFromError(

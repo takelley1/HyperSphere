@@ -505,6 +505,7 @@
 ### RQ-046: Add fuzzy filter mode
 - vSphere mapping: tolerant search in large inventories.
 - Acceptance: `/-f text` ranks results by fuzzy score and preserves stable tie ordering.
+- Status: fulfilled (2026-02-16).
 
 ## Action Execution Parity
 

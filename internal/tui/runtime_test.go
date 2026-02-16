@@ -130,6 +130,53 @@ func TestSessionApplyTagFilterBranchCoverage(t *testing.T) {
 	}
 }
 
+func TestSessionApplyFuzzyFilterRanksAndPreservesStableTieOrder(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Hosts: []HostRow{
+				{Name: "prod-edge", Tags: "env=prod"},
+				{Name: "host-prod", Tags: "env=prod"},
+				{Name: "dev-a", Tags: "env=dev"},
+				{Name: "dev-b", Tags: "env=dev"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.ApplyFuzzyFilter("prod"); err != nil {
+		t.Fatalf("ApplyFuzzyFilter error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected fuzzy filter to keep two prod matches")
+	}
+	if session.CurrentView().Rows[0][0] != "prod-edge" {
+		t.Fatalf("expected highest fuzzy score row first")
+	}
+
+	if err := session.ApplyFuzzyFilter("dev"); err != nil {
+		t.Fatalf("ApplyFuzzyFilter error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected fuzzy filter to keep two dev matches")
+	}
+	if session.CurrentView().Rows[0][0] != "dev-a" || session.CurrentView().Rows[1][0] != "dev-b" {
+		t.Fatalf("expected stable tie ordering for equal fuzzy scores")
+	}
+	if err := session.ApplyFuzzyFilter(""); err == nil {
+		t.Fatalf("expected empty fuzzy filter error")
+	}
+	if score, ok := fuzzyScore("p-r-o-d", "prod"); !ok || score <= 0 {
+		t.Fatalf("expected subsequence fuzzy score to match")
+	}
+	if _, ok := fuzzyScore("host-a", "xyz"); ok {
+		t.Fatalf("expected fuzzy score miss for unmatched query")
+	}
+	if _, ok := fuzzyScore("host-a", "   "); ok {
+		t.Fatalf("expected fuzzy score miss for empty query")
+	}
+}
+
 func TestSessionLastViewToggle(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.ExecuteCommand(":vm"); err != nil {

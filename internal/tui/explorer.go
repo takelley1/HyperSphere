@@ -662,6 +662,18 @@ func (s *Session) ApplyTagFilter(expression string) error {
 	return nil
 }
 
+// ApplyFuzzyFilter filters rows using fuzzy matching and score-based ordering.
+func (s *Session) ApplyFuzzyFilter(query string) error {
+	trimmed := strings.TrimSpace(query)
+	if trimmed == "" {
+		return fmt.Errorf("%w: empty fuzzy filter", ErrInvalidAction)
+	}
+	s.filterText = "-f " + trimmed
+	s.view = filterViewFuzzy(s.baseView, trimmed)
+	s.clampSelectedRow()
+	return nil
+}
+
 func (s *Session) applyRegexFilter(pattern string, inverse bool) error {
 	trimmed := strings.TrimSpace(pattern)
 	if trimmed == "" {
@@ -1936,6 +1948,46 @@ func filterViewTags(view ResourceView, criteria []string) ResourceView {
 	return filtered
 }
 
+func filterViewFuzzy(view ResourceView, query string) ResourceView {
+	type scoredRow struct {
+		id    string
+		cells []string
+		score int
+	}
+	scored := make([]scoredRow, 0, len(view.Rows))
+	for index, row := range view.Rows {
+		score, ok := rowFuzzyScore(row, query)
+		if !ok {
+			continue
+		}
+		id := ""
+		if index < len(view.IDs) {
+			id = view.IDs[index]
+		}
+		scored = append(scored, scoredRow{
+			id:    id,
+			cells: append([]string{}, row...),
+			score: score,
+		})
+	}
+	sort.SliceStable(scored, func(i int, j int) bool {
+		return scored[i].score > scored[j].score
+	})
+	filtered := ResourceView{
+		Resource:    view.Resource,
+		Columns:     append([]string{}, view.Columns...),
+		Rows:        make([][]string, 0, len(scored)),
+		IDs:         make([]string, 0, len(scored)),
+		SortHotKeys: view.SortHotKeys,
+		Actions:     append([]string{}, view.Actions...),
+	}
+	for _, row := range scored {
+		filtered.Rows = append(filtered.Rows, row.cells)
+		filtered.IDs = append(filtered.IDs, row.id)
+	}
+	return filtered
+}
+
 func clampSelectionIndex(value int, length int) int {
 	if length == 0 {
 		return 0
@@ -2003,6 +2055,45 @@ func rowMatchesTags(row []string, tagIndex int, criteria []string) bool {
 		}
 	}
 	return true
+}
+
+func rowFuzzyScore(row []string, query string) (int, bool) {
+	best := 0
+	matched := false
+	for _, value := range row {
+		score, ok := fuzzyScore(value, query)
+		if !ok {
+			continue
+		}
+		matched = true
+		if score > best {
+			best = score
+		}
+	}
+	return best, matched
+}
+
+func fuzzyScore(value string, query string) (int, bool) {
+	candidate := strings.ToLower(value)
+	needle := strings.ToLower(strings.TrimSpace(query))
+	if needle == "" {
+		return 0, false
+	}
+	if index := strings.Index(candidate, needle); index >= 0 {
+		score := 1000 - (index * 10) + len(needle)
+		return score, true
+	}
+	position := 0
+	score := 0
+	for _, runeValue := range needle {
+		next := strings.IndexRune(candidate[position:], runeValue)
+		if next < 0 {
+			return 0, false
+		}
+		score += 5
+		position += next + 1
+	}
+	return score, true
 }
 
 func (s *Session) vmDetailsByID(id string) (ResourceDetails, error) {

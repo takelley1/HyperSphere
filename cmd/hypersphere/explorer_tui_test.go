@@ -1340,6 +1340,42 @@ func TestExecutePromptCommandTagFilterRequiresAllPairs(t *testing.T) {
 	}
 }
 
+func TestExecutePromptCommandFuzzyFilterRanksMatches(t *testing.T) {
+	session := tui.NewSession(
+		tui.Catalog{
+			Hosts: []tui.HostRow{
+				{Name: "prod-edge", Tags: "env=prod"},
+				{Name: "host-prod", Tags: "env=prod"},
+				{Name: "dev-a", Tags: "env=dev"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"/-f prod",
+	)
+	if !keepRunning {
+		t.Fatalf("expected fuzzy filter command to keep runtime alive")
+	}
+	if message != "filter: -f prod" {
+		t.Fatalf("expected fuzzy filter status, got %q", message)
+	}
+	if len(session.CurrentView().Rows) != 2 || session.CurrentView().Rows[0][0] != "prod-edge" {
+		t.Fatalf("expected fuzzy filter to rank highest score first")
+	}
+}
+
 func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 	runtime := newExplorerRuntimeWithReadOnly(true)
 	message, keepRunning := executePromptCommand(

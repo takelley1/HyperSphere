@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-046 by adding `/-f text` fuzzy filter mode with
+  score-based match ranking and stable tie ordering.
+- Added failing-first coverage in `internal/tui/runtime_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for fuzzy ranking and tie-order
+  behavior.
 - Implemented and fulfilled RQ-045 by adding `/-t key=value,...` label-filter
   support that requires all requested tag pairs to be present in row tags.
 - Added failing-first coverage in `internal/tui/runtime_test.go` and
