@@ -53,9 +53,12 @@ func (p *PromptState) Next() (string, bool) {
 	if len(p.history) == 0 {
 		return "", false
 	}
+	if p.cursor >= len(p.history) {
+		p.cursor = len(p.history) - 1
+		return p.history[p.cursor], true
+	}
 	if p.cursor >= len(p.history)-1 {
-		p.cursor = len(p.history)
-		return "", false
+		return p.history[p.cursor], true
 	}
 	p.cursor++
 	return p.history[p.cursor], true

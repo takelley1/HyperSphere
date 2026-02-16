@@ -22,6 +22,10 @@ func TestPromptStateHistoryNavigation(t *testing.T) {
 	if !ok || entry != "!power-off" {
 		t.Fatalf("unexpected history next #1: %q", entry)
 	}
+	entry, ok = state.Next()
+	if !ok || entry != "!power-off" {
+		t.Fatalf("expected bounded history next at newest entry, got %q", entry)
+	}
 }
 
 func TestPromptStateHistoryLimitAndIgnoreBlank(t *testing.T) {
@@ -62,8 +66,9 @@ func TestPromptStateEdgeBranches(t *testing.T) {
 		t.Fatalf("expected no next history for empty state")
 	}
 	state.Record(":vm")
-	if _, ok := state.Next(); ok {
-		t.Fatalf("expected no next history when cursor is at tail")
+	entry, ok := state.Next()
+	if !ok || entry != ":vm" {
+		t.Fatalf("expected bounded next history at tail, got %q ok=%v", entry, ok)
 	}
 	if suggestions := state.Suggest("   ", ResourceView{}); suggestions != nil {
 		t.Fatalf("expected nil suggestions for blank prefix")

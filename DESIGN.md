@@ -38,6 +38,7 @@
 
 ### Prompt UX Parity
 - [ ] Add command palette help for `:history`, `:suggest`, and `:ro`.
+- [ ] Add prompt-history position badge while traversing command history.
 - [ ] Add inline prompt validation feedback before submit.
 - [ ] Add contextual completion list rendering for view/action/filter commands.
 - [ ] Add ghost-text suggestion preview while typing in prompt mode.

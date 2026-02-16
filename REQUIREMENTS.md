@@ -89,6 +89,7 @@
 ### RQ-014: Add command history traversal parity
 - vSphere mapping: repeat and edit prior explorer commands.
 - Acceptance: `:history up/down` moves cursor through bounded history without skipping entries.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-015: Add tab-complete acceptance of first suggestion
 - vSphere mapping: k9s-like prompt completion flow.
@@ -224,23 +225,23 @@
 
 ## Resource Coverage Parity (vSphere Analogs)
 
-### RQ-028: Add `:dc` datacenter resource view
+### RQ-028: Add `:dc`/`:datacenter` datacenter resource view
 - vSphere mapping: top-level inventory container.
 - Acceptance: view columns include `NAME`, `CLUSTERS`, `HOSTS`, `VMS`, `DATASTORES`.
 
-### RQ-029: Add `:rp` resource pool view
+### RQ-029: Add `:rp`/`:resourcepool` resource pool view
 - vSphere mapping: scheduler partitioning visibility.
 - Acceptance: view columns include `NAME`, `CLUSTER`, `CPU_RES`, `MEM_RES`, `VM_COUNT`.
 
-### RQ-030: Add `:network` view
+### RQ-030: Add `:network`/`:nw` view
 - vSphere mapping: distributed switch/portgroup visibility.
 - Acceptance: view columns include `NAME`, `TYPE`, `VLAN`, `SWITCH`, `ATTACHED_VMS`.
 
-### RQ-031: Add `:template` view
+### RQ-031: Add `:template`/`:tp` view
 - vSphere mapping: VM templates lifecycle.
 - Acceptance: view columns include `NAME`, `OS`, `DATASTORE`, `FOLDER`, `AGE`.
 
-### RQ-032: Add `:snapshot` view
+### RQ-032: Add `:snapshot`/`:snap`/`:ss` view
 - vSphere mapping: VM snapshot governance.
 - Acceptance: view columns include `VM`, `SNAPSHOT`, `SIZE`, `CREATED`, `AGE`, `QUIESCED`.
 

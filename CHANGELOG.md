@@ -1,6 +1,18 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-014 command-mode history traversal parity for `:history up`
+  and `:history down` with bounded, non-skipping cursor behavior.
+- Added failing-first command-runtime coverage in
+  `cmd/hypersphere/explorer_tui_test.go` to assert ordered traversal and
+  boundary clamping at both ends of prompt history.
+- Updated `internal/tui/prompt.go` history `Next()` behavior to clamp at the
+  newest entry instead of moving past bounds.
+- Updated `internal/tui/prompt_test.go` edge-branch assertions for bounded tail
+  traversal behavior.
+- Marked `RQ-014` as fulfilled in `REQUIREMENTS.md`.
+- Added a follow-on prompt UX roadmap sub-task in `DESIGN.md` for displaying
+  history traversal position.
 - Implemented RQ-013 file-backed command alias registry support using
   `~/.hypersphere/aliases.yaml` with `HYPERSPHERE_ALIASES_FILE` override.
 - Added failing-first alias execution coverage in

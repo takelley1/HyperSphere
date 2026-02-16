@@ -276,6 +276,50 @@ func TestExecutePromptCommandResolvesAliasFileEntriesWithOptionalArgs(t *testing
 	}
 }
 
+func TestExecutePromptCommandHistoryTraversalIsBoundedWithoutSkipping(t *testing.T) {
+	session := tui.NewSession(defaultCatalog())
+	promptState := tui.NewPromptState(3)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+	inputs := []string{":vm", ":host", ":datastore", ":cluster"}
+	for _, input := range inputs {
+		if _, keepRunning := executePromptCommand(
+			&session,
+			&promptState,
+			executor,
+			&contexts,
+			nil,
+			input,
+		); !keepRunning {
+			t.Fatalf("expected command %q to keep runtime alive", input)
+		}
+	}
+	assertHistoryMessage := func(command string, expected string) {
+		t.Helper()
+		message, keepRunning := executePromptCommand(
+			&session,
+			&promptState,
+			executor,
+			&contexts,
+			nil,
+			command,
+		)
+		if !keepRunning {
+			t.Fatalf("expected command %q to keep runtime alive", command)
+		}
+		if message != expected {
+			t.Fatalf("expected %q for %q, got %q", expected, command, message)
+		}
+	}
+	assertHistoryMessage(":history up", "history: :cluster")
+	assertHistoryMessage(":history up", "history: :datastore")
+	assertHistoryMessage(":history up", "history: :host")
+	assertHistoryMessage(":history up", "history: :host")
+	assertHistoryMessage(":history down", "history: :datastore")
+	assertHistoryMessage(":history down", "history: :cluster")
+	assertHistoryMessage(":history down", "history: :cluster")
+}
+
 func TestExecutePromptCommandCtxSelectRefreshesActiveView(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	if err := session.ExecuteCommand(":host"); err != nil {
