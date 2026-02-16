@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -11,13 +12,14 @@ type fakeExecutor struct {
 	resource Resource
 	action   string
 	ids      []string
+	err      error
 }
 
 func (f *fakeExecutor) Execute(resource Resource, action string, ids []string) error {
 	f.resource = resource
 	f.action = action
 	f.ids = append([]string{}, ids...)
-	return nil
+	return f.err
 }
 
 func TestVMViewColumnsAreRelevant(t *testing.T) {
@@ -340,6 +342,48 @@ func TestSessionActionFallsBackToCurrentRow(t *testing.T) {
 	wantIDs := []string{"vm-b"}
 	if !reflect.DeepEqual(executor.ids, wantIDs) {
 		t.Fatalf("unexpected selected ids: got %v want %v", executor.ids, wantIDs)
+	}
+}
+
+func TestSessionApplyActionRecordsQueuedRunningAndSuccessTransitions(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("ApplyAction returned error: %v", err)
+	}
+	transitions := session.ActionTransitions()
+	if len(transitions) != 3 {
+		t.Fatalf("expected three action transitions, got %d", len(transitions))
+	}
+	expected := []string{"queued", "running", "success"}
+	for index, status := range expected {
+		if transitions[index].Status != status {
+			t.Fatalf("expected status %q at index %d, got %q", status, index, transitions[index].Status)
+		}
+		if transitions[index].Timestamp == "" {
+			t.Fatalf("expected non-empty timestamp for transition index %d", index)
+		}
+	}
+}
+
+func TestSessionApplyActionRecordsFailureTransition(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{err: errors.New("boom")}
+	if err := session.ApplyAction("power-on", executor); err == nil {
+		t.Fatalf("expected ApplyAction to return executor error")
+	}
+	transitions := session.ActionTransitions()
+	if len(transitions) != 3 {
+		t.Fatalf("expected three action transitions, got %d", len(transitions))
+	}
+	if transitions[2].Status != "failure" {
+		t.Fatalf("expected terminal failure transition, got %q", transitions[2].Status)
 	}
 }
 

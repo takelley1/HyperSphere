@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-047 by adding task-like action transition
+  tracking in `Session.ApplyAction` with timestamped
+  `queued -> running -> success|failure` lifecycle states.
+- Added failing-first coverage in `internal/tui/session_test.go` for successful
+  and failed action-transition sequences.
 - Implemented and fulfilled RQ-046 by adding `/-f text` fuzzy filter mode with
   score-based match ranking and stable tie ordering.
 - Added failing-first coverage in `internal/tui/runtime_test.go` and

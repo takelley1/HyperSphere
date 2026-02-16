@@ -512,6 +512,7 @@
 ### RQ-047: Add async task queue model for actions
 - vSphere mapping: long-running vCenter operations.
 - Acceptance: action transitions through `queued -> running -> success|failure` with timestamps.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-048: Add per-action cancellation support
 - vSphere mapping: cancel migrates/snapshot tasks where API supports cancel.

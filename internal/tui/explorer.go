@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -310,6 +311,14 @@ type ResourceDetails struct {
 	Fields []DetailField
 }
 
+// ActionTransition stores one task-like lifecycle state transition.
+type ActionTransition struct {
+	Resource  Resource
+	Action    string
+	Status    string
+	Timestamp string
+}
+
 // ActionExecutor applies bulk actions through a VMware API adapter.
 type ActionExecutor interface {
 	Execute(resource Resource, action string, ids []string) error
@@ -336,6 +345,8 @@ type Session struct {
 	marks           map[string]struct{}
 	markAnchor      int
 	columnSelection map[Resource][]string
+	transitions     []ActionTransition
+	now             func() time.Time
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -354,6 +365,8 @@ func NewSession(catalog Catalog) Session {
 		marks:           map[string]struct{}{},
 		markAnchor:      -1,
 		columnSelection: map[Resource][]string{},
+		transitions:     []ActionTransition{},
+		now:             time.Now,
 	}
 }
 
@@ -560,7 +573,19 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	if len(ids) == 0 {
 		return fmt.Errorf("%w: no selected rows", ErrInvalidAction)
 	}
-	return executor.Execute(s.view.Resource, normalized, ids)
+	s.recordTransition(normalized, "queued")
+	s.recordTransition(normalized, "running")
+	if err := executor.Execute(s.view.Resource, normalized, ids); err != nil {
+		s.recordTransition(normalized, "failure")
+		return err
+	}
+	s.recordTransition(normalized, "success")
+	return nil
+}
+
+// ActionTransitions returns the recorded action lifecycle transitions.
+func (s *Session) ActionTransitions() []ActionTransition {
+	return append([]ActionTransition{}, s.transitions...)
 }
 
 // CurrentView returns the current table snapshot.
@@ -1728,6 +1753,15 @@ func indexOfID(ids []string, target string) int {
 		}
 	}
 	return -1
+}
+
+func (s *Session) recordTransition(action string, status string) {
+	s.transitions = append(s.transitions, ActionTransition{
+		Resource:  s.view.Resource,
+		Action:    action,
+		Status:    status,
+		Timestamp: s.now().UTC().Format(time.RFC3339Nano),
+	})
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {
