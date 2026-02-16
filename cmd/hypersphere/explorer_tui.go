@@ -63,6 +63,8 @@ type explorerRuntime struct {
 	wideColumns   bool
 	headerVisible bool
 	logMode       bool
+	logObjectPath string
+	logTarget     string
 }
 
 type runtimeActionExecutor struct {
@@ -511,16 +513,52 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 }
 
 func (r *explorerRuntime) handleLocalPromptCommand(line string) (string, bool) {
-	switch strings.ToLower(strings.TrimSpace(line)) {
+	fields := strings.Fields(strings.TrimSpace(line))
+	if len(fields) == 0 {
+		return "", false
+	}
+	switch strings.ToLower(fields[0]) {
 	case ":log", ":logs":
 		r.logMode = true
+		r.logObjectPath, r.logTarget = resolveLogCommandArguments(r.session, fields[1:])
 		return "view: logs", true
 	case ":table":
 		r.logMode = false
+		r.logObjectPath = ""
+		r.logTarget = ""
 		return fmt.Sprintf("view: %s", r.session.CurrentView().Resource), true
 	default:
 		return "", false
 	}
+}
+
+func resolveLogCommandArguments(
+	session tui.Session,
+	fields []string,
+) (string, string) {
+	objectPath := defaultLogObjectPath(session)
+	target := ""
+	for _, field := range fields {
+		trimmed := strings.TrimSpace(field)
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "target=") {
+			target = strings.TrimSpace(trimmed[len("target="):])
+			continue
+		}
+		if !strings.Contains(trimmed, "=") {
+			objectPath = trimmed
+		}
+	}
+	return objectPath, target
+}
+
+func defaultLogObjectPath(session tui.Session) string {
+	view := session.CurrentView()
+	selected := session.SelectedRow()
+	if selected >= 0 && selected < len(view.IDs) {
+		return fmt.Sprintf("%s/%s", view.Resource, view.IDs[selected])
+	}
+	return string(view.Resource)
 }
 
 func (r *explorerRuntime) handlePromptHistory(evt *tcell.EventKey) *tcell.EventKey {
@@ -651,7 +689,7 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 		columnOffset,
 		fixedTableColumns,
 	)
-	r.body.SetTitle(composeTableTitle(view, leftOverflow, rightOverflow))
+	r.body.SetTitle(composeRuntimeTitle(r, view, leftOverflow, rightOverflow))
 	r.body.Clear()
 	for rowIndex, row := range rows {
 		for columnIndex, value := range row {
@@ -909,6 +947,30 @@ func composeTableTitle(
 		title += fmt.Sprintf(" [%s]", indicators)
 	}
 	return fmt.Sprintf(" ─ %s ─ ", title)
+}
+
+func composeRuntimeTitle(
+	runtime *explorerRuntime,
+	view tui.ResourceView,
+	leftOverflow bool,
+	rightOverflow bool,
+) string {
+	if runtime != nil && runtime.logMode {
+		return composeLogTitle(runtime.logObjectPath, runtime.logTarget)
+	}
+	return composeTableTitle(view, leftOverflow, rightOverflow)
+}
+
+func composeLogTitle(objectPath string, target string) string {
+	path := strings.TrimSpace(objectPath)
+	if path == "" {
+		path = "unknown"
+	}
+	resolvedTarget := strings.TrimSpace(target)
+	if resolvedTarget == "" {
+		return fmt.Sprintf(" ─ Logs %s ─ ", path)
+	}
+	return fmt.Sprintf(" ─ Logs %s (target=%s) ─ ", path, resolvedTarget)
 }
 
 func titleResourceLabel(resource tui.Resource) string {
@@ -1221,7 +1283,11 @@ func promptValidationMessage(text string) string {
 
 func isLocalPromptCommand(trimmed string) bool {
 	value := strings.ToLower(strings.TrimSpace(trimmed))
-	return value == ":log" || value == ":logs" || value == ":table"
+	return value == ":table" ||
+		value == ":log" ||
+		value == ":logs" ||
+		strings.HasPrefix(value, ":log ") ||
+		strings.HasPrefix(value, ":logs ")
 }
 
 func isPendingPromptInput(raw string, trimmed string) bool {

@@ -178,6 +178,24 @@ func TestComposeTableTitleAddsDividerSegmentsOnBothSides(t *testing.T) {
 	}
 }
 
+func TestComposeLogTitleIncludesObjectPathAndTarget(t *testing.T) {
+	title := composeLogTitle("vm/vm-a", "vmware.log")
+	if !strings.Contains(title, "Logs vm/vm-a (target=vmware.log)") {
+		t.Fatalf("expected log title with object path and target, got %q", title)
+	}
+}
+
+func TestHandlePromptDoneLogCommandSetsLogFrameTitleWithTarget(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.startPrompt(":log vm/vm-a target=vmware.log")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+	title := runtime.body.GetTitle()
+	if !strings.Contains(title, "Logs vm/vm-a (target=vmware.log)") {
+		t.Fatalf("expected log frame title with target, got %q", title)
+	}
+}
+
 func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing.T) {
 	testCases := []struct {
 		command string

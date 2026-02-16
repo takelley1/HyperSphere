@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-103 log-view title parity by adding log frame title rendering
+  in the format `Logs <object-path> (target=<value>)` when a sub-target is set.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  log title formatting and prompt-driven `:log ... target=...` runtime behavior.
+- Marked `RQ-103` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for log-title transition tests
+  and default object-path derivation from selected table row identity.
 - Implemented RQ-102 view-specific legend switching by adding prompt-driven log
   mode (`:log`/`:logs`) and table mode (`:table`) toggles that swap center
   header legends between table commands and log-navigation keys.

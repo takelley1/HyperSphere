@@ -38,8 +38,9 @@
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
-- [ ] Sub-task: add integration coverage for prompt-driven `:log`/`:table` legend switching.
 - [ ] Sub-task: add log-mode legend wiring for `Top`/`Bottom`/paging runtime actions.
+- [ ] Sub-task: add integration coverage for `:log <object-path> target=<value>` title transitions.
+- [ ] Sub-task: add default log object-path derivation tests from selected row identity.
 - [ ] Sub-task: add integration coverage for centered `ViewName(scope)[count]` title updates.
 - [ ] Sub-task: add overflow-indicator placement tests in divider titles (`[◀]`, `[▶]`, `[◀▶]`).
 - [ ] Sub-task: add alternate hypersphere logo variants for low-width terminals.

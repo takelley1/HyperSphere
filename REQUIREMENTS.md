@@ -250,6 +250,7 @@
 - vSphere mapping: identify object and sub-target for streamed logs.
 - Acceptance: log frame title renders `Logs <object-path> (target=<value>)`
   when a sub-target is present.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-104: Add monospaced timestamped log line renderer
 - vSphere mapping: operator-readable event/log triage.
