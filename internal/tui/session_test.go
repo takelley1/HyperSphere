@@ -56,6 +56,24 @@ func TestClusterViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Datacenters: []DatacenterRow{
+				{Name: "dc-1", ClusterCount: 2, HostCount: 10, VMCount: 120, DatastoreCount: 8},
+			},
+		},
+	)
+	view, err := navigator.Execute(":dc")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected datacenter columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "c1"}, {Name: "vm-b", Cluster: "c1"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

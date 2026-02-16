@@ -294,6 +294,7 @@
 ### RQ-028: Add `:dc`/`:datacenter` datacenter resource view
 - vSphere mapping: top-level inventory container.
 - Acceptance: view columns include `NAME`, `CLUSTERS`, `HOSTS`, `VMS`, `DATASTORES`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-029: Add `:rp`/`:resourcepool` resource pool view
 - vSphere mapping: scheduler partitioning visibility.

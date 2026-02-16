@@ -328,11 +328,12 @@ func runDeletionWorkflow(application app.App, cfg config.Config) {
 
 func defaultCatalog() tui.Catalog {
 	return tui.Catalog{
-		VMs:        defaultVMRows(),
-		LUNs:       defaultLUNRows(),
-		Clusters:   defaultClusterRows(),
-		Hosts:      defaultHostRows(),
-		Datastores: defaultDatastoreRows(),
+		VMs:         defaultVMRows(),
+		LUNs:        defaultLUNRows(),
+		Clusters:    defaultClusterRows(),
+		Datacenters: defaultDatacenterRows(),
+		Hosts:       defaultHostRows(),
+		Datastores:  defaultDatastoreRows(),
 	}
 }
 
@@ -368,6 +369,14 @@ func defaultClusterRows() []tui.ClusterRow {
 		{Name: "cluster-west", Tags: "dev", Datacenter: "dc-2", Hosts: 6, VMCount: 90, CPUUsagePercent: 52, MemUsagePercent: 49},
 		{Name: "cluster-central", Tags: "qa", Datacenter: "dc-1", Hosts: 5, VMCount: 64, CPUUsagePercent: 57, MemUsagePercent: 55},
 		{Name: "cluster-edge", Tags: "edge", Datacenter: "dc-3", Hosts: 4, VMCount: 33, CPUUsagePercent: 47, MemUsagePercent: 44},
+	}
+}
+
+func defaultDatacenterRows() []tui.DatacenterRow {
+	return []tui.DatacenterRow{
+		{Name: "dc-1", ClusterCount: 2, HostCount: 13, VMCount: 184, DatastoreCount: 6},
+		{Name: "dc-2", ClusterCount: 1, HostCount: 6, VMCount: 90, DatastoreCount: 4},
+		{Name: "dc-3", ClusterCount: 1, HostCount: 4, VMCount: 33, DatastoreCount: 3},
 	}
 }
 

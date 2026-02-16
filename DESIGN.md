@@ -25,6 +25,8 @@
 - [ ] Add sample inventory variants for dense environments (50+ rows) to validate scrolling ergonomics.
 - [ ] Add sample objects with long names/tags/descriptions for truncation and wrap behavior checks.
 - [ ] Add deterministic sample snapshots/comments fields for describe-panel browsing depth.
+- [ ] Sub-task: add datacenter samples with uneven cluster/host/vm ratios for sort-behavior checks.
+- [ ] Sub-task: add integration coverage for startup `--command dc` with seeded datacenter rows.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

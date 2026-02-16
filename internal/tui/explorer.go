@@ -29,26 +29,30 @@ var (
 type Resource string
 
 const (
-	ResourceVM        Resource = "vm"
-	ResourceLUN       Resource = "lun"
-	ResourceCluster   Resource = "cluster"
-	ResourceHost      Resource = "host"
-	ResourceDatastore Resource = "datastore"
+	ResourceVM         Resource = "vm"
+	ResourceLUN        Resource = "lun"
+	ResourceCluster    Resource = "cluster"
+	ResourceDatacenter Resource = "datacenter"
+	ResourceHost       Resource = "host"
+	ResourceDatastore  Resource = "datastore"
 )
 
 var resourceAliasMap = map[string]Resource{
-	"vm":         ResourceVM,
-	"vms":        ResourceVM,
-	"lun":        ResourceLUN,
-	"luns":       ResourceLUN,
-	"cluster":    ResourceCluster,
-	"clusters":   ResourceCluster,
-	"cl":         ResourceCluster,
-	"host":       ResourceHost,
-	"hosts":      ResourceHost,
-	"datastore":  ResourceDatastore,
-	"datastores": ResourceDatastore,
-	"ds":         ResourceDatastore,
+	"vm":          ResourceVM,
+	"vms":         ResourceVM,
+	"lun":         ResourceLUN,
+	"luns":        ResourceLUN,
+	"cluster":     ResourceCluster,
+	"clusters":    ResourceCluster,
+	"cl":          ResourceCluster,
+	"dc":          ResourceDatacenter,
+	"datacenter":  ResourceDatacenter,
+	"datacenters": ResourceDatacenter,
+	"host":        ResourceHost,
+	"hosts":       ResourceHost,
+	"datastore":   ResourceDatastore,
+	"datastores":  ResourceDatastore,
+	"ds":          ResourceDatastore,
 }
 
 // VMRow represents one VM row in the resource table.
@@ -94,6 +98,15 @@ type ClusterRow struct {
 	MemUsagePercent int
 }
 
+// DatacenterRow represents one datacenter row in the resource table.
+type DatacenterRow struct {
+	Name           string
+	ClusterCount   int
+	HostCount      int
+	VMCount        int
+	DatastoreCount int
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -116,11 +129,12 @@ type DatastoreRow struct {
 
 // Catalog stores rows available for each resource view.
 type Catalog struct {
-	VMs        []VMRow
-	LUNs       []LUNRow
-	Clusters   []ClusterRow
-	Hosts      []HostRow
-	Datastores []DatastoreRow
+	VMs         []VMRow
+	LUNs        []LUNRow
+	Clusters    []ClusterRow
+	Datacenters []DatacenterRow
+	Hosts       []HostRow
+	Datastores  []DatastoreRow
 }
 
 // ResourceView stores a concrete table to render.
@@ -223,6 +237,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return lunView(n.catalog.LUNs), true
 	case ResourceCluster:
 		return clusterView(n.catalog.Clusters), true
+	case ResourceDatacenter:
+		return datacenterView(n.catalog.Datacenters), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -566,6 +582,18 @@ func clusterView(rows []ClusterRow) ResourceView {
 	return buildView(ResourceCluster, columns, clusterSortHotKeys(), clusterActions(), rows, clusterCells)
 }
 
+func datacenterView(rows []DatacenterRow) ResourceView {
+	columns := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES"}
+	return buildView(
+		ResourceDatacenter,
+		columns,
+		datacenterSortHotKeys(),
+		datacenterActions(),
+		rows,
+		datacenterCells,
+	)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
@@ -617,6 +645,16 @@ func hostCells(row HostRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CPUUsagePercent), strconv.Itoa(row.MemUsagePercent), defaultCell(row.ConnectionState)}
 }
 
+func datacenterCells(row DatacenterRow) (string, []string) {
+	return row.Name, []string{
+		row.Name,
+		strconv.Itoa(row.ClusterCount),
+		strconv.Itoa(row.HostCount),
+		strconv.Itoa(row.VMCount),
+		strconv.Itoa(row.DatastoreCount),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
 }
@@ -638,6 +676,10 @@ func lunSortHotKeys() map[string]string {
 
 func clusterSortHotKeys() map[string]string {
 	return map[string]string{"N": "NAME", "T": "TAGS", "D": "DATACENTER", "H": "HOSTS", "V": "VMS", "C": "CPU_PERCENT", "M": "MEM_PERCENT"}
+}
+
+func datacenterSortHotKeys() map[string]string {
+	return map[string]string{"N": "NAME", "C": "CLUSTERS", "H": "HOSTS", "V": "VMS", "D": "DATASTORES"}
 }
 
 func hostSortHotKeys() map[string]string {
@@ -662,6 +704,10 @@ func clusterActions() []string {
 
 func hostActions() []string {
 	return []string{"enter-maintenance", "exit-maintenance", "disconnect", "reconnect", "edit-tags"}
+}
+
+func datacenterActions() []string {
+	return []string{"refresh", "edit-tags"}
 }
 
 func datastoreActions() []string {

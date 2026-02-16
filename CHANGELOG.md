@@ -1,6 +1,18 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-028 datacenter resource coverage by adding `:dc` and
+  `:datacenter` command aliases and a dedicated datacenter table view with
+  columns `NAME`, `CLUSTERS`, `HOSTS`, `VMS`, and `DATASTORES`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for datacenter command parsing and view-column
+  rendering, plus `cmd/hypersphere/main_test.go` coverage for seeded
+  datacenter browsing rows.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with canonical
+  datacenter sample rows to keep the explorer dataset browseable across views.
+- Marked `RQ-028` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on datacenter dataset and startup-routing
+  coverage sub-tasks.
 - Implemented RQ-106 compact-header degradation behavior with width thresholds:
   center legend collapses first, then right logo hides, while left metadata and
   active view title remain visible.
