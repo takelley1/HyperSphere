@@ -26,7 +26,7 @@ func TestVMViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "TAGS", "CLUSTER", "POWER", "DATASTORE", "OWNER"}
+	want := []string{"NAME", "TAGS", "CLUSTER", "POWER", "DATASTORE", "OWNER", "CPU_COUNT", "MEMORY_MB", "SNAPSHOTS"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected vm columns: got %v want %v", view.Columns, want)
 	}
@@ -38,19 +38,19 @@ func TestLUNViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "TAGS", "CLUSTER", "DATASTORE", "CAPACITY_GB", "USED_GB"}
+	want := []string{"NAME", "TAGS", "CLUSTER", "DATASTORE", "CAPACITY_GB", "USED_GB", "FREE_GB", "UTIL_PERCENT"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected lun columns: got %v want %v", view.Columns, want)
 	}
 }
 
 func TestClusterViewColumnsAreRelevant(t *testing.T) {
-	navigator := NewNavigator(Catalog{Clusters: []ClusterRow{{Name: "cluster-a", Tags: "gold", Datacenter: "dc1", Hosts: 5, VMCount: 50, CPUUsagePercent: 60, MemUsagePercent: 58}}})
+	navigator := NewNavigator(Catalog{Clusters: []ClusterRow{{Name: "cluster-a", Tags: "gold", Datacenter: "dc1", Hosts: 5, VMCount: 50, CPUUsagePercent: 60, MemUsagePercent: 58, ResourcePoolCount: 4, NetworkCount: 7}}})
 	view, err := navigator.Execute(":cluster")
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "TAGS", "DATACENTER", "HOSTS", "VMS", "CPU_PERCENT", "MEM_PERCENT"}
+	want := []string{"NAME", "TAGS", "DATACENTER", "HOSTS", "VMS", "CPU_PERCENT", "MEM_PERCENT", "RESOURCE_POOLS", "NETWORKS"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected cluster columns: got %v want %v", view.Columns, want)
 	}
@@ -60,7 +60,7 @@ func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
 			Datacenters: []DatacenterRow{
-				{Name: "dc-1", ClusterCount: 2, HostCount: 10, VMCount: 120, DatastoreCount: 8},
+				{Name: "dc-1", ClusterCount: 2, HostCount: 10, VMCount: 120, DatastoreCount: 8, CPUUsagePercent: 61, MemUsagePercent: 59},
 			},
 		},
 	)
@@ -68,7 +68,7 @@ func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES"}
+	want := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES", "CPU_PERCENT", "MEM_PERCENT"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected datacenter columns: got %v want %v", view.Columns, want)
 	}
@@ -78,7 +78,7 @@ func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
 			ResourcePools: []ResourcePoolRow{
-				{Name: "rp-prod", Cluster: "cluster-east", CPUReservationMHz: 6400, MemReservationMB: 8192, VMCount: 24},
+				{Name: "rp-prod", Cluster: "cluster-east", CPUReservationMHz: 6400, MemReservationMB: 8192, VMCount: 24, CPULimitMHz: 12000, MemLimitMB: 16384},
 			},
 		},
 	)
@@ -86,7 +86,7 @@ func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT"}
+	want := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT", "CPU_LIMIT", "MEM_LIMIT"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected resource pool columns: got %v want %v", view.Columns, want)
 	}
@@ -96,7 +96,7 @@ func TestNetworkViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
 			Networks: []NetworkRow{
-				{Name: "dvpg-prod-100", Type: "distributed-portgroup", VLAN: "100", Switch: "dvs-core", AttachedVMs: 41},
+				{Name: "dvpg-prod-100", Type: "distributed-portgroup", VLAN: "100", Switch: "dvs-core", AttachedVMs: 41, MTU: 9000, Uplinks: 4},
 			},
 		},
 	)
@@ -104,7 +104,7 @@ func TestNetworkViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS"}
+	want := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS", "MTU", "UPLINKS"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected network columns: got %v want %v", view.Columns, want)
 	}
@@ -114,7 +114,7 @@ func TestTemplateViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
 			Templates: []TemplateRow{
-				{Name: "tpl-rhel9-base", OS: "rhel9", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "45d"},
+				{Name: "tpl-rhel9-base", OS: "rhel9", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "45d", CPUCount: 4, MemoryMB: 8192},
 			},
 		},
 	)
@@ -122,7 +122,7 @@ func TestTemplateViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE"}
+	want := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE", "CPU_COUNT", "MEMORY_MB"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected template columns: got %v want %v", view.Columns, want)
 	}
@@ -132,7 +132,7 @@ func TestSnapshotViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
 			Snapshots: []SnapshotRow{
-				{VM: "vm-a", Snapshot: "pre-upgrade", Size: "12G", Created: "2026-02-10T12:00:00Z", Age: "6d", Quiesced: "yes"},
+				{VM: "vm-a", Snapshot: "pre-upgrade", Size: "12G", Created: "2026-02-10T12:00:00Z", Age: "6d", Quiesced: "yes", Owner: "ops@example.com"},
 			},
 		},
 	)
@@ -140,9 +140,48 @@ func TestSnapshotViewColumnsAreRelevant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
-	want := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED"}
+	want := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED", "OWNER"}
 	if !reflect.DeepEqual(view.Columns, want) {
 		t.Fatalf("unexpected snapshot columns: got %v want %v", view.Columns, want)
+	}
+}
+
+func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
+	navigator := NewNavigator(Catalog{
+		VMs:           []VMRow{{Name: "vm-a"}},
+		LUNs:          []LUNRow{{Name: "lun-a", CapacityGB: 100, UsedGB: 50}},
+		Clusters:      []ClusterRow{{Name: "cluster-a", ResourcePoolCount: 3, NetworkCount: 5}},
+		Datacenters:   []DatacenterRow{{Name: "dc-1", CPUUsagePercent: 60, MemUsagePercent: 55}},
+		ResourcePools: []ResourcePoolRow{{Name: "rp-a", CPULimitMHz: 4000, MemLimitMB: 4096}},
+		Networks:      []NetworkRow{{Name: "nw-a", MTU: 9000, Uplinks: 2}},
+		Templates:     []TemplateRow{{Name: "tpl-a", CPUCount: 2, MemoryMB: 4096}},
+		Snapshots:     []SnapshotRow{{VM: "vm-a", Snapshot: "snap-a", Owner: "ops@example.com"}},
+		Hosts:         []HostRow{{Name: "host-a", CoreCount: 24, ThreadCount: 48, VMCount: 50}},
+		Datastores:    []DatastoreRow{{Name: "ds-a", CapacityGB: 1000, UsedGB: 600, FreeGB: 400, Type: "vsan", LatencyMS: 3}},
+	})
+	cases := []struct {
+		command string
+		column  string
+	}{
+		{command: ":vm", column: "CPU_COUNT"},
+		{command: ":lun", column: "UTIL_PERCENT"},
+		{command: ":cluster", column: "RESOURCE_POOLS"},
+		{command: ":dc", column: "CPU_PERCENT"},
+		{command: ":rp", column: "CPU_LIMIT"},
+		{command: ":nw", column: "MTU"},
+		{command: ":tp", column: "CPU_COUNT"},
+		{command: ":ss", column: "OWNER"},
+		{command: ":host", column: "THREADS"},
+		{command: ":datastore", column: "LATENCY_MS"},
+	}
+	for _, tc := range cases {
+		view, err := navigator.Execute(tc.command)
+		if err != nil {
+			t.Fatalf("Execute returned error for %s: %v", tc.command, err)
+		}
+		if findColumnIndex(view.Columns, tc.column) == -1 {
+			t.Fatalf("expected column %q in view %s, got %v", tc.column, tc.command, view.Columns)
+		}
 	}
 }
 

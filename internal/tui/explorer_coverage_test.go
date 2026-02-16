@@ -225,3 +225,17 @@ func TestSetSelectionAndClampSelectionIndexCoverage(t *testing.T) {
 		t.Fatalf("expected empty selection to clamp to zero")
 	}
 }
+
+func TestLUNDerivedCellsClampBoundaries(t *testing.T) {
+	_, overused := lunCells(LUNRow{Name: "lun-over", CapacityGB: 100, UsedGB: 160})
+	if overused[6] != "0" {
+		t.Fatalf("expected free_gb to clamp to 0, got %q", overused[6])
+	}
+	if overused[7] != "100" {
+		t.Fatalf("expected util_percent to clamp to 100, got %q", overused[7])
+	}
+	_, negativeUsage := lunCells(LUNRow{Name: "lun-negative", CapacityGB: 100, UsedGB: -10})
+	if negativeUsage[7] != "0" {
+		t.Fatalf("expected util_percent to clamp to 0, got %q", negativeUsage[7])
+	}
+}

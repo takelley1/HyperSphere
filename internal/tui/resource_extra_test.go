@@ -9,14 +9,14 @@ import (
 
 func TestHostAndDatastoreViewsHaveRelevantColumns(t *testing.T) {
 	navigator := NewNavigator(Catalog{
-		Hosts:      []HostRow{{Name: "host-a", Tags: "gpu", Cluster: "c1", CPUUsagePercent: 70, MemUsagePercent: 62, ConnectionState: "connected"}},
-		Datastores: []DatastoreRow{{Name: "ds-a", Tags: "nvme", Cluster: "c1", CapacityGB: 1000, UsedGB: 600, FreeGB: 400}},
+		Hosts:      []HostRow{{Name: "host-a", Tags: "gpu", Cluster: "c1", CPUUsagePercent: 70, MemUsagePercent: 62, ConnectionState: "connected", CoreCount: 24, ThreadCount: 48, VMCount: 51}},
+		Datastores: []DatastoreRow{{Name: "ds-a", Tags: "nvme", Cluster: "c1", CapacityGB: 1000, UsedGB: 600, FreeGB: 400, Type: "vsan", LatencyMS: 2}},
 	})
 	hostView, err := navigator.Execute(":host")
 	if err != nil {
 		t.Fatalf("host view error: %v", err)
 	}
-	wantHost := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
+	wantHost := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION", "CORES", "THREADS", "VMS"}
 	if !reflect.DeepEqual(hostView.Columns, wantHost) {
 		t.Fatalf("unexpected host columns: %v", hostView.Columns)
 	}
@@ -24,7 +24,7 @@ func TestHostAndDatastoreViewsHaveRelevantColumns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("datastore view error: %v", err)
 	}
-	wantDS := []string{"NAME", "TAGS", "CLUSTER", "CAPACITY_GB", "USED_GB", "FREE_GB"}
+	wantDS := []string{"NAME", "TAGS", "CLUSTER", "CAPACITY_GB", "USED_GB", "FREE_GB", "TYPE", "LATENCY_MS"}
 	if !reflect.DeepEqual(dsView.Columns, wantDS) {
 		t.Fatalf("unexpected datastore columns: %v", dsView.Columns)
 	}

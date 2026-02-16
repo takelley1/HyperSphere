@@ -106,22 +106,26 @@ type LUNRow struct {
 
 // ClusterRow represents one cluster row in the resource table.
 type ClusterRow struct {
-	Name            string
-	Tags            string
-	Datacenter      string
-	Hosts           int
-	VMCount         int
-	CPUUsagePercent int
-	MemUsagePercent int
+	Name              string
+	Tags              string
+	Datacenter        string
+	Hosts             int
+	VMCount           int
+	CPUUsagePercent   int
+	MemUsagePercent   int
+	ResourcePoolCount int
+	NetworkCount      int
 }
 
 // DatacenterRow represents one datacenter row in the resource table.
 type DatacenterRow struct {
-	Name           string
-	ClusterCount   int
-	HostCount      int
-	VMCount        int
-	DatastoreCount int
+	Name            string
+	ClusterCount    int
+	HostCount       int
+	VMCount         int
+	DatastoreCount  int
+	CPUUsagePercent int
+	MemUsagePercent int
 }
 
 // ResourcePoolRow represents one resource pool row in the resource table.
@@ -131,6 +135,8 @@ type ResourcePoolRow struct {
 	CPUReservationMHz int
 	MemReservationMB  int
 	VMCount           int
+	CPULimitMHz       int
+	MemLimitMB        int
 }
 
 // NetworkRow represents one network row in the resource table.
@@ -140,6 +146,8 @@ type NetworkRow struct {
 	VLAN        string
 	Switch      string
 	AttachedVMs int
+	MTU         int
+	Uplinks     int
 }
 
 // TemplateRow represents one VM template row in the resource table.
@@ -149,6 +157,8 @@ type TemplateRow struct {
 	Datastore string
 	Folder    string
 	Age       string
+	CPUCount  int
+	MemoryMB  int
 }
 
 // SnapshotRow represents one VM snapshot row in the resource table.
@@ -159,6 +169,7 @@ type SnapshotRow struct {
 	Created  string
 	Age      string
 	Quiesced string
+	Owner    string
 }
 
 // HostRow represents one host row in the resource table.
@@ -169,6 +180,9 @@ type HostRow struct {
 	CPUUsagePercent int
 	MemUsagePercent int
 	ConnectionState string
+	CoreCount       int
+	ThreadCount     int
+	VMCount         int
 }
 
 // DatastoreRow represents one datastore row in the resource table.
@@ -179,6 +193,8 @@ type DatastoreRow struct {
 	CapacityGB int
 	UsedGB     int
 	FreeGB     int
+	Type       string
+	LatencyMS  int
 }
 
 // Catalog stores rows available for each resource view.
@@ -634,22 +650,51 @@ func firstField(value string) string {
 }
 
 func vmView(rows []VMRow) ResourceView {
-	columns := []string{"NAME", "TAGS", "CLUSTER", "POWER", "DATASTORE", "OWNER"}
+	columns := []string{
+		"NAME",
+		"TAGS",
+		"CLUSTER",
+		"POWER",
+		"DATASTORE",
+		"OWNER",
+		"CPU_COUNT",
+		"MEMORY_MB",
+		"SNAPSHOTS",
+	}
 	return buildView(ResourceVM, columns, vmSortHotKeys(), vmActions(), rows, vmCells)
 }
 
 func lunView(rows []LUNRow) ResourceView {
-	columns := []string{"NAME", "TAGS", "CLUSTER", "DATASTORE", "CAPACITY_GB", "USED_GB"}
+	columns := []string{
+		"NAME",
+		"TAGS",
+		"CLUSTER",
+		"DATASTORE",
+		"CAPACITY_GB",
+		"USED_GB",
+		"FREE_GB",
+		"UTIL_PERCENT",
+	}
 	return buildView(ResourceLUN, columns, lunSortHotKeys(), lunActions(), rows, lunCells)
 }
 
 func clusterView(rows []ClusterRow) ResourceView {
-	columns := []string{"NAME", "TAGS", "DATACENTER", "HOSTS", "VMS", "CPU_PERCENT", "MEM_PERCENT"}
+	columns := []string{
+		"NAME",
+		"TAGS",
+		"DATACENTER",
+		"HOSTS",
+		"VMS",
+		"CPU_PERCENT",
+		"MEM_PERCENT",
+		"RESOURCE_POOLS",
+		"NETWORKS",
+	}
 	return buildView(ResourceCluster, columns, clusterSortHotKeys(), clusterActions(), rows, clusterCells)
 }
 
 func datacenterView(rows []DatacenterRow) ResourceView {
-	columns := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES"}
+	columns := []string{"NAME", "CLUSTERS", "HOSTS", "VMS", "DATASTORES", "CPU_PERCENT", "MEM_PERCENT"}
 	return buildView(
 		ResourceDatacenter,
 		columns,
@@ -661,7 +706,7 @@ func datacenterView(rows []DatacenterRow) ResourceView {
 }
 
 func resourcePoolView(rows []ResourcePoolRow) ResourceView {
-	columns := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT"}
+	columns := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT", "CPU_LIMIT", "MEM_LIMIT"}
 	return buildView(
 		ResourcePool,
 		columns,
@@ -673,7 +718,7 @@ func resourcePoolView(rows []ResourcePoolRow) ResourceView {
 }
 
 func networkView(rows []NetworkRow) ResourceView {
-	columns := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS"}
+	columns := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS", "MTU", "UPLINKS"}
 	return buildView(
 		ResourceNetwork,
 		columns,
@@ -685,7 +730,7 @@ func networkView(rows []NetworkRow) ResourceView {
 }
 
 func templateView(rows []TemplateRow) ResourceView {
-	columns := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE"}
+	columns := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE", "CPU_COUNT", "MEMORY_MB"}
 	return buildView(
 		ResourceTemplate,
 		columns,
@@ -697,7 +742,7 @@ func templateView(rows []TemplateRow) ResourceView {
 }
 
 func snapshotView(rows []SnapshotRow) ResourceView {
-	columns := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED"}
+	columns := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED", "OWNER"}
 	return buildView(
 		ResourceSnapshot,
 		columns,
@@ -709,12 +754,31 @@ func snapshotView(rows []SnapshotRow) ResourceView {
 }
 
 func hostView(rows []HostRow) ResourceView {
-	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
+	columns := []string{
+		"NAME",
+		"TAGS",
+		"CLUSTER",
+		"CPU_PERCENT",
+		"MEM_PERCENT",
+		"CONNECTION",
+		"CORES",
+		"THREADS",
+		"VMS",
+	}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
 }
 
 func datastoreView(rows []DatastoreRow) ResourceView {
-	columns := []string{"NAME", "TAGS", "CLUSTER", "CAPACITY_GB", "USED_GB", "FREE_GB"}
+	columns := []string{
+		"NAME",
+		"TAGS",
+		"CLUSTER",
+		"CAPACITY_GB",
+		"USED_GB",
+		"FREE_GB",
+		"TYPE",
+		"LATENCY_MS",
+	}
 	return buildView(
 		ResourceDatastore,
 		columns,
@@ -744,19 +808,62 @@ func buildView[T any](
 }
 
 func vmCells(row VMRow) (string, []string) {
-	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), defaultCell(row.PowerState), defaultCell(row.Datastore), defaultCell(row.Owner)}
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Tags),
+		defaultCell(row.Cluster),
+		defaultCell(row.PowerState),
+		defaultCell(row.Datastore),
+		defaultCell(row.Owner),
+		strconv.Itoa(row.CPUCount),
+		strconv.Itoa(row.MemoryMB),
+		strconv.Itoa(vmSnapshotCount(row)),
+	}
 }
 
 func lunCells(row LUNRow) (string, []string) {
-	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), defaultCell(row.Datastore), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB)}
+	freeGB := row.CapacityGB - row.UsedGB
+	if freeGB < 0 {
+		freeGB = 0
+	}
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Tags),
+		defaultCell(row.Cluster),
+		defaultCell(row.Datastore),
+		strconv.Itoa(row.CapacityGB),
+		strconv.Itoa(row.UsedGB),
+		strconv.Itoa(freeGB),
+		strconv.Itoa(lunUtilPercent(row.CapacityGB, row.UsedGB)),
+	}
 }
 
 func clusterCells(row ClusterRow) (string, []string) {
-	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Datacenter), strconv.Itoa(row.Hosts), strconv.Itoa(row.VMCount), strconv.Itoa(row.CPUUsagePercent), strconv.Itoa(row.MemUsagePercent)}
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Tags),
+		defaultCell(row.Datacenter),
+		strconv.Itoa(row.Hosts),
+		strconv.Itoa(row.VMCount),
+		strconv.Itoa(row.CPUUsagePercent),
+		strconv.Itoa(row.MemUsagePercent),
+		strconv.Itoa(row.ResourcePoolCount),
+		strconv.Itoa(row.NetworkCount),
+	}
 }
 
 func hostCells(row HostRow) (string, []string) {
-	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CPUUsagePercent), strconv.Itoa(row.MemUsagePercent), defaultCell(row.ConnectionState)}
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Tags),
+		defaultCell(row.Cluster),
+		strconv.Itoa(row.CPUUsagePercent),
+		strconv.Itoa(row.MemUsagePercent),
+		defaultCell(row.ConnectionState),
+		strconv.Itoa(row.CoreCount),
+		strconv.Itoa(row.ThreadCount),
+		strconv.Itoa(row.VMCount),
+	}
 }
 
 func datacenterCells(row DatacenterRow) (string, []string) {
@@ -766,6 +873,8 @@ func datacenterCells(row DatacenterRow) (string, []string) {
 		strconv.Itoa(row.HostCount),
 		strconv.Itoa(row.VMCount),
 		strconv.Itoa(row.DatastoreCount),
+		strconv.Itoa(row.CPUUsagePercent),
+		strconv.Itoa(row.MemUsagePercent),
 	}
 }
 
@@ -776,6 +885,8 @@ func resourcePoolCells(row ResourcePoolRow) (string, []string) {
 		strconv.Itoa(row.CPUReservationMHz),
 		strconv.Itoa(row.MemReservationMB),
 		strconv.Itoa(row.VMCount),
+		strconv.Itoa(row.CPULimitMHz),
+		strconv.Itoa(row.MemLimitMB),
 	}
 }
 
@@ -786,6 +897,8 @@ func networkCells(row NetworkRow) (string, []string) {
 		defaultCell(row.VLAN),
 		defaultCell(row.Switch),
 		strconv.Itoa(row.AttachedVMs),
+		strconv.Itoa(row.MTU),
+		strconv.Itoa(row.Uplinks),
 	}
 }
 
@@ -796,6 +909,8 @@ func templateCells(row TemplateRow) (string, []string) {
 		defaultCell(row.Datastore),
 		defaultCell(row.Folder),
 		defaultCell(row.Age),
+		strconv.Itoa(row.CPUCount),
+		strconv.Itoa(row.MemoryMB),
 	}
 }
 
@@ -808,11 +923,21 @@ func snapshotCells(row SnapshotRow) (string, []string) {
 		defaultCell(row.Created),
 		defaultCell(row.Age),
 		defaultCell(row.Quiesced),
+		defaultCell(row.Owner),
 	}
 }
 
 func datastoreCells(row DatastoreRow) (string, []string) {
-	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Tags),
+		defaultCell(row.Cluster),
+		strconv.Itoa(row.CapacityGB),
+		strconv.Itoa(row.UsedGB),
+		strconv.Itoa(row.FreeGB),
+		defaultCell(row.Type),
+		strconv.Itoa(row.LatencyMS),
+	}
 }
 
 func defaultCell(value string) string {
@@ -822,44 +947,146 @@ func defaultCell(value string) string {
 	return value
 }
 
+func lunUtilPercent(capacityGB int, usedGB int) int {
+	if capacityGB <= 0 {
+		return 0
+	}
+	percent := (usedGB * 100) / capacityGB
+	if percent < 0 {
+		return 0
+	}
+	if percent > 100 {
+		return 100
+	}
+	return percent
+}
+
 func vmSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TAGS", "C": "CLUSTER", "P": "POWER", "D": "DATASTORE", "W": "OWNER"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TAGS",
+		"C": "CLUSTER",
+		"P": "POWER",
+		"D": "DATASTORE",
+		"W": "OWNER",
+		"U": "CPU_COUNT",
+		"M": "MEMORY_MB",
+		"S": "SNAPSHOTS",
+	}
 }
 
 func lunSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TAGS", "C": "CLUSTER", "D": "DATASTORE", "G": "CAPACITY_GB", "U": "USED_GB"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TAGS",
+		"C": "CLUSTER",
+		"D": "DATASTORE",
+		"G": "CAPACITY_GB",
+		"U": "USED_GB",
+		"F": "FREE_GB",
+		"P": "UTIL_PERCENT",
+	}
 }
 
 func clusterSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TAGS", "D": "DATACENTER", "H": "HOSTS", "V": "VMS", "C": "CPU_PERCENT", "M": "MEM_PERCENT"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TAGS",
+		"D": "DATACENTER",
+		"H": "HOSTS",
+		"V": "VMS",
+		"C": "CPU_PERCENT",
+		"M": "MEM_PERCENT",
+		"R": "RESOURCE_POOLS",
+		"W": "NETWORKS",
+	}
 }
 
 func datacenterSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "C": "CLUSTERS", "H": "HOSTS", "V": "VMS", "D": "DATASTORES"}
+	return map[string]string{
+		"N": "NAME",
+		"C": "CLUSTERS",
+		"H": "HOSTS",
+		"V": "VMS",
+		"D": "DATASTORES",
+		"P": "CPU_PERCENT",
+		"M": "MEM_PERCENT",
+	}
 }
 
 func resourcePoolSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "C": "CLUSTER", "P": "CPU_RES", "M": "MEM_RES", "V": "VM_COUNT"}
+	return map[string]string{
+		"N": "NAME",
+		"C": "CLUSTER",
+		"P": "CPU_RES",
+		"M": "MEM_RES",
+		"V": "VM_COUNT",
+		"L": "CPU_LIMIT",
+		"R": "MEM_LIMIT",
+	}
 }
 
 func networkSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TYPE", "V": "VLAN", "S": "SWITCH", "A": "ATTACHED_VMS"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TYPE",
+		"V": "VLAN",
+		"S": "SWITCH",
+		"A": "ATTACHED_VMS",
+		"M": "MTU",
+		"U": "UPLINKS",
+	}
 }
 
 func templateSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "O": "OS", "D": "DATASTORE", "F": "FOLDER", "A": "AGE"}
+	return map[string]string{
+		"N": "NAME",
+		"O": "OS",
+		"D": "DATASTORE",
+		"F": "FOLDER",
+		"A": "AGE",
+		"C": "CPU_COUNT",
+		"M": "MEMORY_MB",
+	}
 }
 
 func snapshotSortHotKeys() map[string]string {
-	return map[string]string{"V": "VM", "S": "SNAPSHOT", "Z": "SIZE", "C": "CREATED", "A": "AGE", "Q": "QUIESCED"}
+	return map[string]string{
+		"V": "VM",
+		"S": "SNAPSHOT",
+		"Z": "SIZE",
+		"C": "CREATED",
+		"A": "AGE",
+		"Q": "QUIESCED",
+		"O": "OWNER",
+	}
 }
 
 func hostSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TAGS", "C": "CLUSTER", "P": "CPU_PERCENT", "M": "MEM_PERCENT", "S": "CONNECTION"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TAGS",
+		"C": "CLUSTER",
+		"P": "CPU_PERCENT",
+		"M": "MEM_PERCENT",
+		"S": "CONNECTION",
+		"O": "CORES",
+		"H": "THREADS",
+		"V": "VMS",
+	}
 }
 
 func datastoreSortHotKeys() map[string]string {
-	return map[string]string{"N": "NAME", "T": "TAGS", "C": "CLUSTER", "A": "CAPACITY_GB", "U": "USED_GB", "F": "FREE_GB"}
+	return map[string]string{
+		"N": "NAME",
+		"T": "TAGS",
+		"C": "CLUSTER",
+		"A": "CAPACITY_GB",
+		"U": "USED_GB",
+		"F": "FREE_GB",
+		"Y": "TYPE",
+		"L": "LATENCY_MS",
+	}
 }
 
 func vmActions() []string {

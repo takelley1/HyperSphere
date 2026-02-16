@@ -1,6 +1,19 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-116 by expanding every resource table schema with
+  additional operational columns to better use horizontal terminal space.
+- Added failing-first coverage in `internal/tui/session_test.go` and
+  `internal/tui/resource_extra_test.go` for expanded per-resource column
+  expectations and cross-resource column presence checks.
+- Updated `internal/tui/explorer.go` with expanded columns, new row fields, and
+  sort-key mappings for VM, LUN, cluster, datacenter, resource pool, network,
+  template, snapshot, host, and datastore views, including derived LUN
+  `FREE_GB` and `UTIL_PERCENT` values.
+- Expanded sample catalog row data in `cmd/hypersphere/main.go` to populate the
+  new columns with representative values for immediate local browsing.
+- Updated `DESIGN.md` with follow-on wide-schema truncation and compact-mode
+  degradation coverage sub-tasks.
 - Implemented RQ-032 snapshot-governance coverage by adding `:snapshot`,
   `:snap`, and `:ss` command aliases with columns `VM`, `SNAPSHOT`, `SIZE`,
   `CREATED`, `AGE`, and `QUIESCED`.

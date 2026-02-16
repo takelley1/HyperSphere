@@ -223,6 +223,21 @@
   color mode and remain clock-free for event-driven redraw behavior.
 - Status: fulfilled (2026-02-16).
 
+### RQ-116: Add additional useful columns across all resource views
+- vSphere mapping: improve high-density operator visibility by using horizontal
+  terminal space for decision-making fields instead of sparse schemas.
+- Acceptance: each resource view adds at least one new operationally useful
+  column beyond its baseline schema.
+- Acceptance: `:vm` includes `CPU_COUNT`, `MEMORY_MB`, `SNAPSHOTS`; `:lun`
+  includes `FREE_GB`, `UTIL_PERCENT`; `:cluster` includes `RESOURCE_POOLS`,
+  `NETWORKS`; `:dc` includes `CPU_PERCENT`, `MEM_PERCENT`; `:rp` includes
+  `CPU_LIMIT`, `MEM_LIMIT`; `:nw` includes `MTU`, `UPLINKS`; `:tp` includes
+  `CPU_COUNT`, `MEMORY_MB`; `:ss` includes `OWNER`; `:host` includes `CORES`,
+  `THREADS`, `VMS`; `:datastore` includes `TYPE`, `LATENCY_MS`.
+- Acceptance: built-in sample dataset provides representative values for the new
+  columns so local browsing uses the wider schemas immediately.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

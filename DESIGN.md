@@ -35,6 +35,8 @@
 - [ ] Sub-task: add integration coverage for startup `--command tp` with seeded template rows.
 - [ ] Sub-task: add snapshot samples covering large-size and stale-age governance edge cases.
 - [ ] Sub-task: add integration coverage for startup `--command ss` with seeded snapshot rows.
+- [ ] Sub-task: add long-string samples for newly added wide columns to stress truncation behavior.
+- [ ] Sub-task: add compact-mode assertions that widened schemas degrade to stable key columns.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.
