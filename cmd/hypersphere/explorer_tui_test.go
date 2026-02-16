@@ -1210,6 +1210,34 @@ func TestExecutePromptCommandResolvesAliasFileEntriesWithOptionalArgs(t *testing
 	}
 }
 
+func TestRuntimeLoadsAliasRegistryAtStartupForMultiTokenArgs(t *testing.T) {
+	aliasPath := filepath.Join(t.TempDir(), "aliases.yaml")
+	content := "go-host: :host\n"
+	if err := os.WriteFile(aliasPath, []byte(content), 0o600); err != nil {
+		t.Fatalf("expected alias file write to succeed: %v", err)
+	}
+	t.Setenv(aliasRegistryEnvPath, aliasPath)
+	runtime := newExplorerRuntime()
+
+	message, keepRunning := executePromptCommand(
+		&runtime.session,
+		&runtime.promptState,
+		runtime.actionExec,
+		&runtime.contexts,
+		&runtime.aliasRegistry,
+		":go-host owner=team-a cluster=prod",
+	)
+	if !keepRunning {
+		t.Fatalf("expected alias command to keep runtime alive")
+	}
+	if message != "view: host" {
+		t.Fatalf("expected host view status from startup-loaded alias, got %q", message)
+	}
+	if runtime.session.CurrentView().Resource != tui.ResourceHost {
+		t.Fatalf("expected startup-loaded alias registry to resolve host view command")
+	}
+}
+
 func TestExecutePromptCommandHistoryTraversalIsBoundedWithoutSkipping(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	promptState := tui.NewPromptState(3)

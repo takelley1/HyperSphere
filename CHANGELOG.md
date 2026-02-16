@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-069 by loading aliases config at runtime startup
+  into a cached alias registry and using it for prompt command resolution.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  startup-loaded alias execution with multi-token arguments.
 - Implemented and fulfilled RQ-068 by adding hotkeys config file support via
   `Session.LoadHotkeysConfig` (JSON key/value bindings) and runtime override
   application before default hotkey handling.

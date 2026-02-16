@@ -629,6 +629,7 @@
 ### RQ-069: Add aliases config file support
 - vSphere mapping: reusable command shortcuts.
 - Acceptance: aliases file loads at startup and resolves multi-token alias arguments.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-070: Add plugins config file support
 - vSphere mapping: external command integration.

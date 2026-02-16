@@ -74,6 +74,7 @@ type explorerRuntime struct {
 	logObjectPath  string
 	logTarget      string
 	logEntries     []runtimeLogEntry
+	aliasRegistry  commandAliasRegistry
 }
 
 type runtimeActionExecutor struct {
@@ -304,6 +305,10 @@ func newExplorerRuntimeWithRenderOptions(
 		wideColumns:    true,
 		headerVisible:  !headless,
 		logEntries:     defaultRuntimeLogEntries(),
+		aliasRegistry:  commandAliasRegistry{aliases: map[string]string{}},
+	}
+	if registry, err := loadDefaultCommandAliasRegistry(); err == nil {
+		runtime.aliasRegistry = registry
 	}
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
@@ -638,7 +643,7 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 		&r.promptState,
 		r.actionExec,
 		&r.contexts,
-		nil,
+		&r.aliasRegistry,
 		r.prompt.GetText(),
 	)
 	r.endPrompt()
