@@ -27,6 +27,8 @@ var (
 	ErrReadOnly = errors.New("read-only mode")
 	// ErrInvalidColumns indicates a requested column set is invalid.
 	ErrInvalidColumns = errors.New("invalid columns")
+	// ErrActionTimeout indicates action execution exceeded configured timeout.
+	ErrActionTimeout = errors.New("action timed out")
 )
 
 // Resource identifies a table view namespace.
@@ -360,6 +362,7 @@ type Session struct {
 	now             func() time.Time
 	lastAction      actionRequest
 	hasLastAction   bool
+	actionTimeouts  map[string]time.Duration
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -382,6 +385,7 @@ func NewSession(catalog Catalog) Session {
 		now:             time.Now,
 		lastAction:      actionRequest{},
 		hasLastAction:   false,
+		actionTimeouts:  map[string]time.Duration{},
 	}
 }
 
@@ -596,9 +600,14 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	s.hasLastAction = true
 	s.recordTransition(normalized, "queued")
 	s.recordTransition(normalized, "running")
+	started := s.now()
 	if err := executor.Execute(s.view.Resource, normalized, ids); err != nil {
 		s.recordTransition(normalized, "failure")
 		return err
+	}
+	if timeout, ok := s.actionTimeout(normalized); ok && s.now().Sub(started) > timeout {
+		s.recordTransition(normalized, "failure")
+		return fmt.Errorf("%w: %s", ErrActionTimeout, normalized)
 	}
 	s.recordTransition(normalized, "success")
 	return nil
@@ -623,6 +632,19 @@ func (s *Session) CancelLastAction(canceler ActionCanceler) error {
 	}
 	s.recordTransition(request.action, "cancelled")
 	return nil
+}
+
+// SetActionTimeout sets the timeout policy for one normalized action.
+func (s *Session) SetActionTimeout(action string, timeout time.Duration) {
+	normalized := strings.ToLower(strings.TrimSpace(action))
+	if normalized == "" {
+		return
+	}
+	if timeout <= 0 {
+		delete(s.actionTimeouts, normalized)
+		return
+	}
+	s.actionTimeouts[normalized] = timeout
 }
 
 // CurrentView returns the current table snapshot.
@@ -1799,6 +1821,11 @@ func (s *Session) recordTransition(action string, status string) {
 		Status:    status,
 		Timestamp: s.now().UTC().Format(time.RFC3339Nano),
 	})
+}
+
+func (s *Session) actionTimeout(action string) (time.Duration, bool) {
+	timeout, ok := s.actionTimeouts[action]
+	return timeout, ok
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {

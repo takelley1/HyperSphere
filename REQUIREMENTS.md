@@ -522,6 +522,7 @@
 ### RQ-049: Add per-action timeout policy
 - vSphere mapping: avoid hung operations.
 - Acceptance: timeout breach marks task as failed with explicit timeout reason.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-050: Add retry policy wiring
 - vSphere mapping: transient vCenter/API failures.

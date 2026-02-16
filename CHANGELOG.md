@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-049 by wiring per-action timeout policies into
+  action execution, marking timed-out actions as `failure` with timeout errors.
+- Added failing-first coverage in `internal/tui/session_test.go` for timeout
+  policy behavior and timeout-transition outcomes.
 - Implemented and fulfilled RQ-048 by adding per-action cancellation support
   through `Session.CancelLastAction`, with terminal `cancelled` state recording
   when backend cancellation succeeds.

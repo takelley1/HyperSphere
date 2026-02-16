@@ -6,6 +6,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type fakeExecutor struct {
@@ -461,6 +462,64 @@ func TestSessionCancelLastActionPropagatesCancelerError(t *testing.T) {
 	transitions := session.ActionTransitions()
 	if transitions[len(transitions)-1].Status == "cancelled" {
 		t.Fatalf("did not expect cancelled transition when canceler returns error")
+	}
+}
+
+func TestSessionApplyActionReturnsTimeoutWhenElapsedExceedsPolicy(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	session.now = sequentialClock([]time.Time{
+		time.Date(2026, 2, 16, 12, 0, 0, 0, time.UTC),
+		time.Date(2026, 2, 16, 12, 0, 0, 0, time.UTC),
+		time.Date(2026, 2, 16, 12, 0, 0, 0, time.UTC),
+		time.Date(2026, 2, 16, 12, 0, 2, 0, time.UTC),
+		time.Date(2026, 2, 16, 12, 0, 2, 0, time.UTC),
+	})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.SetActionTimeout("power-on", time.Second)
+	executor := &fakeExecutor{}
+	err := session.ApplyAction("power-on", executor)
+	if err == nil {
+		t.Fatalf("expected timeout error when action exceeds timeout policy")
+	}
+	if !errors.Is(err, ErrActionTimeout) {
+		t.Fatalf("expected ErrActionTimeout, got %v", err)
+	}
+	transitions := session.ActionTransitions()
+	if transitions[len(transitions)-1].Status != "failure" {
+		t.Fatalf("expected terminal failure transition for timeout")
+	}
+}
+
+func TestSessionSetActionTimeoutBranchCoverage(t *testing.T) {
+	session := NewSession(Catalog{})
+	session.SetActionTimeout("power-on", 2*time.Second)
+	if timeout, ok := session.actionTimeouts["power-on"]; !ok || timeout != 2*time.Second {
+		t.Fatalf("expected action timeout to be stored")
+	}
+	session.SetActionTimeout("power-on", 0)
+	if _, ok := session.actionTimeouts["power-on"]; ok {
+		t.Fatalf("expected non-positive timeout to remove action timeout policy")
+	}
+	session.SetActionTimeout("   ", time.Second)
+	if len(session.actionTimeouts) != 0 {
+		t.Fatalf("expected empty action name to be ignored")
+	}
+}
+
+func sequentialClock(values []time.Time) func() time.Time {
+	index := 0
+	return func() time.Time {
+		if len(values) == 0 {
+			return time.Time{}
+		}
+		if index >= len(values) {
+			return values[len(values)-1]
+		}
+		value := values[index]
+		index++
+		return value
 	}
 }
 
