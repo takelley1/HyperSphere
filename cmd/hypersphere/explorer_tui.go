@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type explorerRuntime struct {
 	session     tui.Session
 	promptState tui.PromptState
 	actionExec  *runtimeActionExecutor
+	theme       explorerTheme
 	body        *tview.Table
 	status      *tview.TextView
 	prompt      *tview.InputField
@@ -30,6 +32,15 @@ type explorerRuntime struct {
 
 type runtimeActionExecutor struct {
 	last string
+}
+
+type explorerTheme struct {
+	UseColor         bool
+	HeaderText       tcell.Color
+	HeaderBackground tcell.Color
+	EvenRowText      tcell.Color
+	OddRowText       tcell.Color
+	StatusError      string
 }
 
 func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, ids []string) error {
@@ -55,6 +66,7 @@ func newExplorerRuntime() explorerRuntime {
 		session:     tui.NewSession(defaultCatalog()),
 		promptState: tui.NewPromptState(defaultPromptHistorySize),
 		actionExec:  &runtimeActionExecutor{},
+		theme:       readTheme(),
 		body:        tview.NewTable(),
 		status:      tview.NewTextView(),
 		prompt:      tview.NewInputField(),
@@ -71,8 +83,10 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetSelectable(true, true)
 	r.body.SetFixed(1, 1)
 	r.body.SetBorders(false)
+	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
 	r.body.SetTitle(" HyperSphere Explorer ")
+	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
 	r.status.SetDynamicColors(true)
 	r.status.SetBorder(true)
 	r.status.SetTitle(" Status ")
@@ -196,7 +210,11 @@ func (r *explorerRuntime) emitStatus(err error) {
 	if err == nil {
 		return
 	}
-	r.status.SetText(fmt.Sprintf("[red]%s", err.Error()))
+	if !r.theme.UseColor {
+		r.status.SetText(err.Error())
+		return
+	}
+	r.status.SetText(fmt.Sprintf("%s%s", r.theme.StatusError, err.Error()))
 }
 
 func (r *explorerRuntime) render(message string) {
@@ -215,8 +233,11 @@ func (r *explorerRuntime) renderTable() {
 			cell := tview.NewTableCell(value)
 			if rowIndex == 0 {
 				cell.SetSelectable(false)
-				cell.SetTextColor(tcell.ColorYellow)
+				cell.SetTextColor(r.theme.HeaderText)
+				cell.SetBackgroundColor(r.theme.HeaderBackground)
 				cell.SetAttributes(tcell.AttrBold)
+			} else {
+				cell.SetTextColor(tableRowColor(r.theme, rowIndex))
 			}
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
@@ -266,10 +287,40 @@ func renderFooter(promptMode bool) string {
 		prompt = "ON"
 	}
 	return fmt.Sprintf(
-		": view | / filter | ! action | :ro toggle | :history up/down | :suggest <prefix> | Prompt: %s | q quit | %s",
+		": view | / filter | ! action | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit | %s",
 		prompt,
 		time.Now().Format("15:04:05"),
 	)
+}
+
+func readTheme() explorerTheme {
+	theme := explorerTheme{
+		UseColor:         true,
+		HeaderText:       tcell.ColorBlack,
+		HeaderBackground: tcell.ColorLightSkyBlue,
+		EvenRowText:      tcell.ColorWhite,
+		OddRowText:       tcell.ColorLightGray,
+		StatusError:      "[red]",
+	}
+	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
+		theme.UseColor = false
+		theme.HeaderText = tcell.ColorWhite
+		theme.HeaderBackground = tcell.ColorBlack
+		theme.EvenRowText = tcell.ColorWhite
+		theme.OddRowText = tcell.ColorWhite
+		theme.StatusError = ""
+	}
+	return theme
+}
+
+func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
+	if !theme.UseColor {
+		return tcell.ColorWhite
+	}
+	if rowIndex%2 == 0 {
+		return theme.EvenRowText
+	}
+	return theme.OddRowText
 }
 
 func executePromptCommand(
@@ -414,14 +465,29 @@ func eventToHotKey(evt *tcell.EventKey) (string, bool) {
 	if evt.Key() == tcell.KeyDown {
 		return "DOWN", true
 	}
+	if evt.Key() == tcell.KeyLeft {
+		return "LEFT", true
+	}
+	if evt.Key() == tcell.KeyRight {
+		return "RIGHT", true
+	}
 	if evt.Key() != tcell.KeyRune {
 		return "", false
 	}
 	if evt.Rune() == ' ' {
 		return "SPACE", true
 	}
+	if evt.Rune() == 'h' {
+		return "LEFT", true
+	}
+	if evt.Rune() == 'l' {
+		return "RIGHT", true
+	}
 	if evt.Rune() == '\\' && evt.Modifiers()&tcell.ModCtrl != 0 {
 		return "CTRL+\\", true
 	}
-	return strings.ToUpper(string(evt.Rune())), true
+	if evt.Modifiers()&tcell.ModShift != 0 {
+		return strings.ToUpper(string(evt.Rune())), true
+	}
+	return string(evt.Rune()), true
 }

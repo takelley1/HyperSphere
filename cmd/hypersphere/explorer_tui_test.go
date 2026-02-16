@@ -3,9 +3,11 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/takelley1/hypersphere/internal/tui"
 )
 
@@ -64,5 +66,33 @@ func TestRenderFooterIncludesPromptMode(t *testing.T) {
 	}
 	if !strings.Contains(renderFooter(false), "Prompt: OFF") {
 		t.Fatalf("expected prompt-off indicator in footer")
+	}
+}
+
+func TestEventToHotKeyVimColumnMovement(t *testing.T) {
+	left, ok := eventToHotKey(tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone))
+	if !ok || left != "LEFT" {
+		t.Fatalf("expected h to map to LEFT, got %q ok=%v", left, ok)
+	}
+	right, ok := eventToHotKey(tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone))
+	if !ok || right != "RIGHT" {
+		t.Fatalf("expected l to map to RIGHT, got %q ok=%v", right, ok)
+	}
+	sortHotKey, ok := eventToHotKey(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModShift))
+	if !ok || sortHotKey != "H" {
+		t.Fatalf("expected shifted H to remain sort hotkey, got %q ok=%v", sortHotKey, ok)
+	}
+}
+
+func TestReadThemeRespectsNoColor(t *testing.T) {
+	t.Setenv("NO_COLOR", "1")
+	theme := readTheme()
+	if theme.UseColor {
+		t.Fatalf("expected NO_COLOR to disable color")
+	}
+	os.Unsetenv("NO_COLOR")
+	theme = readTheme()
+	if !theme.UseColor {
+		t.Fatalf("expected color mode enabled when NO_COLOR is unset")
 	}
 }

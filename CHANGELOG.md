@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Added a terminal theme loader with `NO_COLOR` support so the explorer can run with readable monochrome output on color-limited terminals.
+- Added table styling polish for readability: fixed header styling, alternating row colors, and stronger selected-row highlighting.
+- Added vim-style navigation semantics in the realtime runtime (`h`/`l` for column movement, `j`/`k` row movement preserved) plus plain left/right arrow support.
+- Updated footer help text to advertise vim/arrow movement semantics directly in the TUI.
+- Added tests for vim key translation, `NO_COLOR` theme behavior, and plain arrow-based column movement.
 - Switched explorer runtime from line-buffered input to a full-screen real-time `tview`/`tcell` event loop as the default app entrypoint workflow.
 - Replaced text body rendering with a canonical table widget (`tview.Table`) to mirror k9s-style grid interaction semantics.
 - Added table rendering helpers to inject a leading `SEL` column and mark selected objects with `*` for bulk action visibility.

@@ -9,6 +9,13 @@
 - [ ] Add per-resource status badges in the header line.
 - [ ] Add column-width autosizing based on terminal resize events.
 
+### Terminal Readability and Styles
+- [ ] Add configurable high-contrast, standard, and dim color palettes.
+- [ ] Add monochrome fallback indicators for status and power-state cells.
+- [ ] Add narrow-terminal compact mode with prioritized column sets per resource.
+- [ ] Add horizontal scrolling indicators when columns overflow.
+- [ ] Add optional unicode/ASCII symbol mode for compatibility across terminals.
+
 ### Prompt UX Parity
 - [ ] Add command palette help for `:history`, `:suggest`, and `:ro`.
 - [ ] Add inline prompt validation feedback before submit.

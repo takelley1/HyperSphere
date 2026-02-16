@@ -609,11 +609,11 @@ func tryMoveRow(session *Session, key string) bool {
 }
 
 func tryMoveColumn(session *Session, key string) bool {
-	if key == "SHIFT+RIGHT" {
+	if key == "SHIFT+RIGHT" || key == "RIGHT" {
 		session.moveColumn(1)
 		return true
 	}
-	if key == "SHIFT+LEFT" {
+	if key == "SHIFT+LEFT" || key == "LEFT" {
 		session.moveColumn(-1)
 		return true
 	}

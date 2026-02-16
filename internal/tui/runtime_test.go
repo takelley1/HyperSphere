@@ -166,3 +166,20 @@ func TestSessionSelectionAndMarkAccessors(t *testing.T) {
 		t.Fatalf("did not expect vm-a to be marked")
 	}
 }
+
+func TestArrowColumnMovementWithoutShift(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Tags: "prod"}}})
+	_ = session.ExecuteCommand(":vm")
+	if err := session.HandleKey("RIGHT"); err != nil {
+		t.Fatalf("expected right arrow to move column: %v", err)
+	}
+	if session.SelectedColumn() != 1 {
+		t.Fatalf("expected selected column 1 after right arrow, got %d", session.SelectedColumn())
+	}
+	if err := session.HandleKey("LEFT"); err != nil {
+		t.Fatalf("expected left arrow to move column: %v", err)
+	}
+	if session.SelectedColumn() != 0 {
+		t.Fatalf("expected selected column 0 after left arrow, got %d", session.SelectedColumn())
+	}
+}
