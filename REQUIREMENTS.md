@@ -67,6 +67,7 @@
 ### RQ-010: Add `--crumbsless` startup flag
 - vSphere mapping: Hide breadcrumb/navigation trail.
 - Acceptance: breadcrumb widget does not render when flag is enabled.
+- Status: fulfilled (2026-02-15).
 
 ## Prompt and Command-Mode Parity
 

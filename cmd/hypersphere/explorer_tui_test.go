@@ -247,3 +247,20 @@ func TestNewExplorerRuntimeHeadlessOmitsTableHeader(t *testing.T) {
 		t.Fatalf("expected first row to render host data when headless")
 	}
 }
+
+func TestNewExplorerRuntimeRendersBreadcrumbByDefault(t *testing.T) {
+	runtime := newExplorerRuntimeWithRenderOptions(false, "host", false, false)
+	if !strings.Contains(runtime.breadcrumb.GetText(true), "home > host") {
+		t.Fatalf("expected breadcrumb text to render active view")
+	}
+}
+
+func TestNewExplorerRuntimeCrumbslessOmitsBreadcrumbWidget(t *testing.T) {
+	runtime := newExplorerRuntimeWithRenderOptions(false, "host", false, true)
+	if runtime.breadcrumb.GetText(true) != "" {
+		t.Fatalf("expected crumbsless runtime to keep breadcrumb empty")
+	}
+	if runtime.layout.GetItemCount() != 4 {
+		t.Fatalf("expected crumbsless layout to omit breadcrumb widget")
+	}
+}

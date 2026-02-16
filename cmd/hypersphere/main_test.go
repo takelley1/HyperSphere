@@ -204,3 +204,13 @@ func TestParseFlagsHeadlessEnablesHeaderlessStartup(t *testing.T) {
 		t.Fatalf("expected headless=true when --headless is passed")
 	}
 }
+
+func TestParseFlagsCrumbslessEnablesBreadcrumblessStartup(t *testing.T) {
+	flags, err := parseFlags([]string{"--crumbsless"})
+	if err != nil {
+		t.Fatalf("expected --crumbsless to parse, got error: %v", err)
+	}
+	if !flags.crumbsless {
+		t.Fatalf("expected crumbsless=true when --crumbsless is passed")
+	}
+}

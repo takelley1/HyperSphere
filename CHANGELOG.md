@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-010 `--crumbsless` startup flag to hide the breadcrumb widget in explorer mode.
+- Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to validate `--crumbsless` parsing.
+- Added cmd-level rendering tests in `cmd/hypersphere/explorer_tui_test.go` to assert default breadcrumb rendering and crumbsless omission behavior.
+- Wired `--crumbsless` parsing in `cmd/hypersphere/main.go` and runtime breadcrumb layout/render controls in `cmd/hypersphere/explorer_tui.go`.
+- Marked `RQ-010` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed crumbsless startup tasks and adding a follow-on integration sub-task for crumbsless startup routing.
 - Marked `RQ-009` as fulfilled in `REQUIREMENTS.md`.
 - Implemented RQ-009 `--headless` startup flag to hide the explorer table header row.
 - Added failing-first tests in `cmd/hypersphere/main_test.go` and

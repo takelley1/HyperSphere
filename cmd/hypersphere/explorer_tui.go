@@ -22,8 +22,11 @@ type explorerRuntime struct {
 	actionExec  *runtimeActionExecutor
 	contexts    runtimeContextManager
 	headless    bool
+	crumbsless  bool
 	theme       explorerTheme
+	layout      *tview.Flex
 	body        *tview.Table
+	breadcrumb  *tview.TextView
 	status      *tview.TextView
 	prompt      *tview.InputField
 	footer      *tview.TextView
@@ -108,8 +111,14 @@ func (c *inMemoryContextConnector) Switch(name string) error {
 	return fmt.Errorf("unknown context: %s", name)
 }
 
-func runExplorerWorkflow(output io.Writer, readOnly bool, startupCommand string, headless bool) {
-	runtime := newExplorerRuntimeWithOptions(readOnly, startupCommand, headless)
+func runExplorerWorkflow(
+	output io.Writer,
+	readOnly bool,
+	startupCommand string,
+	headless bool,
+	crumbsless bool,
+) {
+	runtime := newExplorerRuntimeWithRenderOptions(readOnly, startupCommand, headless, crumbsless)
 	if err := runtime.run(); err != nil {
 		_, _ = fmt.Fprintf(output, "tui error: %v\n", err)
 	}
@@ -120,17 +129,26 @@ func newExplorerRuntime() explorerRuntime {
 }
 
 func newExplorerRuntimeWithReadOnly(readOnly bool) explorerRuntime {
-	return newExplorerRuntimeWithOptions(readOnly, "", false)
+	return newExplorerRuntimeWithRenderOptions(readOnly, "", false, false)
 }
 
 func newExplorerRuntimeWithStartupCommand(readOnly bool, startupCommand string) explorerRuntime {
-	return newExplorerRuntimeWithOptions(readOnly, startupCommand, false)
+	return newExplorerRuntimeWithRenderOptions(readOnly, startupCommand, false, false)
 }
 
 func newExplorerRuntimeWithOptions(
 	readOnly bool,
 	startupCommand string,
 	headless bool,
+) explorerRuntime {
+	return newExplorerRuntimeWithRenderOptions(readOnly, startupCommand, headless, false)
+}
+
+func newExplorerRuntimeWithRenderOptions(
+	readOnly bool,
+	startupCommand string,
+	headless bool,
+	crumbsless bool,
 ) explorerRuntime {
 	runtime := explorerRuntime{
 		app:         tview.NewApplication(),
@@ -139,8 +157,10 @@ func newExplorerRuntimeWithOptions(
 		actionExec:  &runtimeActionExecutor{},
 		contexts:    newRuntimeContextManager(),
 		headless:    headless,
+		crumbsless:  crumbsless,
 		theme:       readTheme(),
 		body:        tview.NewTable(),
+		breadcrumb:  tview.NewTextView(),
 		status:      tview.NewTextView(),
 		prompt:      tview.NewInputField(),
 		footer:      tview.NewTextView(),
@@ -172,6 +192,9 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetBorder(true)
 	r.body.SetTitle(" HyperSphere Explorer ")
 	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
+	r.breadcrumb.SetDynamicColors(true)
+	r.breadcrumb.SetBorder(true)
+	r.breadcrumb.SetTitle(" Breadcrumbs ")
 	r.status.SetDynamicColors(true)
 	r.status.SetBorder(true)
 	r.status.SetTitle(" Status ")
@@ -182,9 +205,12 @@ func (r *explorerRuntime) configureWidgets() {
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(r.body, 0, 1, true).
-		AddItem(r.status, 3, 0, false).
-		AddItem(r.prompt, 1, 0, false).
-		AddItem(r.footer, 3, 0, false)
+		AddItem(r.prompt, 1, 0, false)
+	if !r.crumbsless {
+		layout.AddItem(r.breadcrumb, 3, 0, false)
+	}
+	layout.AddItem(r.status, 3, 0, false).AddItem(r.footer, 3, 0, false)
+	r.layout = layout
 	r.app.SetRoot(layout, true)
 	r.app.SetFocus(r.body)
 }
@@ -307,7 +333,15 @@ func (r *explorerRuntime) render(message string) {
 		r.status.SetText(message)
 	}
 	r.renderTable()
+	r.renderBreadcrumb()
 	r.footer.SetText(renderFooter(r.promptMode))
+}
+
+func (r *explorerRuntime) renderBreadcrumb() {
+	if r.crumbsless || r.breadcrumb == nil {
+		return
+	}
+	r.breadcrumb.SetText("home > " + string(r.session.CurrentView().Resource))
 }
 
 func (r *explorerRuntime) renderTable() {
