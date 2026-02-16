@@ -495,6 +495,7 @@
 ### RQ-044: Add inverse filter mode
 - vSphere mapping: exclude noisy objects.
 - Acceptance: `/!pattern` excludes rows matching pattern.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-045: Add label filter analog for tags
 - vSphere mapping: filter by `key=value` style vSphere tags.

@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-044 by adding inverse regex filter-mode support
+  for `/!pattern`, excluding rows that match the provided regex.
+- Added failing-first coverage in `internal/tui/runtime_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for inverse-filter execution paths.
 - Implemented and fulfilled RQ-043 by adding regex filter-mode execution for
   `/pattern` commands with regex compile validation before applying row filters.
 - Added failing-first coverage in `internal/tui/runtime_test.go` and

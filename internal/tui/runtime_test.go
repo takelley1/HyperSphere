@@ -65,6 +65,19 @@ func TestSessionApplyRegexFilterAndRejectInvalidPattern(t *testing.T) {
 	}
 }
 
+func TestSessionApplyInverseRegexFilter(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}, {Name: "db-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.ApplyInverseRegexFilter("^vm-"); err != nil {
+		t.Fatalf("ApplyInverseRegexFilter error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "db-a" {
+		t.Fatalf("expected inverse regex filter to exclude matching vm rows")
+	}
+}
+
 func TestSessionLastViewToggle(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.ExecuteCommand(":vm"); err != nil {

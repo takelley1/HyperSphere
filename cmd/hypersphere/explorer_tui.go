@@ -1988,6 +1988,14 @@ func handleSimpleCommandKinds(
 	case tui.CommandLastView:
 		return statusFromError(session.LastView(), "switched to last view"), true, true
 	case tui.CommandFilter:
+		filterValue := strings.TrimSpace(parsed.Value)
+		if strings.HasPrefix(filterValue, "!") {
+			pattern := strings.TrimSpace(strings.TrimPrefix(filterValue, "!"))
+			return statusFromError(
+				session.ApplyInverseRegexFilter(pattern),
+				fmt.Sprintf("filter: %s", parsed.Value),
+			), true, true
+		}
 		return statusFromError(
 			session.ApplyRegexFilter(parsed.Value),
 			fmt.Sprintf("filter: %s", parsed.Value),

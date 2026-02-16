@@ -1275,6 +1275,35 @@ func TestExecutePromptCommandRegexFilterRejectsInvalidPatternAndKeepsPriorFilter
 	}
 }
 
+func TestExecutePromptCommandInverseRegexFilterExcludesMatches(t *testing.T) {
+	session := tui.NewSession(
+		tui.Catalog{
+			VMs: []tui.VMRow{{Name: "vm-a"}, {Name: "vm-b"}, {Name: "db-a"}},
+		},
+	)
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"/!^vm-",
+	)
+	if !keepRunning {
+		t.Fatalf("expected inverse regex filter command to keep runtime alive")
+	}
+	if message != "filter: !^vm-" {
+		t.Fatalf("expected inverse regex filter status, got %q", message)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "db-a" {
+		t.Fatalf("expected inverse regex filter to exclude matching vm rows")
+	}
+}
+
 func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 	runtime := newExplorerRuntimeWithReadOnly(true)
 	message, keepRunning := executePromptCommand(

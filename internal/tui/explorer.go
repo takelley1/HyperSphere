@@ -642,6 +642,15 @@ func (s *Session) ApplyFilter(filter string) {
 
 // ApplyRegexFilter filters rows by regex match across all columns.
 func (s *Session) ApplyRegexFilter(pattern string) error {
+	return s.applyRegexFilter(pattern, false)
+}
+
+// ApplyInverseRegexFilter excludes rows matching a regex across all columns.
+func (s *Session) ApplyInverseRegexFilter(pattern string) error {
+	return s.applyRegexFilter(pattern, true)
+}
+
+func (s *Session) applyRegexFilter(pattern string, inverse bool) error {
 	trimmed := strings.TrimSpace(pattern)
 	if trimmed == "" {
 		s.ApplyFilter("")
@@ -652,7 +661,10 @@ func (s *Session) ApplyRegexFilter(pattern string) error {
 		return err
 	}
 	s.filterText = trimmed
-	s.view = filterViewRegex(s.baseView, compiled)
+	if inverse {
+		s.filterText = "!" + s.filterText
+	}
+	s.view = filterViewRegex(s.baseView, compiled, inverse)
 	s.clampSelectedRow()
 	return nil
 }
@@ -1862,7 +1874,7 @@ func filterView(view ResourceView, filter string) ResourceView {
 	return filtered
 }
 
-func filterViewRegex(view ResourceView, pattern *regexp.Regexp) ResourceView {
+func filterViewRegex(view ResourceView, pattern *regexp.Regexp, inverse bool) ResourceView {
 	filtered := ResourceView{
 		Resource:    view.Resource,
 		Columns:     append([]string{}, view.Columns...),
@@ -1872,7 +1884,11 @@ func filterViewRegex(view ResourceView, pattern *regexp.Regexp) ResourceView {
 		Actions:     append([]string{}, view.Actions...),
 	}
 	for index, row := range view.Rows {
-		if !rowMatchesRegex(row, pattern) {
+		matched := rowMatchesRegex(row, pattern)
+		if inverse {
+			matched = !matched
+		}
+		if !matched {
 			continue
 		}
 		filtered.Rows = append(filtered.Rows, append([]string{}, row...))
