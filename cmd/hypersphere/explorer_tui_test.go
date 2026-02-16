@@ -151,3 +151,62 @@ func TestRenderFooterOmitsClockForEventDrivenRedraw(t *testing.T) {
 		t.Fatalf("expected footer without realtime clock: %q", footer)
 	}
 }
+
+func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
+	session := tui.NewSession(defaultCatalog())
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		":ctx",
+	)
+
+	if !keepRunning {
+		t.Fatalf("expected ctx list command to keep runtime alive")
+	}
+	if !strings.Contains(message, "contexts:") {
+		t.Fatalf("expected ctx list status, got %q", message)
+	}
+	if !strings.Contains(message, "vc-primary") {
+		t.Fatalf("expected default context list to include vc-primary, got %q", message)
+	}
+}
+
+func TestExecutePromptCommandCtxSelectRefreshesActiveView(t *testing.T) {
+	session := tui.NewSession(defaultCatalog())
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("unexpected initial view error: %v", err)
+	}
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("unexpected row move error: %v", err)
+	}
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		":ctx vc-lab",
+	)
+
+	if !keepRunning {
+		t.Fatalf("expected ctx select command to keep runtime alive")
+	}
+	if !strings.Contains(message, "context: vc-lab") {
+		t.Fatalf("expected selected context status, got %q", message)
+	}
+	if session.CurrentView().Resource != tui.ResourceHost {
+		t.Fatalf("expected active view to remain host after refresh")
+	}
+	if session.SelectedRow() != 0 {
+		t.Fatalf("expected active view refresh to reset selection row, got %d", session.SelectedRow())
+	}
+}

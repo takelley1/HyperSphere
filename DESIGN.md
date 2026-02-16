@@ -38,6 +38,9 @@
 - [ ] Add `?` hotkey modal for per-view keybinding discovery.
 - [ ] Add `ctrl-a` alias palette to browse and execute command shortcuts.
 - [ ] Add tab-accept behavior for first prompt suggestion.
+- [ ] Add `:ctx` completion hints for configured endpoint names.
+- [ ] Add context switch status badge to the header metadata area.
+- [ ] Add prompt validation for unknown `:ctx` endpoint names before submit.
 
 ## Medium-Term Goals
 
@@ -58,9 +61,9 @@
 - [ ] Add split-pane detail drawers for selected object metadata.
 - [ ] Add search result jump list with next/previous navigation.
 - [ ] Add keyboard cheatsheet modal with per-view hotkeys.
-- [ ] Add active vCenter context switcher view and reconnect flow.
 - [ ] Add pulses-style health dashboard for live utilization and alarms.
 - [ ] Add xray-style dependency explorer for VM/host/datastore/network relationships.
+- [ ] Add endpoint health probing during context reconnect to classify degraded/disconnected states.
 
 ### Write-Path UX
 - [ ] Add confirmation dialogs for destructive actions.
@@ -81,6 +84,7 @@
 - [ ] Add integration tests for mark semantics and bulk action execution.
 - [ ] Add integration tests for failure handling, retries, and read-only enforcement.
 - [ ] Add benchmark tests for large inventory rendering and sorting.
+- [ ] Add integration tests for `:ctx` switch flow and active-view refresh behavior.
 
 ### API and Plugin Surface
 - [ ] Add versioned explorer API contracts for external adapters.

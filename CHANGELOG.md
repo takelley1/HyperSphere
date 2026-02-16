@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-018 `:ctx` command parity in explorer prompt mode.
+- Added parser support for `:ctx` and `:ctx <endpoint>` with validation for extra arguments.
+- Added runtime context manager plumbing with configured endpoint listing and endpoint switch handling.
+- Added active-view refresh after context switch so the current resource view reconnects and re-renders deterministically.
+- Added regression tests for `:ctx` parsing, context list status output, and context switch refresh behavior.
+- Updated `DESIGN.md` by removing the completed context-switch goal and adding follow-on subtasks for context completion, header status, and integration coverage.
+- Marked `RQ-018` as fulfilled in `REQUIREMENTS.md`.
 - Added screenshot-driven visual parity requirements (RQ-092 to RQ-106) to
   define the target k9s-style look for HyperSphere.
 - Added atomic UI requirements for header zoning, cyan framing, centered title

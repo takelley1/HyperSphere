@@ -86,7 +86,7 @@ func resourceCommandAliases() []string {
 	return []string{
 		":vm", ":vms", ":lun", ":luns", ":cluster", ":clusters",
 		":host", ":hosts", ":datastore", ":datastores", ":ds",
-		":help", ":q", ":readonly", ":ro", ":history up", ":history down",
+		":help", ":q", ":readonly", ":ro", ":history up", ":history down", ":ctx",
 	}
 }
 

@@ -90,3 +90,28 @@ func TestParseExplorerInputHistoryAndSuggest(t *testing.T) {
 		t.Fatalf("expected empty suggest prefix error")
 	}
 }
+
+func TestParseExplorerInputContextCommands(t *testing.T) {
+	list, err := ParseExplorerInput(":ctx")
+	if err != nil {
+		t.Fatalf("unexpected ctx list parse error: %v", err)
+	}
+	if list.Kind != CommandContext || list.Value != "" {
+		t.Fatalf("unexpected ctx list parse: %+v", list)
+	}
+
+	selectCmd, err := ParseExplorerInput(":ctx vc-west")
+	if err != nil {
+		t.Fatalf("unexpected ctx select parse error: %v", err)
+	}
+	if selectCmd.Kind != CommandContext || selectCmd.Value != "vc-west" {
+		t.Fatalf("unexpected ctx select parse: %+v", selectCmd)
+	}
+
+	if _, err := ParseExplorerInput(":ctx vc-west extra"); err == nil {
+		t.Fatalf("expected invalid ctx command with extra args")
+	}
+	if _, err := parseContextCommand(":context vc-west"); err == nil {
+		t.Fatalf("expected invalid ctx keyword error")
+	}
+}

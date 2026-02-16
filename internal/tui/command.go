@@ -14,6 +14,7 @@ const (
 	CommandNoop     CommandKind = "noop"
 	CommandQuit     CommandKind = "quit"
 	CommandHelp     CommandKind = "help"
+	CommandContext  CommandKind = "context"
 	CommandReadOnly CommandKind = "readonly"
 	CommandLastView CommandKind = "last_view"
 	CommandHistory  CommandKind = "history"
@@ -39,23 +40,8 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 	if trimmed == "" {
 		return ExplorerCommand{Kind: CommandNoop}, nil
 	}
-	if trimmed == ":q" || trimmed == ":quit" {
-		return ExplorerCommand{Kind: CommandQuit}, nil
-	}
-	if trimmed == ":help" || trimmed == ":h" || trimmed == "?" {
-		return ExplorerCommand{Kind: CommandHelp}, nil
-	}
-	if strings.HasPrefix(trimmed, ":ro") || strings.HasPrefix(trimmed, ":readonly") {
-		return parseReadOnlyCommand(trimmed)
-	}
-	if trimmed == ":-" {
-		return ExplorerCommand{Kind: CommandLastView}, nil
-	}
-	if strings.HasPrefix(trimmed, ":history") {
-		return parseHistoryCommand(trimmed)
-	}
-	if strings.HasPrefix(trimmed, ":suggest ") {
-		return parseSuggestCommand(trimmed)
+	if command, ok := parseLiteralCommand(trimmed); ok {
+		return command, nil
 	}
 	if strings.HasPrefix(trimmed, "/") {
 		return ExplorerCommand{
@@ -64,11 +50,7 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 		}, nil
 	}
 	if strings.HasPrefix(trimmed, ":") {
-		resource, err := parseCommand(trimmed)
-		if err != nil {
-			return ExplorerCommand{}, err
-		}
-		return ExplorerCommand{Kind: CommandView, Value: string(resource)}, nil
+		return parseColonCommand(trimmed)
 	}
 	if strings.HasPrefix(trimmed, "!") {
 		action := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(trimmed, "!")))
@@ -78,6 +60,39 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 		return ExplorerCommand{Kind: CommandAction, Value: action}, nil
 	}
 	return ExplorerCommand{Kind: CommandHotKey, Value: normalizeKey(trimmed)}, nil
+}
+
+func parseLiteralCommand(line string) (ExplorerCommand, bool) {
+	if line == ":q" || line == ":quit" {
+		return ExplorerCommand{Kind: CommandQuit}, true
+	}
+	if line == ":help" || line == ":h" || line == "?" {
+		return ExplorerCommand{Kind: CommandHelp}, true
+	}
+	if line == ":-" {
+		return ExplorerCommand{Kind: CommandLastView}, true
+	}
+	return ExplorerCommand{}, false
+}
+
+func parseColonCommand(line string) (ExplorerCommand, error) {
+	if strings.HasPrefix(line, ":ro") || strings.HasPrefix(line, ":readonly") {
+		return parseReadOnlyCommand(line)
+	}
+	if strings.HasPrefix(line, ":history") {
+		return parseHistoryCommand(line)
+	}
+	if strings.HasPrefix(line, ":suggest ") {
+		return parseSuggestCommand(line)
+	}
+	if strings.HasPrefix(line, ":ctx") {
+		return parseContextCommand(line)
+	}
+	resource, err := parseCommand(line)
+	if err != nil {
+		return ExplorerCommand{}, err
+	}
+	return ExplorerCommand{Kind: CommandView, Value: string(resource)}, nil
 }
 
 func parseReadOnlyCommand(line string) (ExplorerCommand, error) {
@@ -116,4 +131,18 @@ func parseSuggestCommand(line string) (ExplorerCommand, error) {
 		return ExplorerCommand{}, fmt.Errorf("%w: empty suggest prefix", ErrInvalidAction)
 	}
 	return ExplorerCommand{Kind: CommandSuggest, Value: value}, nil
+}
+
+func parseContextCommand(line string) (ExplorerCommand, error) {
+	fields := strings.Fields(strings.TrimPrefix(line, ":"))
+	if len(fields) == 0 || fields[0] != "ctx" {
+		return ExplorerCommand{}, fmt.Errorf("%w: invalid context command", ErrInvalidAction)
+	}
+	if len(fields) == 1 {
+		return ExplorerCommand{Kind: CommandContext, Value: ""}, nil
+	}
+	if len(fields) == 2 {
+		return ExplorerCommand{Kind: CommandContext, Value: fields[1]}, nil
+	}
+	return ExplorerCommand{}, fmt.Errorf("%w: context %s", ErrInvalidAction, strings.Join(fields[1:], " "))
 }

@@ -92,6 +92,7 @@
 ### RQ-018: Add command `:ctx` analog for vCenter targets
 - vSphere mapping: switch active vCenter endpoint profile.
 - Acceptance: `:ctx` shows configured endpoints; selecting one reconnects and refreshes active view.
+- Status: fulfilled (2026-02-15).
 
 ## Table Interaction Parity
 

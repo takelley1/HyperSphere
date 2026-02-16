@@ -20,6 +20,7 @@ type explorerRuntime struct {
 	session     tui.Session
 	promptState tui.PromptState
 	actionExec  *runtimeActionExecutor
+	contexts    runtimeContextManager
 	theme       explorerTheme
 	body        *tview.Table
 	status      *tview.TextView
@@ -30,6 +31,21 @@ type explorerRuntime struct {
 
 type runtimeActionExecutor struct {
 	last string
+}
+
+type runtimeContextConnector interface {
+	List() []string
+	Active() string
+	Switch(name string) error
+}
+
+type runtimeContextManager struct {
+	connector runtimeContextConnector
+}
+
+type inMemoryContextConnector struct {
+	active    string
+	endpoints []string
 }
 
 type explorerTheme struct {
@@ -51,6 +67,46 @@ func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, id
 	return nil
 }
 
+func newRuntimeContextManager() runtimeContextManager {
+	return runtimeContextManager{
+		connector: &inMemoryContextConnector{
+			active:    "vc-primary",
+			endpoints: []string{"vc-primary", "vc-lab"},
+		},
+	}
+}
+
+func (m runtimeContextManager) List() []string {
+	return m.connector.List()
+}
+
+func (m runtimeContextManager) Active() string {
+	return m.connector.Active()
+}
+
+func (m runtimeContextManager) Switch(name string) error {
+	return m.connector.Switch(name)
+}
+
+func (c *inMemoryContextConnector) List() []string {
+	values := append([]string{}, c.endpoints...)
+	return values
+}
+
+func (c *inMemoryContextConnector) Active() string {
+	return c.active
+}
+
+func (c *inMemoryContextConnector) Switch(name string) error {
+	for _, endpoint := range c.endpoints {
+		if endpoint == name {
+			c.active = name
+			return nil
+		}
+	}
+	return fmt.Errorf("unknown context: %s", name)
+}
+
 func runExplorerWorkflow(output io.Writer) {
 	runtime := newExplorerRuntime()
 	if err := runtime.run(); err != nil {
@@ -64,6 +120,7 @@ func newExplorerRuntime() explorerRuntime {
 		session:     tui.NewSession(defaultCatalog()),
 		promptState: tui.NewPromptState(defaultPromptHistorySize),
 		actionExec:  &runtimeActionExecutor{},
+		contexts:    newRuntimeContextManager(),
 		theme:       readTheme(),
 		body:        tview.NewTable(),
 		status:      tview.NewTextView(),
@@ -144,6 +201,7 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 		&r.session,
 		&r.promptState,
 		r.actionExec,
+		&r.contexts,
 		r.prompt.GetText(),
 	)
 	r.endPrompt()
@@ -337,6 +395,7 @@ func executePromptCommand(
 	session *tui.Session,
 	promptState *tui.PromptState,
 	executor *runtimeActionExecutor,
+	contexts *runtimeContextManager,
 	line string,
 ) (string, bool) {
 	parsed, err := tui.ParseExplorerInput(line)
@@ -346,47 +405,108 @@ func executePromptCommand(
 	if shouldRecordHistory(parsed.Kind) {
 		promptState.Record(line)
 	}
-	return runCommand(session, promptState, executor, parsed)
+	return runCommand(session, promptState, executor, contexts, parsed)
 }
 
 func runCommand(
 	session *tui.Session,
 	promptState *tui.PromptState,
 	executor *runtimeActionExecutor,
+	contexts *runtimeContextManager,
 	parsed tui.ExplorerCommand,
 ) (string, bool) {
+	if message, keepRunning, handled := handleSimpleCommandKinds(
+		session,
+		promptState,
+		parsed,
+	); handled {
+		return message, keepRunning
+	}
 	switch parsed.Kind {
-	case tui.CommandNoop:
-		return "", true
-	case tui.CommandQuit:
-		return "bye", false
-	case tui.CommandHelp:
-		return "use :vm/:lun/:cluster/:host/:datastore, :ro, /text, !action", true
-	case tui.CommandReadOnly:
-		applyReadOnlyMode(session, parsed.Value)
-		return readOnlyStatus(*session), true
-	case tui.CommandHistory:
-		return historyStatus(promptState, parsed.Value), true
-	case tui.CommandSuggest:
-		return suggestStatus(promptState, parsed.Value, session.CurrentView()), true
-	case tui.CommandLastView:
-		return statusFromError(session.LastView(), "switched to last view"), true
-	case tui.CommandFilter:
-		session.ApplyFilter(parsed.Value)
-		return fmt.Sprintf("filter: %s", parsed.Value), true
+	case tui.CommandContext:
+		return handleContextCommand(session, contexts, parsed.Value), true
 	case tui.CommandView:
 		return statusFromError(session.ExecuteCommand(":"+parsed.Value), "view: "+parsed.Value), true
 	case tui.CommandAction:
-		if err := session.ApplyAction(parsed.Value, executor); err != nil {
-			return fmt.Sprintf("[red]command error: %s", err.Error()), true
-		}
-		if executor.last != "" {
-			return executor.last, true
-		}
-		return "action executed", true
+		return handleActionCommand(session, executor, parsed.Value), true
 	default:
 		return statusFromError(session.HandleKey(parsed.Value), "key: "+parsed.Value), true
 	}
+}
+
+func handleSimpleCommandKinds(
+	session *tui.Session,
+	promptState *tui.PromptState,
+	parsed tui.ExplorerCommand,
+) (string, bool, bool) {
+	switch parsed.Kind {
+	case tui.CommandNoop:
+		return "", true, true
+	case tui.CommandQuit:
+		return "bye", false, true
+	case tui.CommandHelp:
+		return "use :vm/:lun/:cluster/:host/:datastore, :ctx, :ro, /text, !action", true, true
+	case tui.CommandReadOnly:
+		applyReadOnlyMode(session, parsed.Value)
+		return readOnlyStatus(*session), true, true
+	case tui.CommandHistory:
+		return historyStatus(promptState, parsed.Value), true, true
+	case tui.CommandSuggest:
+		return suggestStatus(promptState, parsed.Value, session.CurrentView()), true, true
+	case tui.CommandLastView:
+		return statusFromError(session.LastView(), "switched to last view"), true, true
+	case tui.CommandFilter:
+		session.ApplyFilter(parsed.Value)
+		return fmt.Sprintf("filter: %s", parsed.Value), true, true
+	default:
+		return "", true, false
+	}
+}
+
+func handleActionCommand(
+	session *tui.Session,
+	executor *runtimeActionExecutor,
+	action string,
+) string {
+	if err := session.ApplyAction(action, executor); err != nil {
+		return fmt.Sprintf("[red]command error: %s", err.Error())
+	}
+	if executor.last != "" {
+		return executor.last
+	}
+	return "action executed"
+}
+
+func handleContextCommand(
+	session *tui.Session,
+	contexts *runtimeContextManager,
+	value string,
+) string {
+	if contexts == nil {
+		return "[red]command error: context manager unavailable"
+	}
+	if strings.TrimSpace(value) == "" {
+		return contextListStatus(*contexts)
+	}
+	if err := contexts.Switch(value); err != nil {
+		return fmt.Sprintf("[red]command error: %s", err.Error())
+	}
+	if err := refreshActiveView(session); err != nil {
+		return fmt.Sprintf("[red]command error: %s", err.Error())
+	}
+	return fmt.Sprintf("context: %s", contexts.Active())
+}
+
+func refreshActiveView(session *tui.Session) error {
+	return session.ExecuteCommand(":" + string(session.CurrentView().Resource))
+}
+
+func contextListStatus(contexts runtimeContextManager) string {
+	return fmt.Sprintf(
+		"contexts: %s | active: %s",
+		strings.Join(contexts.List(), ", "),
+		contexts.Active(),
+	)
 }
 
 func statusFromError(err error, success string) string {
