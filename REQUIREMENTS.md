@@ -262,6 +262,14 @@
   guidance (`Shift+O`) so operators can discover sorting without opening docs.
 - Status: fulfilled (2026-02-16).
 
+### RQ-120: Move breadcrumbs and status panels to top of TUI layout
+- vSphere mapping: keep context and feedback visible without requiring bottom
+  scanning while navigating resource tables.
+- Acceptance: breadcrumbs and status widgets render above the table body.
+- Acceptance: prompt remains at the bottom input line; breadcrumbs/status no
+  longer occupy bottom layout slots.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

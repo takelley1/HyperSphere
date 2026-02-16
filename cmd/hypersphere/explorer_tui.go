@@ -287,13 +287,13 @@ func (r *explorerRuntime) configureWidgets() {
 	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(r.topHeader, topHeaderPanelHeight, 0, false).
-		AddItem(r.body, 0, 1, true).
-		AddItem(r.prompt, 1, 0, false)
+		AddItem(r.topHeader, topHeaderPanelHeight, 0, false)
 	if !r.crumbsless {
 		layout.AddItem(r.breadcrumb, 3, 0, false)
 	}
 	layout.AddItem(r.status, 3, 0, false)
+	layout.AddItem(r.body, 0, 1, true)
+	layout.AddItem(r.prompt, 1, 0, false)
 	r.layout = layout
 	r.layout.SetBackgroundColor(r.theme.CanvasBackground)
 	r.pages.AddPage("main", layout, true, true)

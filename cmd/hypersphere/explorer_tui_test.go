@@ -1235,6 +1235,33 @@ func TestNewExplorerRuntimeRemovesBottomHelpBarFromLayout(t *testing.T) {
 	}
 }
 
+func TestNewExplorerRuntimePlacesBreadcrumbAndStatusAboveBody(t *testing.T) {
+	runtime := newExplorerRuntime()
+	if runtime.layout.GetItemCount() != 5 {
+		t.Fatalf("expected five layout items with breadcrumbs enabled")
+	}
+	topItem := runtime.layout.GetItem(0)
+	breadcrumbItem := runtime.layout.GetItem(1)
+	statusItem := runtime.layout.GetItem(2)
+	bodyItem := runtime.layout.GetItem(3)
+	promptItem := runtime.layout.GetItem(4)
+	if topItem != runtime.topHeader {
+		t.Fatalf("expected top header as first layout item")
+	}
+	if breadcrumbItem != runtime.breadcrumb {
+		t.Fatalf("expected breadcrumb as second layout item")
+	}
+	if statusItem != runtime.status {
+		t.Fatalf("expected status as third layout item")
+	}
+	if bodyItem != runtime.body {
+		t.Fatalf("expected body table below top status widgets")
+	}
+	if promptItem != runtime.prompt {
+		t.Fatalf("expected prompt as last layout item")
+	}
+}
+
 func TestDescribePanelOpensOnDAndEscRestoresSelectionAndMarks(t *testing.T) {
 	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
 	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))

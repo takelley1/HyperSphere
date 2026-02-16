@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-120 by moving breadcrumb and status panels above the
+  resource table in the vertical TUI layout.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert top-to-bottom layout order (`topHeader`, `breadcrumb`, `status`,
+  `body`, `prompt`) when breadcrumbs are enabled.
 - Added and fulfilled RQ-119 by adding explicit sort guidance (`<Shift+O> Sort`)
   to the top-center table help legend.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

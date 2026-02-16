@@ -76,6 +76,7 @@
 - [ ] Sub-task: add trend-direction derivation from prior sample snapshots.
 - [ ] Sub-task: add integration coverage for multiline logo rendering during live resize.
 - [ ] Sub-task: add logo clipping assertions for odd-width terminals and 1-column deltas.
+- [ ] Sub-task: add compact-height layout coverage for top stacked header+breadcrumb+status zones.
 
 ### Rendering Performance
 - [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.
