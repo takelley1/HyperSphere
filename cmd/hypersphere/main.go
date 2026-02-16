@@ -328,11 +328,72 @@ func runDeletionWorkflow(application app.App, cfg config.Config) {
 
 func defaultCatalog() tui.Catalog {
 	return tui.Catalog{
-		VMs:        []tui.VMRow{{Name: "vm-a", Tags: "prod,linux", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-1", Owner: "a@example.com"}, {Name: "vm-b", Tags: "dev,windows", Cluster: "cluster-west", PowerState: "off", Datastore: "ds-2", Owner: "b@example.com"}},
-		LUNs:       []tui.LUNRow{{Name: "lun-001", Tags: "gold", Cluster: "cluster-east", Datastore: "san-a", CapacityGB: 1000, UsedGB: 450}, {Name: "lun-002", Tags: "silver", Cluster: "cluster-west", Datastore: "san-b", CapacityGB: 2000, UsedGB: 900}},
-		Clusters:   []tui.ClusterRow{{Name: "cluster-east", Tags: "prod", Datacenter: "dc-1", Hosts: 8, VMCount: 120, CPUUsagePercent: 63, MemUsagePercent: 58}, {Name: "cluster-west", Tags: "dev", Datacenter: "dc-2", Hosts: 6, VMCount: 90, CPUUsagePercent: 52, MemUsagePercent: 49}},
-		Hosts:      []tui.HostRow{{Name: "esxi-01", Tags: "gpu", Cluster: "cluster-east", CPUUsagePercent: 72, MemUsagePercent: 67, ConnectionState: "connected"}, {Name: "esxi-02", Tags: "general", Cluster: "cluster-west", CPUUsagePercent: 44, MemUsagePercent: 52, ConnectionState: "connected"}},
-		Datastores: []tui.DatastoreRow{{Name: "vsan-east", Tags: "flash", Cluster: "cluster-east", CapacityGB: 8000, UsedGB: 4200, FreeGB: 3800}, {Name: "nfs-west", Tags: "archive", Cluster: "cluster-west", CapacityGB: 12000, UsedGB: 7200, FreeGB: 4800}},
+		VMs:        defaultVMRows(),
+		LUNs:       defaultLUNRows(),
+		Clusters:   defaultClusterRows(),
+		Hosts:      defaultHostRows(),
+		Datastores: defaultDatastoreRows(),
+	}
+}
+
+func defaultVMRows() []tui.VMRow {
+	return []tui.VMRow{
+		{Name: "vm-a", Tags: "prod,linux", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-1", Owner: "a@example.com"},
+		{Name: "vm-b", Tags: "dev,windows", Cluster: "cluster-west", PowerState: "off", Datastore: "ds-2", Owner: "b@example.com"},
+		{Name: "vm-c", Tags: "prod,db", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-3", Owner: "c@example.com"},
+		{Name: "vm-d", Tags: "qa,linux", Cluster: "cluster-central", PowerState: "suspended", Datastore: "ds-4", Owner: "d@example.com"},
+		{Name: "vm-e", Tags: "edge,linux", Cluster: "cluster-edge", PowerState: "on", Datastore: "ds-5", Owner: "e@example.com"},
+		{Name: "vm-f", Tags: "dev,api", Cluster: "cluster-west", PowerState: "off", Datastore: "ds-6", Owner: "f@example.com"},
+		{Name: "vm-g", Tags: "ops,jump", Cluster: "cluster-east", PowerState: "on", Datastore: "ds-7", Owner: "g@example.com"},
+		{Name: "vm-h", Tags: "prod,cache", Cluster: "cluster-central", PowerState: "on", Datastore: "ds-8", Owner: "h@example.com"},
+	}
+}
+
+func defaultLUNRows() []tui.LUNRow {
+	return []tui.LUNRow{
+		{Name: "lun-001", Tags: "gold", Cluster: "cluster-east", Datastore: "san-a", CapacityGB: 1000, UsedGB: 450},
+		{Name: "lun-002", Tags: "silver", Cluster: "cluster-west", Datastore: "san-b", CapacityGB: 2000, UsedGB: 900},
+		{Name: "lun-003", Tags: "bronze", Cluster: "cluster-central", Datastore: "san-c", CapacityGB: 1500, UsedGB: 700},
+		{Name: "lun-004", Tags: "archive", Cluster: "cluster-edge", Datastore: "san-d", CapacityGB: 3000, UsedGB: 1200},
+		{Name: "lun-005", Tags: "flash", Cluster: "cluster-east", Datastore: "san-e", CapacityGB: 1200, UsedGB: 840},
+		{Name: "lun-006", Tags: "backup", Cluster: "cluster-west", Datastore: "san-f", CapacityGB: 2500, UsedGB: 1250},
+		{Name: "lun-007", Tags: "gold", Cluster: "cluster-central", Datastore: "san-g", CapacityGB: 1800, UsedGB: 1080},
+		{Name: "lun-008", Tags: "silver", Cluster: "cluster-edge", Datastore: "san-h", CapacityGB: 1600, UsedGB: 640},
+	}
+}
+
+func defaultClusterRows() []tui.ClusterRow {
+	return []tui.ClusterRow{
+		{Name: "cluster-east", Tags: "prod", Datacenter: "dc-1", Hosts: 8, VMCount: 120, CPUUsagePercent: 63, MemUsagePercent: 58},
+		{Name: "cluster-west", Tags: "dev", Datacenter: "dc-2", Hosts: 6, VMCount: 90, CPUUsagePercent: 52, MemUsagePercent: 49},
+		{Name: "cluster-central", Tags: "qa", Datacenter: "dc-1", Hosts: 5, VMCount: 64, CPUUsagePercent: 57, MemUsagePercent: 55},
+		{Name: "cluster-edge", Tags: "edge", Datacenter: "dc-3", Hosts: 4, VMCount: 33, CPUUsagePercent: 47, MemUsagePercent: 44},
+	}
+}
+
+func defaultHostRows() []tui.HostRow {
+	return []tui.HostRow{
+		{Name: "esxi-01", Tags: "gpu", Cluster: "cluster-east", CPUUsagePercent: 72, MemUsagePercent: 67, ConnectionState: "connected"},
+		{Name: "esxi-02", Tags: "general", Cluster: "cluster-west", CPUUsagePercent: 44, MemUsagePercent: 52, ConnectionState: "connected"},
+		{Name: "esxi-03", Tags: "storage", Cluster: "cluster-central", CPUUsagePercent: 51, MemUsagePercent: 60, ConnectionState: "connected"},
+		{Name: "esxi-04", Tags: "compute", Cluster: "cluster-edge", CPUUsagePercent: 38, MemUsagePercent: 41, ConnectionState: "maintenance"},
+		{Name: "esxi-05", Tags: "gpu", Cluster: "cluster-east", CPUUsagePercent: 68, MemUsagePercent: 73, ConnectionState: "connected"},
+		{Name: "esxi-06", Tags: "general", Cluster: "cluster-west", CPUUsagePercent: 40, MemUsagePercent: 46, ConnectionState: "disconnected"},
+		{Name: "esxi-07", Tags: "network", Cluster: "cluster-central", CPUUsagePercent: 49, MemUsagePercent: 58, ConnectionState: "connected"},
+		{Name: "esxi-08", Tags: "edge", Cluster: "cluster-edge", CPUUsagePercent: 36, MemUsagePercent: 39, ConnectionState: "connected"},
+	}
+}
+
+func defaultDatastoreRows() []tui.DatastoreRow {
+	return []tui.DatastoreRow{
+		{Name: "vsan-east", Tags: "flash", Cluster: "cluster-east", CapacityGB: 8000, UsedGB: 4200, FreeGB: 3800},
+		{Name: "nfs-west", Tags: "archive", Cluster: "cluster-west", CapacityGB: 12000, UsedGB: 7200, FreeGB: 4800},
+		{Name: "vvol-central", Tags: "tier-1", Cluster: "cluster-central", CapacityGB: 9000, UsedGB: 5100, FreeGB: 3900},
+		{Name: "iscsi-edge", Tags: "edge", Cluster: "cluster-edge", CapacityGB: 4000, UsedGB: 1900, FreeGB: 2100},
+		{Name: "ds-5", Tags: "backup", Cluster: "cluster-east", CapacityGB: 6000, UsedGB: 2500, FreeGB: 3500},
+		{Name: "ds-6", Tags: "dev", Cluster: "cluster-west", CapacityGB: 5500, UsedGB: 2100, FreeGB: 3400},
+		{Name: "ds-7", Tags: "prod", Cluster: "cluster-central", CapacityGB: 10000, UsedGB: 6900, FreeGB: 3100},
+		{Name: "ds-8", Tags: "qa", Cluster: "cluster-edge", CapacityGB: 5000, UsedGB: 2200, FreeGB: 2800},
 	}
 }
 

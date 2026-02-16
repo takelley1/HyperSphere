@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-114 by expanding the built-in sample catalog used by
+  the explorer runtime so local browsing has more inventory breadth.
+- Added failing-first coverage in `cmd/hypersphere/main_test.go` to assert
+  expanded row counts per resource and mixed operational states.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with richer VM/LUN/
+  cluster/host/datastore sample rows while preserving canonical IDs used in tests.
+- Updated `DESIGN.md` with new short-term demo dataset quality sub-tasks for
+  dense inventories, long-field browsing, and describe-panel depth.
 - Implemented RQ-103 log-view title parity by adding log frame title rendering
   in the format `Logs <object-path> (target=<value>)` when a sub-target is set.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for

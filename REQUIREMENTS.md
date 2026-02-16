@@ -204,6 +204,15 @@
   stable across redraw/resize flows.
 - Status: fulfilled (2026-02-16).
 
+### RQ-114: Expand built-in sample inventory data for browsing
+- vSphere mapping: operators need enough local sample data to browse table
+  behaviors and interactions without connecting to live endpoints.
+- Acceptance: default sample catalog includes at least 8 rows each for VM, LUN,
+  host, and datastore resources, and at least 4 cluster rows.
+- Acceptance: sample data includes mixed operational states (for example powered
+  off VMs and disconnected hosts) to exercise browsing and status cues.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

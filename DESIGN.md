@@ -21,6 +21,11 @@
 - [ ] Sub-task: add selection-sync integration coverage for headless mode table clicks.
 - [ ] Sub-task: add mouse click row-selection behavior for mixed compact/non-compact views.
 
+### Demo Dataset Quality
+- [ ] Add sample inventory variants for dense environments (50+ rows) to validate scrolling ergonomics.
+- [ ] Add sample objects with long names/tags/descriptions for truncation and wrap behavior checks.
+- [ ] Add deterministic sample snapshots/comments fields for describe-panel browsing depth.
+
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.
 - [ ] Add monochrome fallback indicators for status and power-state cells.

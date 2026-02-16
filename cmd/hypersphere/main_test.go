@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/takelley1/hypersphere/internal/tui"
 )
 
 func TestRunVersionCommandPrintsBuildFields(t *testing.T) {
@@ -213,4 +215,50 @@ func TestParseFlagsCrumbslessEnablesBreadcrumblessStartup(t *testing.T) {
 	if !flags.crumbsless {
 		t.Fatalf("expected crumbsless=true when --crumbsless is passed")
 	}
+}
+
+func TestDefaultCatalogProvidesExpandedBrowsingDataset(t *testing.T) {
+	catalog := defaultCatalog()
+	if len(catalog.VMs) < 8 {
+		t.Fatalf("expected at least 8 VM rows for browsing, got %d", len(catalog.VMs))
+	}
+	if len(catalog.LUNs) < 8 {
+		t.Fatalf("expected at least 8 LUN rows for browsing, got %d", len(catalog.LUNs))
+	}
+	if len(catalog.Clusters) < 4 {
+		t.Fatalf("expected at least 4 cluster rows for browsing, got %d", len(catalog.Clusters))
+	}
+	if len(catalog.Hosts) < 8 {
+		t.Fatalf("expected at least 8 host rows for browsing, got %d", len(catalog.Hosts))
+	}
+	if len(catalog.Datastores) < 8 {
+		t.Fatalf(
+			"expected at least 8 datastore rows for browsing, got %d",
+			len(catalog.Datastores),
+		)
+	}
+	if !catalogContainsVMState(catalog.VMs, "off") {
+		t.Fatalf("expected sample VM data to include powered-off rows")
+	}
+	if !catalogContainsHostConnection(catalog.Hosts, "disconnected") {
+		t.Fatalf("expected sample host data to include disconnected rows")
+	}
+}
+
+func catalogContainsVMState(rows []tui.VMRow, state string) bool {
+	for _, row := range rows {
+		if row.PowerState == state {
+			return true
+		}
+	}
+	return false
+}
+
+func catalogContainsHostConnection(rows []tui.HostRow, state string) bool {
+	for _, row := range rows {
+		if row.ConnectionState == state {
+			return true
+		}
+	}
+	return false
 }
