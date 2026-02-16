@@ -96,3 +96,49 @@ func TestReadThemeRespectsNoColor(t *testing.T) {
 		t.Fatalf("expected color mode enabled when NO_COLOR is unset")
 	}
 }
+
+func TestApplyPromptCompletionUsesFirstSuggestion(t *testing.T) {
+	promptState := tui.NewPromptState(20)
+	view := tui.ResourceView{Actions: []string{"power-on", "power-off"}}
+	value, status, changed := applyPromptCompletion(&promptState, view, "!pow")
+	if !changed {
+		t.Fatalf("expected completion to be applied")
+	}
+	if value != "!power-off" {
+		t.Fatalf("expected !power-off completion, got %q", value)
+	}
+	if !strings.Contains(status, "!power-off") {
+		t.Fatalf("expected completion status to mention !power-off, got %q", status)
+	}
+}
+
+func TestApplyPromptCompletionNoMatch(t *testing.T) {
+	promptState := tui.NewPromptState(20)
+	view := tui.ResourceView{}
+	value, status, changed := applyPromptCompletion(&promptState, view, "!does-not-exist")
+	if changed {
+		t.Fatalf("did not expect completion change")
+	}
+	if value != "!does-not-exist" {
+		t.Fatalf("expected input unchanged, got %q", value)
+	}
+	if status != "" {
+		t.Fatalf("expected empty status for no completion, got %q", status)
+	}
+}
+
+func TestHandlePromptHistoryTabCompletesPrompt(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.prompt.SetText(":v")
+	evt := tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone)
+	consumed := runtime.handlePromptHistory(evt)
+	if consumed != nil {
+		t.Fatalf("expected tab event to be consumed")
+	}
+	if runtime.prompt.GetText() != ":vm" {
+		t.Fatalf("expected prompt completion :vm, got %q", runtime.prompt.GetText())
+	}
+	if !strings.Contains(runtime.status.GetText(true), "completion: :vm") {
+		t.Fatalf("expected status to include completion message")
+	}
+}

@@ -3,7 +3,6 @@
 ## Short-Term Goals
 
 ### Table Widget Parity
-- [ ] Add tab-complete acceptance for the first suggestion in prompt mode.
 - [ ] Sync table focus from mouse selection back into session row/column state.
 - [ ] Add sticky multi-column headers with sort-direction glyphs.
 - [ ] Add per-resource status badges in the header line.
@@ -20,6 +19,7 @@
 - [ ] Add command palette help for `:history`, `:suggest`, and `:ro`.
 - [ ] Add inline prompt validation feedback before submit.
 - [ ] Add contextual completion list rendering for view/action/filter commands.
+- [ ] Add ghost-text suggestion preview while typing in prompt mode.
 
 ## Medium-Term Goals
 

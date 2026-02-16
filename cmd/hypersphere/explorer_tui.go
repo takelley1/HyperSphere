@@ -175,6 +175,10 @@ func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
 }
 
 func (r *explorerRuntime) handlePromptHistory(evt *tcell.EventKey) *tcell.EventKey {
+	if evt.Key() == tcell.KeyTab {
+		r.completePromptFromSuggestions()
+		return nil
+	}
 	if evt.Key() == tcell.KeyUp {
 		r.fillPromptFromHistory("up")
 		return nil
@@ -184,6 +188,19 @@ func (r *explorerRuntime) handlePromptHistory(evt *tcell.EventKey) *tcell.EventK
 		return nil
 	}
 	return evt
+}
+
+func (r *explorerRuntime) completePromptFromSuggestions() {
+	value, status, changed := applyPromptCompletion(
+		&r.promptState,
+		r.session.CurrentView(),
+		r.prompt.GetText(),
+	)
+	if !changed {
+		return
+	}
+	r.prompt.SetText(value)
+	r.status.SetText(status)
 }
 
 func (r *explorerRuntime) fillPromptFromHistory(direction string) {
@@ -287,10 +304,25 @@ func renderFooter(promptMode bool) string {
 		prompt = "ON"
 	}
 	return fmt.Sprintf(
-		": view | / filter | ! action | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit | %s",
+		": view | / filter | ! action | Tab complete | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit | %s",
 		prompt,
 		time.Now().Format("15:04:05"),
 	)
+}
+
+func applyPromptCompletion(
+	promptState *tui.PromptState,
+	view tui.ResourceView,
+	text string,
+) (string, string, bool) {
+	suggestions := promptState.Suggest(text, view)
+	if len(suggestions) == 0 {
+		return text, "", false
+	}
+	if strings.TrimSpace(text) == suggestions[0] {
+		return text, "", false
+	}
+	return suggestions[0], "completion: " + suggestions[0], true
 }
 
 func readTheme() explorerTheme {

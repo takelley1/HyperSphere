@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Added prompt `Tab` completion in the realtime explorer; it now accepts the first command/action suggestion from the current view context.
+- Added prompt completion status messaging so accepted completions are immediately visible in the status panel.
+- Updated footer help text to include prompt completion behavior.
+- Added cmd-level tests for completion success, no-match behavior, and `Tab` event handling in prompt mode.
 - Added a terminal theme loader with `NO_COLOR` support so the explorer can run with readable monochrome output on color-limited terminals.
 - Added table styling polish for readability: fixed header styling, alternating row colors, and stronger selected-row highlighting.
 - Added vim-style navigation semantics in the realtime runtime (`h`/`l` for column movement, `j`/`k` row movement preserved) plus plain left/right arrow support.
