@@ -501,6 +501,12 @@ func (s *Session) AvailableColumns() ([]string, error) {
 
 // HandleKey applies one k9s-inspired table hotkey.
 func (s *Session) HandleKey(key string) error {
+	if key == "n" && s.jumpFilteredMatch(1) {
+		return nil
+	}
+	if key == "N" && s.jumpFilteredMatch(-1) {
+		return nil
+	}
 	normalized := normalizeKey(key)
 	if normalized == "" {
 		return nil
@@ -1668,6 +1674,19 @@ func indexOfID(ids []string, target string) int {
 		}
 	}
 	return -1
+}
+
+func (s *Session) jumpFilteredMatch(step int) bool {
+	if s.filterText == "" || len(s.view.Rows) == 0 {
+		return false
+	}
+	count := len(s.view.Rows)
+	next := (s.selectedRow + step) % count
+	if next < 0 {
+		next += count
+	}
+	s.SetSelection(next, s.selectedColumn)
+	return true
 }
 
 func (s *Session) warpToScopedVMView() error {

@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-041 by adding `n`/`N` filtered-match jump-list
+  navigation with wrap-around behavior across active filter result rows.
+- Added failing-first coverage in `internal/tui/runtime_test.go` for forward and
+  reverse match cycling and wrap semantics.
 - Implemented and fulfilled RQ-040 by adding `Shift+W` namespace warp from
   folder/tag rows into VM view with scoped filtering from the selected key.
 - Added failing-first coverage in `internal/tui/runtime_test.go` for folder/tag

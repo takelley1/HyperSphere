@@ -476,6 +476,7 @@
 ### RQ-041: Add search result jump list
 - vSphere mapping: next/previous navigation through matched rows.
 - Acceptance: `n`/`N` hotkeys cycle through filtered match indices with wrap-around.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-042: Add split-pane details drawer
 - vSphere mapping: selected object metadata inspection.

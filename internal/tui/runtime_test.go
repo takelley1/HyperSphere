@@ -367,6 +367,43 @@ func TestSessionShiftWWarpReturnsExecuteErrorWhenVMViewCannotBeBuilt(t *testing.
 	}
 }
 
+func TestSessionSearchJumpCyclesFilteredMatchesWithWrap(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{Name: "prod-a", Tags: "prod"},
+				{Name: "prod-b", Tags: "prod"},
+				{Name: "dev-a", Tags: "dev"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.ApplyFilter("prod")
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected filtered vm rows to include two prod matches")
+	}
+	if err := session.HandleKey("n"); err != nil {
+		t.Fatalf("HandleKey n error: %v", err)
+	}
+	if session.SelectedRow() != 1 {
+		t.Fatalf("expected n to move to next filtered row, got %d", session.SelectedRow())
+	}
+	if err := session.HandleKey("n"); err != nil {
+		t.Fatalf("HandleKey n error: %v", err)
+	}
+	if session.SelectedRow() != 0 {
+		t.Fatalf("expected n wrap to first filtered row, got %d", session.SelectedRow())
+	}
+	if err := session.HandleKey("N"); err != nil {
+		t.Fatalf("HandleKey N error: %v", err)
+	}
+	if session.SelectedRow() != 1 {
+		t.Fatalf("expected N wrap to last filtered row, got %d", session.SelectedRow())
+	}
+}
+
 func TestSessionLastViewFailsWithoutHistory(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.LastView(); err == nil {
