@@ -500,6 +500,7 @@
 ### RQ-045: Add label filter analog for tags
 - vSphere mapping: filter by `key=value` style vSphere tags.
 - Acceptance: `/-t env=prod,tier=gold` returns rows with all requested tag pairs.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-046: Add fuzzy filter mode
 - vSphere mapping: tolerant search in large inventories.

@@ -78,6 +78,58 @@ func TestSessionApplyInverseRegexFilter(t *testing.T) {
 	}
 }
 
+func TestSessionApplyTagFilterRequiresAllTagPairs(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Hosts: []HostRow{
+				{Name: "host-a", Tags: "env=prod,tier=gold"},
+				{Name: "host-b", Tags: "env=prod,tier=silver"},
+				{Name: "host-c", Tags: "env=dev,tier=gold"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.ApplyTagFilter("env=prod,tier=gold"); err != nil {
+		t.Fatalf("ApplyTagFilter error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "host-a" {
+		t.Fatalf("expected tag filter to require all requested tag pairs")
+	}
+}
+
+func TestSessionApplyTagFilterBranchCoverage(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.ApplyTagFilter("env=prod"); err != nil {
+		t.Fatalf("expected tag filter to succeed with no tags column: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 0 {
+		t.Fatalf("expected no rows when applying tag filter without TAGS column")
+	}
+	if err := session.ApplyTagFilter(""); err == nil {
+		t.Fatalf("expected empty tag filter error")
+	}
+	if err := session.ApplyTagFilter("env"); err == nil {
+		t.Fatalf("expected invalid tag filter expression error")
+	}
+	if rowMatchesTags([]string{"env=prod"}, 3, []string{"env=prod"}) {
+		t.Fatalf("expected out-of-range tag index to fail match")
+	}
+	if rowMatchesTags([]string{"env=prod"}, -1, []string{"env=prod"}) {
+		t.Fatalf("expected negative tag index to fail match")
+	}
+	if rowMatchesTags([]string{"env=prod,tier=silver"}, 0, []string{"env=prod", "tier=gold"}) {
+		t.Fatalf("expected missing tag criterion to fail match")
+	}
+	if !rowMatchesTags([]string{"env=prod,,tier=gold"}, 0, []string{"env=prod", "tier=gold"}) {
+		t.Fatalf("expected empty tag tokens to be ignored for positive matches")
+	}
+}
+
 func TestSessionLastViewToggle(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.ExecuteCommand(":vm"); err != nil {

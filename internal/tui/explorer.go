@@ -650,6 +650,18 @@ func (s *Session) ApplyInverseRegexFilter(pattern string) error {
 	return s.applyRegexFilter(pattern, true)
 }
 
+// ApplyTagFilter filters rows by requiring all requested key=value tag pairs.
+func (s *Session) ApplyTagFilter(expression string) error {
+	criteria, err := parseTagFilterCriteria(expression)
+	if err != nil {
+		return err
+	}
+	s.filterText = "-t " + strings.Join(criteria, ",")
+	s.view = filterViewTags(s.baseView, criteria)
+	s.clampSelectedRow()
+	return nil
+}
+
 func (s *Session) applyRegexFilter(pattern string, inverse bool) error {
 	trimmed := strings.TrimSpace(pattern)
 	if trimmed == "" {
@@ -1899,6 +1911,31 @@ func filterViewRegex(view ResourceView, pattern *regexp.Regexp, inverse bool) Re
 	return filtered
 }
 
+func filterViewTags(view ResourceView, criteria []string) ResourceView {
+	filtered := ResourceView{
+		Resource:    view.Resource,
+		Columns:     append([]string{}, view.Columns...),
+		Rows:        make([][]string, 0, len(view.Rows)),
+		IDs:         make([]string, 0, len(view.IDs)),
+		SortHotKeys: view.SortHotKeys,
+		Actions:     append([]string{}, view.Actions...),
+	}
+	tagIndex := findColumnIndex(view.Columns, "TAGS")
+	if tagIndex < 0 {
+		return filtered
+	}
+	for index, row := range view.Rows {
+		if !rowMatchesTags(row, tagIndex, criteria) {
+			continue
+		}
+		filtered.Rows = append(filtered.Rows, append([]string{}, row...))
+		if index < len(view.IDs) {
+			filtered.IDs = append(filtered.IDs, view.IDs[index])
+		}
+	}
+	return filtered
+}
+
 func clampSelectionIndex(value int, length int) int {
 	if length == 0 {
 		return 0
@@ -1928,6 +1965,44 @@ func rowMatchesRegex(row []string, pattern *regexp.Regexp) bool {
 		}
 	}
 	return false
+}
+
+func parseTagFilterCriteria(expression string) ([]string, error) {
+	trimmed := strings.TrimSpace(expression)
+	if trimmed == "" {
+		return nil, fmt.Errorf("%w: empty tag filter", ErrInvalidAction)
+	}
+	parts := strings.Split(trimmed, ",")
+	criteria := make([]string, 0, len(parts))
+	for _, part := range parts {
+		candidate := strings.ToLower(strings.TrimSpace(part))
+		key, value, ok := strings.Cut(candidate, "=")
+		if !ok || strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
+			return nil, fmt.Errorf("%w: invalid tag filter %s", ErrInvalidAction, part)
+		}
+		criteria = append(criteria, strings.TrimSpace(key)+"="+strings.TrimSpace(value))
+	}
+	return criteria, nil
+}
+
+func rowMatchesTags(row []string, tagIndex int, criteria []string) bool {
+	if tagIndex < 0 || tagIndex >= len(row) {
+		return false
+	}
+	available := map[string]struct{}{}
+	for _, part := range strings.Split(strings.ToLower(row[tagIndex]), ",") {
+		value := strings.TrimSpace(part)
+		if value == "" {
+			continue
+		}
+		available[value] = struct{}{}
+	}
+	for _, expected := range criteria {
+		if _, ok := available[expected]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Session) vmDetailsByID(id string) (ResourceDetails, error) {

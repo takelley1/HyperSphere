@@ -24,7 +24,7 @@
 - [ ] Sub-task: add coverage for full-row highlight behavior when table width is narrower than content.
 - [ ] Sub-task: persist per-view selected columns to config so chooser state survives restart.
 - [ ] Sub-task: add explicit top-help hint for sort inversion (`Shift+I`) alongside primary sort key.
-- [ ] Sub-task: add tag label-filter parser fixtures for `/-t key=value` syntax (`RQ-045`).
+- [ ] Sub-task: add fuzzy-filter ranking fixtures and stable tie-order coverage (`RQ-046`).
 
 ### Demo Dataset Quality
 - [ ] Add sample inventory variants for dense environments (50+ rows) to validate scrolling ergonomics.

@@ -1304,6 +1304,42 @@ func TestExecutePromptCommandInverseRegexFilterExcludesMatches(t *testing.T) {
 	}
 }
 
+func TestExecutePromptCommandTagFilterRequiresAllPairs(t *testing.T) {
+	session := tui.NewSession(
+		tui.Catalog{
+			Hosts: []tui.HostRow{
+				{Name: "host-a", Tags: "env=prod,tier=gold"},
+				{Name: "host-b", Tags: "env=prod,tier=silver"},
+				{Name: "host-c", Tags: "env=dev,tier=gold"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"/-t env=prod,tier=gold",
+	)
+	if !keepRunning {
+		t.Fatalf("expected tag filter command to keep runtime alive")
+	}
+	if message != "filter: -t env=prod,tier=gold" {
+		t.Fatalf("expected tag filter status, got %q", message)
+	}
+	if len(session.CurrentView().Rows) != 1 || session.CurrentView().Rows[0][0] != "host-a" {
+		t.Fatalf("expected tag filter to include only rows matching all requested pairs")
+	}
+}
+
 func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 	runtime := newExplorerRuntimeWithReadOnly(true)
 	message, keepRunning := executePromptCommand(
