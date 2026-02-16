@@ -624,6 +624,7 @@
 ### RQ-068: Add hotkeys config file support
 - vSphere mapping: user key remapping parity.
 - Acceptance: custom hotkey binding overrides default action binding at runtime.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-069: Add aliases config file support
 - vSphere mapping: reusable command shortcuts.

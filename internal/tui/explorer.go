@@ -3,8 +3,10 @@
 package tui
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -411,6 +413,7 @@ type Session struct {
 	xrayDepth        int
 	faultMode        bool
 	eventWatch       bool
+	hotkeyBindings   map[string]string
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -442,6 +445,7 @@ func NewSession(catalog Catalog) Session {
 		xrayDepth:        1,
 		faultMode:        false,
 		eventWatch:       false,
+		hotkeyBindings:   map[string]string{},
 	}
 }
 
@@ -588,6 +592,33 @@ func (s *Session) VisibleColumns() []string {
 	return append([]string{}, s.view.Columns...)
 }
 
+// SetHotkeyBindings overrides default hotkey behavior at runtime.
+func (s *Session) SetHotkeyBindings(bindings map[string]string) {
+	s.hotkeyBindings = map[string]string{}
+	for key, value := range bindings {
+		normalizedKey := normalizeKey(key)
+		normalizedValue := normalizeKey(value)
+		if normalizedKey == "" || normalizedValue == "" {
+			continue
+		}
+		s.hotkeyBindings[normalizedKey] = normalizedValue
+	}
+}
+
+// LoadHotkeysConfig loads custom hotkey bindings from a JSON key/value file.
+func (s *Session) LoadHotkeysConfig(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	bindings := map[string]string{}
+	if err := json.Unmarshal(content, &bindings); err != nil {
+		return err
+	}
+	s.SetHotkeyBindings(bindings)
+	return nil
+}
+
 // AvailableColumns returns the full column set for the active resource.
 func (s *Session) AvailableColumns() ([]string, error) {
 	fullView, err := s.navigator.TableFor(s.view.Resource)
@@ -608,6 +639,9 @@ func (s *Session) HandleKey(key string) error {
 	normalized := normalizeKey(key)
 	if normalized == "" {
 		return nil
+	}
+	if override, ok := s.hotkeyBindings[normalized]; ok {
+		normalized = override
 	}
 	if tryMoveRow(s, normalized) || tryMoveColumn(s, normalized) {
 		return nil

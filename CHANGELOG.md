@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-068 by adding hotkeys config file support via
+  `Session.LoadHotkeysConfig` (JSON key/value bindings) and runtime override
+  application before default hotkey handling.
+- Added failing-first coverage in `internal/tui/session_test.go` to verify
+  custom hotkey binding overrides default behavior at runtime.
 - Implemented and fulfilled RQ-067 by adding explicit main-config schema
   validation with `SchemaValidationError` reporting the precise failing field
   path for unknown keys and object type mismatches.

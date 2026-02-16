@@ -4,6 +4,7 @@ package tui
 
 import (
 	"errors"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -1085,6 +1086,58 @@ func TestSessionEventWatchAppendHandlesInvalidTimestampsAndColumnSelectionErrors
 	view := session.CurrentView()
 	if len(view.Rows) != 3 {
 		t.Fatalf("expected event append with invalid timestamps to still add row, got %d", len(view.Rows))
+	}
+}
+
+func TestSessionLoadHotkeysConfigOverridesDefaultBindingAtRuntime(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	configPath := t.TempDir() + "/hotkeys.json"
+	if err := os.WriteFile(configPath, []byte(`{"SHIFT+O":"DOWN"}`), 0o600); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	if err := session.LoadHotkeysConfig(configPath); err != nil {
+		t.Fatalf("LoadHotkeysConfig returned error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+O"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if session.SelectedRow() != 1 {
+		t.Fatalf("expected SHIFT+O to follow configured DOWN binding, got row %d", session.SelectedRow())
+	}
+}
+
+func TestSessionSetHotkeyBindingsSkipsInvalidEntries(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.SetHotkeyBindings(map[string]string{
+		"":        "DOWN",
+		"SHIFT+I": "",
+		"SHIFT+O": "DOWN",
+	})
+	if err := session.HandleKey("SHIFT+O"); err != nil {
+		t.Fatalf("HandleKey returned error: %v", err)
+	}
+	if session.SelectedRow() != 1 {
+		t.Fatalf("expected valid binding to apply and invalid entries to be ignored")
+	}
+}
+
+func TestSessionLoadHotkeysConfigErrorBranches(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.LoadHotkeysConfig("/does/not/exist.json"); err == nil {
+		t.Fatalf("expected read error for missing hotkeys config file")
+	}
+	configPath := t.TempDir() + "/hotkeys.json"
+	if err := os.WriteFile(configPath, []byte("{not-json"), 0o600); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	if err := session.LoadHotkeysConfig(configPath); err == nil {
+		t.Fatalf("expected json parse error for invalid hotkeys config")
 	}
 }
 
