@@ -466,6 +466,7 @@
 ### RQ-039: Add `Shift+J` owner jump analog
 - vSphere mapping: jump from child object to parent owner.
 - Acceptance: from VM row, owner jump moves focus to host or resource pool owning that VM.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-040: Add namespace warp analog for tags/folders
 - vSphere mapping: fast scope jump by common partition key.

@@ -173,6 +173,106 @@ func TestSessionBreadcrumbPathFallbackBranches(t *testing.T) {
 	}
 }
 
+func TestSessionShiftJOwnerJumpMovesFromVMToHost(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:      []VMRow{{Name: "vm-a", Host: "esxi-01", Cluster: "cluster-a"}},
+			Hosts:    []HostRow{{Name: "esxi-01", Cluster: "cluster-a"}, {Name: "esxi-02", Cluster: "cluster-a"}},
+			Clusters: []ClusterRow{{Name: "cluster-a", Datacenter: "dc-1"}},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+J"); err != nil {
+		t.Fatalf("HandleKey SHIFT+J error: %v", err)
+	}
+	if session.CurrentView().Resource != ResourceHost {
+		t.Fatalf("expected owner jump to host view, got %s", session.CurrentView().Resource)
+	}
+	if session.CurrentView().IDs[session.SelectedRow()] != "esxi-01" {
+		t.Fatalf("expected owner jump to focus owning host row")
+	}
+}
+
+func TestSessionShiftJOwnerJumpFallsBackToResourcePool(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:           []VMRow{{Name: "vm-a", Cluster: "cluster-a"}},
+			ResourcePools: []ResourcePoolRow{{Name: "rp-prod", Cluster: "cluster-a"}},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+J"); err != nil {
+		t.Fatalf("HandleKey SHIFT+J error: %v", err)
+	}
+	if session.CurrentView().Resource != ResourcePool {
+		t.Fatalf("expected owner jump to resource pool view, got %s", session.CurrentView().Resource)
+	}
+	if session.CurrentView().IDs[session.SelectedRow()] != "rp-prod" {
+		t.Fatalf("expected owner jump to focus owning resource pool row")
+	}
+}
+
+func TestSessionShiftJOwnerJumpErrorBranches(t *testing.T) {
+	notVM := NewSession(Catalog{Hosts: []HostRow{{Name: "esxi-01"}}})
+	if err := notVM.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := notVM.jumpToOwner(); err == nil {
+		t.Fatalf("expected owner jump error for non-vm view")
+	}
+
+	emptyVM := NewSession(Catalog{})
+	if err := emptyVM.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := emptyVM.jumpToOwner(); err == nil {
+		t.Fatalf("expected owner jump error for vm view without rows")
+	}
+
+	missingVM := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Host: "esxi-01"}}})
+	if err := missingVM.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	missingVM.view.IDs[0] = "vm-missing"
+	if err := missingVM.jumpToOwner(); err == nil {
+		t.Fatalf("expected owner jump error for missing vm lookup")
+	}
+
+	unowned := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := unowned.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := unowned.jumpToOwner(); err == nil {
+		t.Fatalf("expected owner jump error when no host or resource pool owner exists")
+	}
+}
+
+func TestOwnerJumpHelperBranches(t *testing.T) {
+	session := NewSession(Catalog{
+		Hosts:         []HostRow{{Name: "esxi-01"}},
+		ResourcePools: []ResourcePoolRow{{Name: "rp-a", Cluster: "cluster-a"}},
+	})
+	if session.jumpToOwnedRow(":unknown", "id") {
+		t.Fatalf("expected jumpToOwnedRow to fail for invalid command")
+	}
+	if session.jumpToOwnedRow(":host", "missing") {
+		t.Fatalf("expected jumpToOwnedRow to fail when target row id is absent")
+	}
+	if containsHostName(session.navigator.catalog.Hosts, "missing") {
+		t.Fatalf("did not expect missing host name to be found")
+	}
+	if _, ok := firstResourcePoolForCluster(session.navigator.catalog.ResourcePools, "missing"); ok {
+		t.Fatalf("did not expect missing cluster resource pool mapping")
+	}
+	if indexOfID([]string{"a", "b"}, "missing") != -1 {
+		t.Fatalf("expected indexOfID to return -1 for absent target")
+	}
+}
+
 func TestSessionLastViewFailsWithoutHistory(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.LastView(); err == nil {

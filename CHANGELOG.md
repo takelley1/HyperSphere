@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-039 by adding `Shift+J` owner-jump behavior
+  from VM rows to owning host rows, with fallback to resource pool owners.
+- Added failing-first coverage in `internal/tui/runtime_test.go` for host-owner
+  and resource-pool-owner jump flows.
 - Implemented and fulfilled RQ-038 by adding hierarchical breadcrumb path
   rendering (`home > dc > cluster > host > vm`) derived from selected row
   context for datacenter/cluster/host/vm views.

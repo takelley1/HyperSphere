@@ -526,6 +526,9 @@ func (s *Session) HandleKey(key string) error {
 	if normalized == "SHIFT+I" {
 		return s.invertSort()
 	}
+	if normalized == "SHIFT+J" {
+		return s.jumpToOwner()
+	}
 	column, ok := s.view.SortHotKeys[normalized]
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrUnsupportedHotKey, key)
@@ -1590,6 +1593,78 @@ func (s *Session) selectedIDs() []string {
 		}
 	}
 	return ids
+}
+
+func (s *Session) jumpToOwner() error {
+	if s.view.Resource != ResourceVM {
+		return fmt.Errorf("%w: SHIFT+J", ErrUnsupportedHotKey)
+	}
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return err
+	}
+	vm, ok := findVMRowByID(s.navigator.catalog.VMs, id)
+	if !ok {
+		return fmt.Errorf("%w: selected vm not found", ErrInvalidAction)
+	}
+	if s.jumpToHostOwner(vm.Host) || s.jumpToResourcePoolOwner(vm.Cluster) {
+		return nil
+	}
+	return fmt.Errorf("%w: SHIFT+J", ErrUnsupportedHotKey)
+}
+
+func (s *Session) jumpToHostOwner(host string) bool {
+	if strings.TrimSpace(host) == "" || !containsHostName(s.navigator.catalog.Hosts, host) {
+		return false
+	}
+	return s.jumpToOwnedRow(":host", host)
+}
+
+func (s *Session) jumpToResourcePoolOwner(cluster string) bool {
+	pool, ok := firstResourcePoolForCluster(s.navigator.catalog.ResourcePools, cluster)
+	if !ok {
+		return false
+	}
+	return s.jumpToOwnedRow(":rp", pool)
+}
+
+func (s *Session) jumpToOwnedRow(command string, rowID string) bool {
+	if err := s.ExecuteCommand(command); err != nil {
+		return false
+	}
+	rowIndex := indexOfID(s.view.IDs, rowID)
+	if rowIndex < 0 {
+		return false
+	}
+	s.SetSelection(rowIndex, 0)
+	return true
+}
+
+func containsHostName(rows []HostRow, host string) bool {
+	for _, row := range rows {
+		if row.Name == host {
+			return true
+		}
+	}
+	return false
+}
+
+func firstResourcePoolForCluster(rows []ResourcePoolRow, cluster string) (string, bool) {
+	for _, row := range rows {
+		if row.Cluster == cluster {
+			return row.Name, true
+		}
+	}
+	return "", false
+}
+
+func indexOfID(ids []string, target string) int {
+	for index, id := range ids {
+		if id == target {
+			return index
+		}
+	}
+	return -1
 }
 
 func (s *Session) sortBySelectedColumn() error {
