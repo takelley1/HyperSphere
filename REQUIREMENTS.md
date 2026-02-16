@@ -270,6 +270,16 @@
   longer occupy bottom layout slots.
 - Status: fulfilled (2026-02-16).
 
+### RQ-121: Render breadcrumbs/status as compact top-right path hints
+- vSphere mapping: preserve context/status visibility while reducing visual
+  intrusion from dedicated bordered panels.
+- Acceptance: standalone breadcrumb/status panels are removed from the vertical
+  layout; only top header, table, and prompt remain.
+- Acceptance: top-right header near the logo shows compact `path:` and
+  `status:` lines.
+- Acceptance: breadcrumbs-less mode suppresses the compact path line.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

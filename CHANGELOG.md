@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-121 by de-emphasizing breadcrumbs/status into compact
+  top-right header hints (`path:` and `status:`) near the logo.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  compact layout item count and top-header compact path/status rendering.
+- Updated `cmd/hypersphere/explorer_tui.go` to remove standalone breadcrumb and
+  status layout panels, keep only top-header/table/prompt rows, and render
+  compact right-zone path/status lines with tag-stripped status text.
 - Added and fulfilled RQ-120 by moving breadcrumb and status panels above the
   resource table in the vertical TUI layout.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

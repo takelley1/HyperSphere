@@ -287,13 +287,9 @@ func (r *explorerRuntime) configureWidgets() {
 	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(r.topHeader, topHeaderPanelHeight, 0, false)
-	if !r.crumbsless {
-		layout.AddItem(r.breadcrumb, 3, 0, false)
-	}
-	layout.AddItem(r.status, 3, 0, false)
-	layout.AddItem(r.body, 0, 1, true)
-	layout.AddItem(r.prompt, 1, 0, false)
+		AddItem(r.topHeader, topHeaderPanelHeight, 0, false).
+		AddItem(r.body, 0, 1, true).
+		AddItem(r.prompt, 1, 0, false)
 	r.layout = layout
 	r.layout.SetBackgroundColor(r.theme.CanvasBackground)
 	r.pages.AddPage("main", layout, true, true)
@@ -712,7 +708,13 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	}
 	leftLines := strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n")
 	centerLines := strings.Split(renderTopHeaderCenter(r.logMode, r.promptMode), "\n")
-	rightLines := strings.Split(renderTopHeaderRight(), "\n")
+	rightLines := strings.Split(
+		renderTopHeaderRightWithContext(
+			compactTopHeaderPath(r.crumbsless, r.session.CurrentView().Resource),
+			compactTopHeaderStatus(r.status.GetText(true)),
+		),
+		"\n",
+	)
 	centerLines, rightLines = degradeTopHeaderSections(width, centerLines, rightLines)
 	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
@@ -1808,6 +1810,55 @@ func renderTopHeaderRight() string {
 		},
 		"\n",
 	)
+}
+
+func renderTopHeaderRightWithContext(path string, status string) string {
+	lines := strings.Split(renderTopHeaderRight(), "\n")
+	if len(lines) == 0 {
+		return ""
+	}
+	if path != "" {
+		lines[0] = "path: " + path
+	}
+	if len(lines) > 1 && status != "" {
+		lines[1] = "status: " + status
+	}
+	return strings.Join(lines, "\n")
+}
+
+func compactTopHeaderPath(crumbsless bool, resource tui.Resource) string {
+	if crumbsless {
+		return ""
+	}
+	return "home > " + string(resource)
+}
+
+func compactTopHeaderStatus(status string) string {
+	sanitized := strings.TrimSpace(stripTviewTags(status))
+	if sanitized == "" {
+		return "ready"
+	}
+	return sanitized
+}
+
+func stripTviewTags(text string) string {
+	var builder strings.Builder
+	builder.Grow(len(text))
+	inTag := false
+	for _, value := range text {
+		if value == '[' {
+			inTag = true
+			continue
+		}
+		if value == ']' {
+			inTag = false
+			continue
+		}
+		if !inTag {
+			builder.WriteRune(value)
+		}
+	}
+	return builder.String()
 }
 
 func executePromptCommand(

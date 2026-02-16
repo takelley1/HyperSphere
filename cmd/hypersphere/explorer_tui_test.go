@@ -996,8 +996,11 @@ func TestRenderTopHeaderWithWidthCollapsesCenterLegendBeforeHidingLogo(t *testin
 	if strings.Contains(text, "<Tab> Complete") {
 		t.Fatalf("expected center legend to collapse before logo hide, got %q", text)
 	}
-	if !strings.Contains(text, ".------------.") {
-		t.Fatalf("expected logo to remain visible before hide threshold, got %q", text)
+	if !strings.Contains(text, "path: home > vm") || !strings.Contains(text, "status: ready") {
+		t.Fatalf("expected compact path/status in top-right zone, got %q", text)
+	}
+	if !strings.Contains(text, "+------+ |") {
+		t.Fatalf("expected logo body to remain visible before hide threshold, got %q", text)
 	}
 }
 
@@ -1223,42 +1226,27 @@ func TestNewExplorerRuntimeCrumbslessOmitsBreadcrumbWidget(t *testing.T) {
 	if runtime.breadcrumb.GetText(true) != "" {
 		t.Fatalf("expected crumbsless runtime to keep breadcrumb empty")
 	}
-	if runtime.layout.GetItemCount() != 4 {
-		t.Fatalf("expected crumbsless layout to omit breadcrumb and bottom help bar widgets")
+	if runtime.layout.GetItemCount() != 3 {
+		t.Fatalf("expected compact layout with top header, table, and prompt only")
 	}
 }
 
 func TestNewExplorerRuntimeRemovesBottomHelpBarFromLayout(t *testing.T) {
 	runtime := newExplorerRuntime()
-	if runtime.layout.GetItemCount() != 5 {
-		t.Fatalf("expected runtime layout without footer help bar")
+	if runtime.layout.GetItemCount() != 3 {
+		t.Fatalf("expected runtime layout without standalone breadcrumb/status/footer widgets")
 	}
 }
 
-func TestNewExplorerRuntimePlacesBreadcrumbAndStatusAboveBody(t *testing.T) {
+func TestNewExplorerRuntimeRendersCompactPathAndStatusInTopRightHeader(t *testing.T) {
 	runtime := newExplorerRuntime()
-	if runtime.layout.GetItemCount() != 5 {
-		t.Fatalf("expected five layout items with breadcrumbs enabled")
+	runtime.renderTopHeaderWithWidth(120)
+	header := strings.ToLower(runtime.topHeader.GetText(false))
+	if !strings.Contains(header, "path: home > vm") {
+		t.Fatalf("expected compact breadcrumb path in top header, got %q", header)
 	}
-	topItem := runtime.layout.GetItem(0)
-	breadcrumbItem := runtime.layout.GetItem(1)
-	statusItem := runtime.layout.GetItem(2)
-	bodyItem := runtime.layout.GetItem(3)
-	promptItem := runtime.layout.GetItem(4)
-	if topItem != runtime.topHeader {
-		t.Fatalf("expected top header as first layout item")
-	}
-	if breadcrumbItem != runtime.breadcrumb {
-		t.Fatalf("expected breadcrumb as second layout item")
-	}
-	if statusItem != runtime.status {
-		t.Fatalf("expected status as third layout item")
-	}
-	if bodyItem != runtime.body {
-		t.Fatalf("expected body table below top status widgets")
-	}
-	if promptItem != runtime.prompt {
-		t.Fatalf("expected prompt as last layout item")
+	if !strings.Contains(header, "status: ready") {
+		t.Fatalf("expected compact status in top header, got %q", header)
 	}
 }
 
