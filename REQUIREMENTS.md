@@ -614,6 +614,7 @@
 ### RQ-066: Add XDG-style config discovery with env override
 - vSphere mapping: predictable config locations across OSes.
 - Acceptance: `HYPERSPHERE_CONFIG_DIR` overrides default config root path.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-067: Add config schema validation for main config file
 - vSphere mapping: fail-fast misconfiguration handling.

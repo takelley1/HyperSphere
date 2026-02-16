@@ -4,6 +4,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,8 @@ const (
 	envMode      = "HYPERSPHERE_MODE"
 	envExecute   = "HYPERSPHERE_EXECUTE"
 	envThreshold = "HYPERSPHERE_THRESHOLD"
+	envConfigDir = "HYPERSPHERE_CONFIG_DIR"
+	envHome      = "HOME"
 )
 
 // Prompter asks users for values during interactive configuration.
@@ -34,6 +37,7 @@ type Config struct {
 	Execute          bool
 	ThresholdPercent int
 	NonInteractive   bool
+	ConfigDir        string
 }
 
 // Resolve load configuration with CLI, then env, then prompt precedence.
@@ -52,7 +56,19 @@ func Resolve(cli CLIInput, env map[string]string, prompt Prompter) (Config, erro
 	if err != nil {
 		return Config{}, err
 	}
+	cfg.ConfigDir = resolveConfigDir(env)
 	return cfg, nil
+}
+
+func resolveConfigDir(env map[string]string) string {
+	if value := strings.TrimSpace(env[envConfigDir]); value != "" {
+		return value
+	}
+	homeDir := strings.TrimSpace(env[envHome])
+	if homeDir == "" {
+		return filepath.Join(".config", "hypersphere")
+	}
+	return filepath.Join(homeDir, ".config", "hypersphere")
 }
 
 func resolveMode(cli CLIInput, env map[string]string, prompt Prompter) (string, error) {

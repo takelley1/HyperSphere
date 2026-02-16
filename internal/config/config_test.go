@@ -46,12 +46,33 @@ func TestResolveReadsEnvWhenCLIMissing(t *testing.T) {
 		"HYPERSPHERE_MODE":      "purge",
 		"HYPERSPHERE_EXECUTE":   "true",
 		"HYPERSPHERE_THRESHOLD": "85",
+		"HOME":                  "/home/tester",
 	}, fakePrompter{responses: map[string]string{}})
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
 	if cfg.Mode != "purge" || !cfg.Execute || cfg.ThresholdPercent != 85 {
 		t.Fatalf("unexpected resolved config: %+v", cfg)
+	}
+	if cfg.ConfigDir != "/home/tester/.config/hypersphere" {
+		t.Fatalf("expected default config dir from HOME, got %q", cfg.ConfigDir)
+	}
+}
+
+func TestResolveUsesConfigDirEnvOverride(t *testing.T) {
+	cfg, err := Resolve(
+		CLIInput{Mode: "mark", Execute: true, ThresholdPercent: 80},
+		map[string]string{
+			"HOME":                   "/home/tester",
+			"HYPERSPHERE_CONFIG_DIR": "/tmp/hs-config",
+		},
+		fakePrompter{},
+	)
+	if err != nil {
+		t.Fatalf("Resolve returned error: %v", err)
+	}
+	if cfg.ConfigDir != "/tmp/hs-config" {
+		t.Fatalf("expected config dir override from env, got %q", cfg.ConfigDir)
 	}
 }
 

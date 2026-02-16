@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-066 by adding XDG-style config-root discovery
+  with `HOME/.config/hypersphere` defaulting and
+  `HYPERSPHERE_CONFIG_DIR` environment override support.
+- Added failing-first coverage in `internal/config/config_test.go` for both
+  default config-root resolution and explicit env override behavior.
 - Implemented and fulfilled RQ-065 by adding event watch mode in `:event`
   where `!watch` toggles live append behavior and incoming events are inserted
   in timestamp order.
