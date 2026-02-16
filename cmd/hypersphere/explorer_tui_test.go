@@ -4,6 +4,7 @@ package main
 
 import (
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -140,5 +141,13 @@ func TestHandlePromptHistoryTabCompletesPrompt(t *testing.T) {
 	}
 	if !strings.Contains(runtime.status.GetText(true), "completion: :vm") {
 		t.Fatalf("expected status to include completion message")
+	}
+}
+
+func TestRenderFooterOmitsClockForEventDrivenRedraw(t *testing.T) {
+	footer := renderFooter(true)
+	clock := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\b`)
+	if clock.MatchString(footer) {
+		t.Fatalf("expected footer without realtime clock: %q", footer)
 	}
 }

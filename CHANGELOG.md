@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Removed periodic 1-second explorer redraw loop and switched to input-driven rendering to reduce flicker/stutter.
+- Removed footer realtime clock to avoid forced full-screen repaint cadence unrelated to user interaction.
+- Added cmd-level regression test to keep footer clock-free for event-driven redraw behavior.
+- Added `REQUIREMENTS.md` with 91 atomic, test-ready k9s-to-vSphere parity requirements.
+- Mapped k9s feature families into concrete vSphere analogs across CLI, UX,
+  resources, actions, plugins, and quality gates.
+- Added explicit acceptance criteria for each requirement to support failing-test-first development.
+- Expanded `DESIGN.md` with newly discovered parity tasks across short, medium,
+  and long-term horizons.
 - Added prompt `Tab` completion in the realtime explorer; it now accepts the first command/action suggestion from the current view context.
 - Added prompt completion status messaging so accepted completions are immediately visible in the status panel.
 - Updated footer help text to include prompt completion behavior.

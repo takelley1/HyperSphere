@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -26,7 +25,6 @@ type explorerRuntime struct {
 	status      *tview.TextView
 	prompt      *tview.InputField
 	footer      *tview.TextView
-	done        chan struct{}
 	promptMode  bool
 }
 
@@ -71,7 +69,6 @@ func newExplorerRuntime() explorerRuntime {
 		status:      tview.NewTextView(),
 		prompt:      tview.NewInputField(),
 		footer:      tview.NewTextView(),
-		done:        make(chan struct{}),
 	}
 	runtime.configureWidgets()
 	runtime.configureHandlers()
@@ -111,25 +108,7 @@ func (r *explorerRuntime) configureHandlers() {
 }
 
 func (r *explorerRuntime) run() error {
-	go r.refreshLoop()
-	err := r.app.Run()
-	close(r.done)
-	return err
-}
-
-func (r *explorerRuntime) refreshLoop() {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-r.done:
-			return
-		case <-ticker.C:
-			r.app.QueueUpdateDraw(func() {
-				r.render("")
-			})
-		}
-	}
+	return r.app.Run()
 }
 
 func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
@@ -304,9 +283,8 @@ func renderFooter(promptMode bool) string {
 		prompt = "ON"
 	}
 	return fmt.Sprintf(
-		": view | / filter | ! action | Tab complete | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit | %s",
+		": view | / filter | ! action | Tab complete | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit",
 		prompt,
-		time.Now().Format("15:04:05"),
 	)
 }
 

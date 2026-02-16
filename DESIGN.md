@@ -15,11 +15,20 @@
 - [ ] Add horizontal scrolling indicators when columns overflow.
 - [ ] Add optional unicode/ASCII symbol mode for compatibility across terminals.
 
+### Rendering Performance
+- [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.
+- [ ] Add render instrumentation counters for frame timing in debug mode.
+- [ ] Add optional debounce for high-frequency key-repeat scenarios.
+- [ ] Add adaptive redraw policy for large inventories (>10k rows).
+
 ### Prompt UX Parity
 - [ ] Add command palette help for `:history`, `:suggest`, and `:ro`.
 - [ ] Add inline prompt validation feedback before submit.
 - [ ] Add contextual completion list rendering for view/action/filter commands.
 - [ ] Add ghost-text suggestion preview while typing in prompt mode.
+- [ ] Add `?` hotkey modal for per-view keybinding discovery.
+- [ ] Add `ctrl-a` alias palette to browse and execute command shortcuts.
+- [ ] Add tab-accept behavior for first prompt suggestion.
 
 ## Medium-Term Goals
 
@@ -40,6 +49,9 @@
 - [ ] Add split-pane detail drawers for selected object metadata.
 - [ ] Add search result jump list with next/previous navigation.
 - [ ] Add keyboard cheatsheet modal with per-view hotkeys.
+- [ ] Add active vCenter context switcher view and reconnect flow.
+- [ ] Add pulses-style health dashboard for live utilization and alarms.
+- [ ] Add xray-style dependency explorer for VM/host/datastore/network relationships.
 
 ### Write-Path UX
 - [ ] Add confirmation dialogs for destructive actions.
@@ -72,3 +84,4 @@
 - [ ] Add large-environment performance benchmarks for table rendering and refresh.
 - [ ] Add release criteria and acceptance checklist for k9s-parity milestones.
 - [ ] Add parity matrix mapping k9s features to vSphere analogs with completion state.
+- [ ] Add a canonical requirements ledger linking parity items to failing-test IDs.
