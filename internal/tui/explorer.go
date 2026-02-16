@@ -52,6 +52,7 @@ const (
 	ResourceTag        Resource = "tag"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
+	ResourcePulse      Resource = "pulse"
 )
 
 var resourceAliasMap = map[string]Resource{
@@ -93,6 +94,8 @@ var resourceAliasMap = map[string]Resource{
 	"datastore":     ResourceDatastore,
 	"datastores":    ResourceDatastore,
 	"ds":            ResourceDatastore,
+	"pulse":         ResourcePulse,
+	"pulses":        ResourcePulse,
 }
 
 // VMRow represents one VM row in the resource table.
@@ -487,6 +490,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
 		return datastoreView(n.catalog.Datastores), true
+	case ResourcePulse:
+		return pulseView(n.catalog), true
 	default:
 		return ResourceView{}, false
 	}
@@ -1269,6 +1274,31 @@ func datastoreView(rows []DatastoreRow) ResourceView {
 	)
 }
 
+func pulseView(catalog Catalog) ResourceView {
+	columns := []string{
+		"CPU_PERCENT",
+		"MEM_PERCENT",
+		"DATASTORE_PERCENT",
+		"ACTIVE_ALARMS",
+		"REFRESH_TIMER",
+	}
+	row := []string{
+		strconv.Itoa(averageClusterCPU(catalog.Clusters)),
+		strconv.Itoa(averageClusterMemory(catalog.Clusters)),
+		strconv.Itoa(datastoreUsagePercent(catalog.Datastores)),
+		strconv.Itoa(activeAlarmCount(catalog.Alarms)),
+		"15s",
+	}
+	return ResourceView{
+		Resource:    ResourcePulse,
+		Columns:     columns,
+		Rows:        [][]string{row},
+		IDs:         []string{"pulse"},
+		SortHotKeys: map[string]string{},
+		Actions:     []string{"refresh"},
+	}
+}
+
 func buildView[T any](
 	resource Resource,
 	columns []string,
@@ -1481,6 +1511,51 @@ func datastoreCells(row DatastoreRow) (string, []string) {
 		defaultCell(row.Type),
 		strconv.Itoa(row.LatencyMS),
 	}
+}
+
+func averageClusterCPU(rows []ClusterRow) int {
+	total := 0
+	for _, row := range rows {
+		total += row.CPUUsagePercent
+	}
+	if len(rows) == 0 {
+		return 0
+	}
+	return total / len(rows)
+}
+
+func averageClusterMemory(rows []ClusterRow) int {
+	total := 0
+	for _, row := range rows {
+		total += row.MemUsagePercent
+	}
+	if len(rows) == 0 {
+		return 0
+	}
+	return total / len(rows)
+}
+
+func datastoreUsagePercent(rows []DatastoreRow) int {
+	totalCapacity := 0
+	totalUsed := 0
+	for _, row := range rows {
+		totalCapacity += row.CapacityGB
+		totalUsed += row.UsedGB
+	}
+	if totalCapacity <= 0 {
+		return 0
+	}
+	return (totalUsed * 100) / totalCapacity
+}
+
+func activeAlarmCount(rows []AlarmRow) int {
+	count := 0
+	for _, row := range rows {
+		if strings.ToLower(strings.TrimSpace(row.Status)) != "green" {
+			count++
+		}
+	}
+	return count
 }
 
 func defaultCell(value string) string {

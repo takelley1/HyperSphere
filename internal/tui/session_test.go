@@ -190,6 +190,62 @@ func TestDatastoreViewActionsIncludeEvacuation(t *testing.T) {
 	}
 }
 
+func TestPulseViewRendersUtilizationAndAlarmSummary(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Clusters: []ClusterRow{
+				{Name: "cluster-a", CPUUsagePercent: 60, MemUsagePercent: 50},
+				{Name: "cluster-b", CPUUsagePercent: 40, MemUsagePercent: 30},
+			},
+			Datastores: []DatastoreRow{
+				{Name: "ds-1", CapacityGB: 100, UsedGB: 70},
+				{Name: "ds-2", CapacityGB: 100, UsedGB: 50},
+			},
+			Alarms: []AlarmRow{
+				{Entity: "vm-a", Status: "red"},
+				{Entity: "vm-b", Status: "green"},
+				{Entity: "host-a", Status: "yellow"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":pulse")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	wantColumns := []string{
+		"CPU_PERCENT",
+		"MEM_PERCENT",
+		"DATASTORE_PERCENT",
+		"ACTIVE_ALARMS",
+		"REFRESH_TIMER",
+	}
+	if !reflect.DeepEqual(view.Columns, wantColumns) {
+		t.Fatalf("unexpected pulse columns: got %v want %v", view.Columns, wantColumns)
+	}
+	if len(view.Rows) != 1 {
+		t.Fatalf("expected one pulse summary row, got %d", len(view.Rows))
+	}
+	wantRow := []string{"50", "40", "60", "2", "15s"}
+	if !reflect.DeepEqual(view.Rows[0], wantRow) {
+		t.Fatalf("unexpected pulse summary row: got %v want %v", view.Rows[0], wantRow)
+	}
+}
+
+func TestPulseMetricHelpersHandleEmptyInputs(t *testing.T) {
+	if value := averageClusterCPU(nil); value != 0 {
+		t.Fatalf("expected zero cpu average for empty input, got %d", value)
+	}
+	if value := averageClusterMemory(nil); value != 0 {
+		t.Fatalf("expected zero memory average for empty input, got %d", value)
+	}
+	if value := datastoreUsagePercent(nil); value != 0 {
+		t.Fatalf("expected zero datastore usage for empty input, got %d", value)
+	}
+	if value := datastoreUsagePercent([]DatastoreRow{{Name: "ds-1", CapacityGB: 0, UsedGB: 10}}); value != 0 {
+		t.Fatalf("expected zero datastore usage when total capacity is zero, got %d", value)
+	}
+}
+
 func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{

@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-061 by adding a `:pulse` dashboard view that
+  summarizes average cluster CPU/memory utilization, datastore usage percent,
+  active alarms, and a refresh timer field.
+- Added failing-first coverage in `internal/tui/session_test.go` for pulse view
+  routing and summary metric rendering expectations.
 - Implemented and fulfilled RQ-060 by adding per-object execution support for
   tag `assign`/`unassign` bulk actions so marked-object operations can report
   failed object IDs instead of only coarse action-level errors.

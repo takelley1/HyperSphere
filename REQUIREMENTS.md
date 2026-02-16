@@ -587,6 +587,7 @@
 ### RQ-061: Add Pulses analog dashboard
 - vSphere mapping: live cluster/host/VM utilization summary.
 - Acceptance: dashboard renders CPU, memory, datastore usage, and active alarms with refresh timer.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-062: Add XRay analog dependency graph
 - vSphere mapping: graph VM -> host -> datastore -> network dependencies.
