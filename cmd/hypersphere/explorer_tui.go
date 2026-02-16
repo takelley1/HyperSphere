@@ -24,13 +24,17 @@ type explorerRuntime struct {
 	headless    bool
 	crumbsless  bool
 	theme       explorerTheme
+	pages       *tview.Pages
 	layout      *tview.Flex
+	helpModal   *tview.Modal
 	body        *tview.Table
 	breadcrumb  *tview.TextView
 	status      *tview.TextView
 	prompt      *tview.InputField
 	footer      *tview.TextView
 	promptMode  bool
+	helpOpen    bool
+	helpText    string
 }
 
 type runtimeActionExecutor struct {
@@ -159,6 +163,8 @@ func newExplorerRuntimeWithRenderOptions(
 		headless:    headless,
 		crumbsless:  crumbsless,
 		theme:       readTheme(),
+		pages:       tview.NewPages(),
+		helpModal:   tview.NewModal(),
 		body:        tview.NewTable(),
 		breadcrumb:  tview.NewTextView(),
 		status:      tview.NewTextView(),
@@ -202,6 +208,8 @@ func (r *explorerRuntime) configureWidgets() {
 	r.footer.SetDynamicColors(true)
 	r.footer.SetBorder(true)
 	r.footer.SetTitle(" Help ")
+	r.helpModal.SetBorder(true)
+	r.helpModal.SetTitle(" Keymap Help ")
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(r.body, 0, 1, true).
@@ -211,7 +219,9 @@ func (r *explorerRuntime) configureWidgets() {
 	}
 	layout.AddItem(r.status, 3, 0, false).AddItem(r.footer, 3, 0, false)
 	r.layout = layout
-	r.app.SetRoot(layout, true)
+	r.pages.AddPage("main", layout, true, true)
+	r.pages.AddPage("help", r.helpModal, true, false)
+	r.app.SetRoot(r.pages, true)
 	r.app.SetFocus(r.body)
 }
 
@@ -226,8 +236,18 @@ func (r *explorerRuntime) run() error {
 }
 
 func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
+	if r.helpOpen {
+		if evt.Key() == tcell.KeyEscape {
+			r.closeHelpModal()
+		}
+		return nil
+	}
 	if r.promptMode {
 		return evt
+	}
+	if evt.Key() == tcell.KeyRune && evt.Rune() == '?' {
+		r.openHelpModal()
+		return nil
 	}
 	if isPromptActivation(evt) {
 		r.startPrompt(string(evt.Rune()))
@@ -244,6 +264,22 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	r.emitStatus(r.session.HandleKey(command))
 	r.render("")
 	return nil
+}
+
+func (r *explorerRuntime) openHelpModal() {
+	r.helpText = helpModalText(r.session.CurrentView())
+	r.helpModal.SetText(r.helpText)
+	r.pages.ShowPage("help")
+	r.helpOpen = true
+}
+
+func (r *explorerRuntime) closeHelpModal() {
+	r.pages.HidePage("help")
+	r.helpOpen = false
+}
+
+func (r *explorerRuntime) isHelpModalOpen() bool {
+	return r.helpOpen
 }
 
 func (r *explorerRuntime) handlePromptDone(key tcell.Key) {
@@ -429,6 +465,18 @@ func renderFooter(promptMode bool) string {
 	return fmt.Sprintf(
 		": view | / filter | ! action | Tab complete | h/j/k/l + arrows move | :ro toggle | Prompt: %s | q quit",
 		prompt,
+	)
+}
+
+func helpModalText(view tui.ResourceView) string {
+	actions := "none"
+	if len(view.Actions) > 0 {
+		actions = strings.Join(view.Actions, ", ")
+	}
+	return fmt.Sprintf(
+		"View: %s\nActions: %s\nKeys: Esc close | J/K move row | H/L move column",
+		view.Resource,
+		actions,
 	)
 }
 

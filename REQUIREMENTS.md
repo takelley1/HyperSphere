@@ -74,6 +74,7 @@
 ### RQ-011: Add `?` key to open keymap help modal
 - vSphere mapping: discoverability of hotkeys per active vSphere view.
 - Acceptance: pressing `?` opens a modal containing active view actions and closes on `Esc`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-012: Add `ctrl-a` alias palette
 - vSphere mapping: browse all resource aliases/shortcuts.

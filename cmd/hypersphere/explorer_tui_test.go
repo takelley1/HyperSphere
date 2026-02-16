@@ -144,6 +144,21 @@ func TestHandlePromptHistoryTabCompletesPrompt(t *testing.T) {
 	}
 }
 
+func TestHelpModalToggleWithQuestionAndEscape(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone))
+	if !runtime.isHelpModalOpen() {
+		t.Fatalf("expected help modal to open on ?")
+	}
+	if !strings.Contains(runtime.helpText, "power-on") {
+		t.Fatalf("expected help modal to include active view actions")
+	}
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	if runtime.isHelpModalOpen() {
+		t.Fatalf("expected help modal to close on escape")
+	}
+}
+
 func TestRenderFooterOmitsClockForEventDrivenRedraw(t *testing.T) {
 	footer := renderFooter(true)
 	clock := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\b`)

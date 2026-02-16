@@ -41,7 +41,7 @@
 - [ ] Add inline prompt validation feedback before submit.
 - [ ] Add contextual completion list rendering for view/action/filter commands.
 - [ ] Add ghost-text suggestion preview while typing in prompt mode.
-- [ ] Add `?` hotkey modal for per-view keybinding discovery.
+- [ ] Add integration coverage for help-modal lifecycle across view switches.
 - [ ] Add `ctrl-a` alias palette to browse and execute command shortcuts.
 - [ ] Add tab-accept behavior for first prompt suggestion.
 - [ ] Add `:ctx` completion hints for configured endpoint names.

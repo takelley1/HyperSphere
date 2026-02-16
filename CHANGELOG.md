@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-011 `?` key behavior to open a keymap help modal in explorer runtime and close it with `Esc`.
+- Added failing-first cmd-level coverage in `cmd/hypersphere/explorer_tui_test.go` for help modal open/close lifecycle and action-content rendering.
+- Refactored runtime root layout to use `tview.Pages` with a dedicated help modal page and explicit modal state tracking.
+- Updated `DESIGN.md` by removing the completed `?` modal prompt task and adding follow-on integration coverage for modal behavior across view switches.
+- Marked `RQ-011` as fulfilled in `REQUIREMENTS.md`.
 - Implemented RQ-010 `--crumbsless` startup flag to hide the breadcrumb widget in explorer mode.
 - Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to validate `--crumbsless` parsing.
 - Added cmd-level rendering tests in `cmd/hypersphere/explorer_tui_test.go` to assert default breadcrumb rendering and crumbsless omission behavior.
