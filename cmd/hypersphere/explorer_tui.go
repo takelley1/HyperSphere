@@ -18,6 +18,7 @@ const minAutosizeColumnWidth = 3
 const compactModeWidthThreshold = 15
 const explorerTableTitle = "HyperSphere Explorer"
 const fixedTableColumns = 1
+const defaultTopHeaderWidth = 120
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
@@ -40,6 +41,7 @@ type explorerRuntime struct {
 	layout        *tview.Flex
 	helpModal     *tview.Modal
 	aliasModal    *tview.Modal
+	topHeader     *tview.TextView
 	body          *tview.Table
 	breadcrumb    *tview.TextView
 	status        *tview.TextView
@@ -184,6 +186,7 @@ func newExplorerRuntimeWithRenderOptions(
 		pages:         tview.NewPages(),
 		helpModal:     tview.NewModal(),
 		aliasModal:    tview.NewModal(),
+		topHeader:     tview.NewTextView(),
 		body:          tview.NewTable(),
 		breadcrumb:    tview.NewTextView(),
 		status:        tview.NewTextView(),
@@ -238,8 +241,10 @@ func (r *explorerRuntime) configureWidgets() {
 	r.aliasModal.SetText("Select a resource alias")
 	r.aliasModal.AddButtons(r.aliasEntries)
 	r.aliasModal.SetDoneFunc(r.handleAliasSelection)
+	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
+		AddItem(r.topHeader, 1, 0, false).
 		AddItem(r.body, 0, 1, true).
 		AddItem(r.prompt, 1, 0, false)
 	if !r.crumbsless {
@@ -281,6 +286,7 @@ func (r *explorerRuntime) handleScreenResize(screen tcell.Screen) bool {
 	if tableWidth <= 0 {
 		tableWidth = width
 	}
+	r.renderTopHeaderWithWidth(width)
 	r.renderTableWithWidth(tableWidth)
 	return false
 }
@@ -514,9 +520,28 @@ func (r *explorerRuntime) render(message string) {
 	if message != "" {
 		r.status.SetText(message)
 	}
+	r.renderTopHeader()
 	r.renderTable()
 	r.renderBreadcrumb()
 	r.footer.SetText(renderFooter(r.promptMode))
+}
+
+func (r *explorerRuntime) renderTopHeader() {
+	r.renderTopHeaderWithWidth(r.lastWidth)
+}
+
+func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
+	if r.topHeader == nil {
+		return
+	}
+	r.topHeader.SetText(
+		renderTopHeaderLine(
+			normalizeTopHeaderWidth(width),
+			renderTopHeaderLeft(r.contexts.Active()),
+			renderTopHeaderCenter(),
+			renderTopHeaderRight(),
+		),
+	)
 }
 
 func (r *explorerRuntime) renderBreadcrumb() {
@@ -1017,6 +1042,67 @@ func tableRowColor(theme explorerTheme, rowIndex int) tcell.Color {
 		return theme.EvenRowText
 	}
 	return theme.OddRowText
+}
+
+func renderTopHeaderLine(width int, left string, center string, right string) string {
+	leftWidth, centerWidth, rightWidth := topHeaderZoneWidths(width)
+	return fitHeaderLeft(left, leftWidth) +
+		fitHeaderCenter(center, centerWidth) +
+		fitHeaderRight(right, rightWidth)
+}
+
+func topHeaderZoneWidths(width int) (int, int, int) {
+	leftWidth := width / 3
+	centerWidth := width / 3
+	rightWidth := width - leftWidth - centerWidth
+	return leftWidth, centerWidth, rightWidth
+}
+
+func fitHeaderLeft(text string, width int) string {
+	value := trimHeaderText(text, width)
+	return value + strings.Repeat(" ", width-len(value))
+}
+
+func fitHeaderCenter(text string, width int) string {
+	value := trimHeaderText(text, width)
+	pad := width - len(value)
+	leftPad := pad / 2
+	rightPad := pad - leftPad
+	return strings.Repeat(" ", leftPad) + value + strings.Repeat(" ", rightPad)
+}
+
+func fitHeaderRight(text string, width int) string {
+	value := trimHeaderText(text, width)
+	return strings.Repeat(" ", width-len(value)) + value
+}
+
+func trimHeaderText(text string, width int) string {
+	if width <= 0 {
+		return ""
+	}
+	if len(text) <= width {
+		return text
+	}
+	return text[:width]
+}
+
+func normalizeTopHeaderWidth(width int) int {
+	if width <= 0 {
+		return defaultTopHeaderWidth
+	}
+	return width
+}
+
+func renderTopHeaderLeft(context string) string {
+	return fmt.Sprintf("Context: %s", context)
+}
+
+func renderTopHeaderCenter() string {
+	return "<:> Command </> Filter <?> Help"
+}
+
+func renderTopHeaderRight() string {
+	return "HyperSphere"
 }
 
 func executePromptCommand(

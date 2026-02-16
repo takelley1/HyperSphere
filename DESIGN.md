@@ -30,10 +30,11 @@
 - [ ] Add status color mapping for healthy/degraded/faulted rows.
 
 ### Header Layout Parity
-- [ ] Add three-zone header layout (left metadata, center hotkeys, right logo).
 - [ ] Add fixed metadata label order for context/version/capacity fields.
 - [ ] Add right-aligned ASCII logo block with safe clipping bounds.
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
+- [ ] Add runtime width tracking tests for top-header zone clipping and padding.
+- [ ] Add top-header render integration coverage for resize-driven redraw behavior.
 
 ### Rendering Performance
 - [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.

@@ -216,6 +216,36 @@ func TestRenderFooterIncludesPromptMode(t *testing.T) {
 	}
 }
 
+func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *testing.T) {
+	line := renderTopHeaderLine(
+		120,
+		"Context: vc-primary",
+		"<:> Command </> Filter <?> Help",
+		"HyperSphere",
+	)
+	if len(line) != 120 {
+		t.Fatalf("expected 120-column header line, got %d", len(line))
+	}
+	leftZone := line[:40]
+	centerZone := line[40:80]
+	rightZone := line[80:]
+	if !strings.Contains(leftZone, "Context: vc-primary") {
+		t.Fatalf("expected left metadata in left zone, got %q", leftZone)
+	}
+	if !strings.Contains(centerZone, "<:> Command </> Filter <?> Help") {
+		t.Fatalf("expected center legend in center zone, got %q", centerZone)
+	}
+	if !strings.Contains(rightZone, "HyperSphere") {
+		t.Fatalf("expected logo text in right zone, got %q", rightZone)
+	}
+	if strings.Contains(line[:80], "HyperSphere") {
+		t.Fatalf("expected right-zone text to avoid left/center overlap: %q", line[:80])
+	}
+	if strings.Contains(line[40:], "Context: vc-primary") {
+		t.Fatalf("expected left-zone text to avoid center/right overlap: %q", line[40:])
+	}
+}
+
 func TestEventToHotKeyVimColumnMovement(t *testing.T) {
 	left, ok := eventToHotKey(tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone))
 	if !ok || left != "LEFT" {
@@ -680,7 +710,7 @@ func TestNewExplorerRuntimeCrumbslessOmitsBreadcrumbWidget(t *testing.T) {
 	if runtime.breadcrumb.GetText(true) != "" {
 		t.Fatalf("expected crumbsless runtime to keep breadcrumb empty")
 	}
-	if runtime.layout.GetItemCount() != 4 {
+	if runtime.layout.GetItemCount() != 5 {
 		t.Fatalf("expected crumbsless layout to omit breadcrumb widget")
 	}
 }

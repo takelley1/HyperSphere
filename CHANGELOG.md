@@ -1,6 +1,16 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-092 three-zone top header layout in the explorer runtime with
+  fixed left/center/right zones and deterministic clipping/padding behavior.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  verify 120-column zone rendering and non-overlap between metadata, hotkeys,
+  and logo text.
+- Updated `cmd/hypersphere/explorer_tui.go` to add a dedicated top-header
+  widget, resize-aware redraw wiring, and canonical zone-format helper
+  functions.
+- Updated `DESIGN.md` by removing the completed three-zone header item and
+  adding follow-on top-header clipping and resize integration sub-tasks.
 - Implemented RQ-027 `ctrl-e` header-visibility toggle parity in the explorer
   runtime.
 - Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`
