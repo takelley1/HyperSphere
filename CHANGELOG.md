@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-036 by adding the `:folder`/`:folders` view
+  with columns `PATH`, `TYPE`, `CHILDREN`, and `VM_COUNT`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for folder alias parsing and folder view
+  column rendering.
+- Extended `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded folder
+  rows and added browse-dataset assertions in `cmd/hypersphere/main_test.go`.
 - Implemented and fulfilled RQ-035 by adding the `:alarm`/`:alarms` view with
   columns `ENTITY`, `ALARM`, `STATUS`, `TRIGGERED`, and `ACKED_BY`.
 - Added failing-first coverage in `internal/tui/command_test.go` and

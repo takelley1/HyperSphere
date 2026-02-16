@@ -267,6 +267,9 @@ func TestDefaultCatalogProvidesExpandedBrowsingDataset(t *testing.T) {
 	if len(catalog.Alarms) < 6 {
 		t.Fatalf("expected at least 6 alarm rows for browsing, got %d", len(catalog.Alarms))
 	}
+	if len(catalog.Folders) < 6 {
+		t.Fatalf("expected at least 6 folder rows for browsing, got %d", len(catalog.Folders))
+	}
 	if len(catalog.Hosts) < 8 {
 		t.Fatalf("expected at least 8 host rows for browsing, got %d", len(catalog.Hosts))
 	}

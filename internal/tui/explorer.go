@@ -42,6 +42,7 @@ const (
 	ResourceTask       Resource = "task"
 	ResourceEvent      Resource = "event"
 	ResourceAlarm      Resource = "alarm"
+	ResourceFolder     Resource = "folder"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -76,6 +77,8 @@ var resourceAliasMap = map[string]Resource{
 	"events":        ResourceEvent,
 	"alarm":         ResourceAlarm,
 	"alarms":        ResourceAlarm,
+	"folder":        ResourceFolder,
+	"folders":       ResourceFolder,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -221,6 +224,14 @@ type AlarmRow struct {
 	AckedBy   string
 }
 
+// FolderRow represents one inventory folder row in the resource table.
+type FolderRow struct {
+	Path     string
+	Type     string
+	Children int
+	VMCount  int
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -259,6 +270,7 @@ type Catalog struct {
 	Tasks         []TaskRow
 	Events        []EventRow
 	Alarms        []AlarmRow
+	Folders       []FolderRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -381,6 +393,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return eventView(n.catalog.Events), true
 	case ResourceAlarm:
 		return alarmView(n.catalog.Alarms), true
+	case ResourceFolder:
+		return folderView(n.catalog.Folders), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -895,6 +909,11 @@ func alarmView(rows []AlarmRow) ResourceView {
 	return buildView(ResourceAlarm, columns, alarmSortHotKeys(), alarmActions(), rows, alarmCells)
 }
 
+func folderView(rows []FolderRow) ResourceView {
+	columns := []string{"PATH", "TYPE", "CHILDREN", "VM_COUNT"}
+	return buildView(ResourceFolder, columns, folderSortHotKeys(), folderActions(), rows, folderCells)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{
 		"NAME",
@@ -1114,6 +1133,15 @@ func alarmCells(row AlarmRow) (string, []string) {
 	}
 }
 
+func folderCells(row FolderRow) (string, []string) {
+	return defaultCell(row.Path), []string{
+		defaultCell(row.Path),
+		defaultCell(row.Type),
+		strconv.Itoa(row.Children),
+		strconv.Itoa(row.VMCount),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{
 		row.Name,
@@ -1287,6 +1315,15 @@ func alarmSortHotKeys() map[string]string {
 	}
 }
 
+func folderSortHotKeys() map[string]string {
+	return map[string]string{
+		"P": "PATH",
+		"T": "TYPE",
+		"C": "CHILDREN",
+		"V": "VM_COUNT",
+	}
+}
+
 func hostSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
@@ -1360,6 +1397,10 @@ func eventActions() []string {
 
 func alarmActions() []string {
 	return []string{"acknowledge", "clear"}
+}
+
+func folderActions() []string {
+	return []string{"open", "rename"}
 }
 
 func datastoreActions() []string {

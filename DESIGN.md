@@ -24,7 +24,6 @@
 - [ ] Sub-task: add coverage for full-row highlight behavior when table width is narrower than content.
 - [ ] Sub-task: persist per-view selected columns to config so chooser state survives restart.
 - [ ] Sub-task: add explicit top-help hint for sort inversion (`Shift+I`) alongside primary sort key.
-- [ ] Sub-task: add folder hierarchy samples and `:folder` startup routing coverage.
 - [ ] Sub-task: add tag/category samples and `:tag` startup routing coverage.
 
 ### Demo Dataset Quality

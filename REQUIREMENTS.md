@@ -448,6 +448,7 @@
 ### RQ-036: Add `:folder` view
 - vSphere mapping: inventory hierarchy exploration.
 - Acceptance: view columns include `PATH`, `TYPE`, `CHILDREN`, `VM_COUNT`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-037: Add `:tag` view
 - vSphere mapping: tag/category management parity.

@@ -339,6 +339,7 @@ func defaultCatalog() tui.Catalog {
 		Tasks:         defaultTaskRows(),
 		Events:        defaultEventRows(),
 		Alarms:        defaultAlarmRows(),
+		Folders:       defaultFolderRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -459,6 +460,17 @@ func defaultAlarmRows() []tui.AlarmRow {
 		{Entity: "cluster-west", Alarm: "Imbalance detected", Status: "yellow", Triggered: "2026-02-16T08:20:00Z", AckedBy: "-"},
 		{Entity: "ds-7", Alarm: "Space utilization warning", Status: "yellow", Triggered: "2026-02-16T08:18:00Z", AckedBy: "ops@example.com"},
 		{Entity: "vm-b", Alarm: "Snapshot chain length high", Status: "yellow", Triggered: "2026-02-16T08:22:00Z", AckedBy: "-"},
+	}
+}
+
+func defaultFolderRows() []tui.FolderRow {
+	return []tui.FolderRow{
+		{Path: "/Datacenters/dc-1/vm/Prod", Type: "vm-folder", Children: 6, VMCount: 74},
+		{Path: "/Datacenters/dc-1/vm/QA", Type: "vm-folder", Children: 3, VMCount: 28},
+		{Path: "/Datacenters/dc-2/vm/Dev", Type: "vm-folder", Children: 5, VMCount: 52},
+		{Path: "/Datacenters/dc-3/vm/Edge", Type: "vm-folder", Children: 2, VMCount: 17},
+		{Path: "/Datacenters/dc-1/host/Compute", Type: "host-folder", Children: 4, VMCount: 0},
+		{Path: "/Datacenters/dc-2/network/Distributed", Type: "network-folder", Children: 7, VMCount: 0},
 	}
 }
 
