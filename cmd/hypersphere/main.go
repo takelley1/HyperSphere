@@ -334,6 +334,7 @@ func defaultCatalog() tui.Catalog {
 		Datacenters:   defaultDatacenterRows(),
 		ResourcePools: defaultResourcePoolRows(),
 		Networks:      defaultNetworkRows(),
+		Templates:     defaultTemplateRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -399,6 +400,17 @@ func defaultNetworkRows() []tui.NetworkRow {
 		{Name: "dvpg-storage-120", Type: "distributed-portgroup", VLAN: "120", Switch: "dvs-storage", AttachedVMs: 19},
 		{Name: "dvpg-backup-130", Type: "distributed-portgroup", VLAN: "130", Switch: "dvs-backup", AttachedVMs: 11},
 		{Name: "dvpg-edge-trunk", Type: "distributed-portgroup", VLAN: "trunk", Switch: "dvs-edge", AttachedVMs: 7},
+	}
+}
+
+func defaultTemplateRows() []tui.TemplateRow {
+	return []tui.TemplateRow{
+		{Name: "tpl-rhel9-base", OS: "rhel9", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "45d"},
+		{Name: "tpl-ubuntu2204-base", OS: "ubuntu22.04", Datastore: "vvol-central", Folder: "/Templates/Linux", Age: "32d"},
+		{Name: "tpl-windows2022-base", OS: "windows2022", Datastore: "nfs-west", Folder: "/Templates/Windows", Age: "54d"},
+		{Name: "tpl-sles15-base", OS: "sles15", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "27d"},
+		{Name: "tpl-centos7-legacy", OS: "centos7", Datastore: "ds-6", Folder: "/Templates/Legacy", Age: "143d"},
+		{Name: "tpl-debian12-app", OS: "debian12", Datastore: "ds-7", Folder: "/Templates/App", Age: "18d"},
 	}
 }
 

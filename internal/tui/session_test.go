@@ -110,6 +110,24 @@ func TestNetworkViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestTemplateViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Templates: []TemplateRow{
+				{Name: "tpl-rhel9-base", OS: "rhel9", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "45d"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":tp")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected template columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "c1"}, {Name: "vm-b", Cluster: "c1"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

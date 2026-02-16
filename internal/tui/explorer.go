@@ -35,6 +35,7 @@ const (
 	ResourceDatacenter Resource = "datacenter"
 	ResourcePool       Resource = "resourcepool"
 	ResourceNetwork    Resource = "network"
+	ResourceTemplate   Resource = "template"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -56,6 +57,9 @@ var resourceAliasMap = map[string]Resource{
 	"nw":            ResourceNetwork,
 	"network":       ResourceNetwork,
 	"networks":      ResourceNetwork,
+	"tp":            ResourceTemplate,
+	"template":      ResourceTemplate,
+	"templates":     ResourceTemplate,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -133,6 +137,15 @@ type NetworkRow struct {
 	AttachedVMs int
 }
 
+// TemplateRow represents one VM template row in the resource table.
+type TemplateRow struct {
+	Name      string
+	OS        string
+	Datastore string
+	Folder    string
+	Age       string
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -161,6 +174,7 @@ type Catalog struct {
 	Datacenters   []DatacenterRow
 	ResourcePools []ResourcePoolRow
 	Networks      []NetworkRow
+	Templates     []TemplateRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -271,6 +285,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return resourcePoolView(n.catalog.ResourcePools), true
 	case ResourceNetwork:
 		return networkView(n.catalog.Networks), true
+	case ResourceTemplate:
+		return templateView(n.catalog.Templates), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -650,6 +666,18 @@ func networkView(rows []NetworkRow) ResourceView {
 	)
 }
 
+func templateView(rows []TemplateRow) ResourceView {
+	columns := []string{"NAME", "OS", "DATASTORE", "FOLDER", "AGE"}
+	return buildView(
+		ResourceTemplate,
+		columns,
+		templateSortHotKeys(),
+		templateActions(),
+		rows,
+		templateCells,
+	)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
@@ -731,6 +759,16 @@ func networkCells(row NetworkRow) (string, []string) {
 	}
 }
 
+func templateCells(row TemplateRow) (string, []string) {
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.OS),
+		defaultCell(row.Datastore),
+		defaultCell(row.Folder),
+		defaultCell(row.Age),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
 }
@@ -764,6 +802,10 @@ func resourcePoolSortHotKeys() map[string]string {
 
 func networkSortHotKeys() map[string]string {
 	return map[string]string{"N": "NAME", "T": "TYPE", "V": "VLAN", "S": "SWITCH", "A": "ATTACHED_VMS"}
+}
+
+func templateSortHotKeys() map[string]string {
+	return map[string]string{"N": "NAME", "O": "OS", "D": "DATASTORE", "F": "FOLDER", "A": "AGE"}
 }
 
 func hostSortHotKeys() map[string]string {
@@ -800,6 +842,10 @@ func resourcePoolActions() []string {
 
 func networkActions() []string {
 	return []string{"attach-vm", "detach-vm", "edit-tags"}
+}
+
+func templateActions() []string {
+	return []string{"clone", "edit-tags"}
 }
 
 func datastoreActions() []string {

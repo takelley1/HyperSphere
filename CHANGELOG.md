@@ -1,6 +1,18 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-031 template lifecycle coverage by adding `:template` and
+  `:tp` command aliases with columns `NAME`, `OS`, `DATASTORE`, `FOLDER`,
+  and `AGE`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for template alias parsing and template view
+  column rendering.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded
+  template rows and added browse-dataset assertions in
+  `cmd/hypersphere/main_test.go`.
+- Marked `RQ-031` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on template dataset and startup-routing
+  coverage sub-tasks.
 - Implemented RQ-030 distributed-network view coverage by adding `:network`
   and `:nw` command aliases with columns `NAME`, `TYPE`, `VLAN`, `SWITCH`,
   and `ATTACHED_VMS`.

@@ -309,6 +309,7 @@
 ### RQ-031: Add `:template`/`:tp` view
 - vSphere mapping: VM templates lifecycle.
 - Acceptance: view columns include `NAME`, `OS`, `DATASTORE`, `FOLDER`, `AGE`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-032: Add `:snapshot`/`:snap`/`:ss` view
 - vSphere mapping: VM snapshot governance.
