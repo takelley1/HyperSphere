@@ -187,6 +187,7 @@
 - vSphere mapping: discoverable command hints matching screenshot style.
 - Acceptance: hotkey legend renders entries as `<key>` plus action label,
   with one entry per line.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-095: Add right-side ASCII HyperSphere logo block
 - vSphere mapping: branded parity with k9s right-header mark.

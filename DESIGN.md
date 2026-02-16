@@ -34,6 +34,7 @@
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.
 - [ ] Add runtime width tracking tests for top-header zone clipping and padding.
 - [ ] Add top-header render integration coverage for resize-driven redraw behavior.
+- [ ] Sub-task: add integration coverage for center legend one-entry-per-line rendering.
 - [ ] Sub-task: replace placeholder metadata values with live cluster/user/vCenter stats.
 - [ ] Sub-task: add metadata trend suffix rendering for CPU and MEM values.
 
@@ -81,6 +82,7 @@
 - [ ] Add split-pane detail drawers for selected object metadata.
 - [ ] Add search result jump list with next/previous navigation.
 - [ ] Add keyboard cheatsheet modal with per-view hotkeys.
+- [ ] Sub-task: centralize per-view legend definitions for table and log contexts.
 - [ ] Add context-scoped alias overlays so aliases can vary by active vCenter target.
 - [ ] Add pulses-style health dashboard for live utilization and alarms.
 - [ ] Add xray-style dependency explorer for VM/host/datastore/network relationships.
@@ -122,5 +124,6 @@
 - [ ] Add release criteria and acceptance checklist for k9s-parity milestones.
 - [ ] Add parity matrix mapping k9s features to vSphere analogs with completion state.
 - [ ] Add a canonical requirements ledger linking parity items to failing-test IDs.
+- [ ] Sub-task: validate center legend parity items against screenshot baselines.
 - [ ] Sub-task: emit machine-readable parity matrix artifact from `REQUIREMENTS.md`.
 - [ ] Sub-task: gate release checklist on parity matrix `done|validated` thresholds.

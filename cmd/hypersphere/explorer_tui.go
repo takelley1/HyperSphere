@@ -1194,7 +1194,14 @@ func renderTopHeaderLeft(context string) string {
 }
 
 func renderTopHeaderCenter() string {
-	return "<:> Command </> Filter <?> Help"
+	return strings.Join(
+		[]string{
+			"<:> Command",
+			"</> Filter",
+			"<?> Help",
+		},
+		"\n",
+	)
 }
 
 func renderTopHeaderRight() string {

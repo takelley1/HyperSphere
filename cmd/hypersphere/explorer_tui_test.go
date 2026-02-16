@@ -220,7 +220,7 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 	line := renderTopHeaderLine(
 		120,
 		"Context: vc-primary",
-		"<:> Command </> Filter <?> Help",
+		"<:> Command",
 		"HyperSphere",
 	)
 	if len(line) != 120 {
@@ -232,7 +232,7 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 	if !strings.Contains(leftZone, "Context: vc-primary") {
 		t.Fatalf("expected left metadata in left zone, got %q", leftZone)
 	}
-	if !strings.Contains(centerZone, "<:> Command </> Filter <?> Help") {
+	if !strings.Contains(centerZone, "<:> Command") {
 		t.Fatalf("expected center legend in center zone, got %q", centerZone)
 	}
 	if !strings.Contains(rightZone, "HyperSphere") {
@@ -243,6 +243,28 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 	}
 	if strings.Contains(line[40:], "Context: vc-primary") {
 		t.Fatalf("expected left-zone text to avoid center/right overlap: %q", line[40:])
+	}
+}
+
+func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
+	lines := strings.Split(renderTopHeaderCenter(), "\n")
+	want := []string{
+		"<:> Command",
+		"</> Filter",
+		"<?> Help",
+	}
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d center legend lines, got %d (%q)", len(want), len(lines), lines)
+	}
+	for index, expected := range want {
+		if lines[index] != expected {
+			t.Fatalf(
+				"expected center legend line %d to be %q, got %q",
+				index,
+				expected,
+				lines[index],
+			)
+		}
 	}
 }
 

@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-094 center hotkey legend parity so the top-center legend now
+  renders one angle-bracket hotkey entry per line (`<:> Command`,
+  `</> Filter`, `<?> Help`).
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert line-by-line center legend output and fixed-zone header rendering.
+- Marked `RQ-094` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on short/medium/long-term legend-parity
+  subtasks for integration coverage and screenshot validation.
 - Implemented RQ-093 left metadata panel parity by rendering the top-left
   header zone as a fixed seven-line metadata panel in the required label order:
   `Context`, `Cluster`, `User`, `HS Version`, `vCenter Version`, `CPU`, `MEM`.
