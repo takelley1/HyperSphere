@@ -482,6 +482,7 @@
 - vSphere mapping: selected object metadata inspection.
 - Acceptance: toggling details pane shows key-value metadata for current row
   without leaving table view.
+- Status: fulfilled (2026-02-16).
 
 ## Filter and Query Parity
 

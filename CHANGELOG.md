@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-042 by replacing modal describe behavior with a
+  split-pane details drawer inside the main table layout.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert table navigation remains active while the details drawer is open.
 - Implemented and fulfilled RQ-041 by adding `n`/`N` filtered-match jump-list
   navigation with wrap-around behavior across active filter result rows.
 - Added failing-first coverage in `internal/tui/runtime_test.go` for forward and

@@ -1345,3 +1345,18 @@ func TestDescribePanelOpensOnDAndEscRestoresSelectionAndMarks(t *testing.T) {
 		t.Fatalf("expected marked row to remain marked after describe close")
 	}
 }
+
+func TestDescribeDrawerKeepsTableNavigationActive(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	startRow := runtime.session.SelectedRow()
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+	if !runtime.isDescribePanelOpen() {
+		t.Fatalf("expected describe drawer to open on d")
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))
+	if runtime.session.SelectedRow() == startRow {
+		t.Fatalf("expected table navigation to remain active while describe drawer is open")
+	}
+}

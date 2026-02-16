@@ -28,6 +28,7 @@ const logLevelWidth = 5
 const logMessageMinWidth = 16
 const compactHeaderCollapseWidth = 100
 const compactHeaderHideLogoWidth = 80
+const describeDrawerHeight = 9
 
 var compactColumnsByResource = map[tui.Resource][]string{
 	tui.ResourceVM:        {"NAME", "POWER", "ATTACHED_STORAGE"},
@@ -39,38 +40,39 @@ var compactColumnsByResource = map[tui.Resource][]string{
 }
 
 type explorerRuntime struct {
-	app           *tview.Application
-	session       tui.Session
-	promptState   tui.PromptState
-	actionExec    *runtimeActionExecutor
-	contexts      runtimeContextManager
-	headless      bool
-	crumbsless    bool
-	theme         explorerTheme
-	pages         *tview.Pages
-	layout        *tview.Flex
-	helpModal     *tview.Modal
-	aliasModal    *tview.Modal
-	describeModal *tview.Modal
-	topHeader     *tview.TextView
-	body          *tview.Table
-	breadcrumb    *tview.TextView
-	status        *tview.TextView
-	prompt        *tview.InputField
-	aliasEntries  []string
-	promptMode    bool
-	helpOpen      bool
-	aliasOpen     bool
-	describeOpen  bool
-	helpText      string
-	describeText  string
-	lastWidth     int
-	wideColumns   bool
-	headerVisible bool
-	logMode       bool
-	logObjectPath string
-	logTarget     string
-	logEntries    []runtimeLogEntry
+	app            *tview.Application
+	session        tui.Session
+	promptState    tui.PromptState
+	actionExec     *runtimeActionExecutor
+	contexts       runtimeContextManager
+	headless       bool
+	crumbsless     bool
+	theme          explorerTheme
+	pages          *tview.Pages
+	layout         *tview.Flex
+	contentPane    *tview.Flex
+	helpModal      *tview.Modal
+	aliasModal     *tview.Modal
+	topHeader      *tview.TextView
+	body           *tview.Table
+	describeDrawer *tview.TextView
+	breadcrumb     *tview.TextView
+	status         *tview.TextView
+	prompt         *tview.InputField
+	aliasEntries   []string
+	promptMode     bool
+	helpOpen       bool
+	aliasOpen      bool
+	describeOpen   bool
+	helpText       string
+	describeText   string
+	lastWidth      int
+	wideColumns    bool
+	headerVisible  bool
+	logMode        bool
+	logObjectPath  string
+	logTarget      string
+	logEntries     []runtimeLogEntry
 }
 
 type runtimeActionExecutor struct {
@@ -207,26 +209,26 @@ func newExplorerRuntimeWithRenderOptions(
 	crumbsless bool,
 ) explorerRuntime {
 	runtime := explorerRuntime{
-		app:           tview.NewApplication(),
-		session:       tui.NewSession(defaultCatalog()),
-		promptState:   tui.NewPromptState(defaultPromptHistorySize),
-		actionExec:    &runtimeActionExecutor{},
-		contexts:      newRuntimeContextManager(),
-		headless:      headless,
-		crumbsless:    crumbsless,
-		theme:         readTheme(),
-		pages:         tview.NewPages(),
-		helpModal:     tview.NewModal(),
-		aliasModal:    tview.NewModal(),
-		describeModal: tview.NewModal(),
-		topHeader:     tview.NewTextView(),
-		body:          tview.NewTable(),
-		breadcrumb:    tview.NewTextView(),
-		status:        tview.NewTextView(),
-		prompt:        tview.NewInputField(),
-		wideColumns:   true,
-		headerVisible: !headless,
-		logEntries:    defaultRuntimeLogEntries(),
+		app:            tview.NewApplication(),
+		session:        tui.NewSession(defaultCatalog()),
+		promptState:    tui.NewPromptState(defaultPromptHistorySize),
+		actionExec:     &runtimeActionExecutor{},
+		contexts:       newRuntimeContextManager(),
+		headless:       headless,
+		crumbsless:     crumbsless,
+		theme:          readTheme(),
+		pages:          tview.NewPages(),
+		helpModal:      tview.NewModal(),
+		aliasModal:     tview.NewModal(),
+		topHeader:      tview.NewTextView(),
+		body:           tview.NewTable(),
+		describeDrawer: tview.NewTextView(),
+		breadcrumb:     tview.NewTextView(),
+		status:         tview.NewTextView(),
+		prompt:         tview.NewInputField(),
+		wideColumns:    true,
+		headerVisible:  !headless,
+		logEntries:     defaultRuntimeLogEntries(),
 	}
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
@@ -283,20 +285,26 @@ func (r *explorerRuntime) configureWidgets() {
 	r.aliasModal.SetText("Select a resource alias")
 	r.aliasModal.AddButtons(r.aliasEntries)
 	r.aliasModal.SetDoneFunc(r.handleAliasSelection)
-	r.describeModal.SetBorder(true)
-	r.describeModal.SetTitle(" Describe ")
+	r.describeDrawer.SetBorder(true)
+	r.describeDrawer.SetTitle(" Details Drawer ")
+	r.describeDrawer.SetBackgroundColor(r.theme.CanvasBackground)
+	r.describeDrawer.SetDynamicColors(true)
+	content := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(r.body, 0, 1, true).
+		AddItem(r.describeDrawer, 0, 0, false)
+	r.contentPane = content
 	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(r.topHeader, topHeaderPanelHeight, 0, false).
-		AddItem(r.body, 0, 1, true).
+		AddItem(r.contentPane, 0, 1, true).
 		AddItem(r.prompt, 1, 0, false)
 	r.layout = layout
 	r.layout.SetBackgroundColor(r.theme.CanvasBackground)
 	r.pages.AddPage("main", layout, true, true)
 	r.pages.AddPage("help", r.helpModal, true, false)
 	r.pages.AddPage("alias", r.aliasModal, true, false)
-	r.pages.AddPage("describe", r.describeModal, true, false)
 	r.pages.SetBackgroundColor(r.theme.CanvasBackground)
 	r.app.SetRoot(r.pages, true)
 	r.app.SetFocus(r.body)
@@ -351,10 +359,8 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 	}
-	if r.describeOpen {
-		if evt.Key() == tcell.KeyEscape {
-			r.closeDescribePanel()
-		}
+	if r.describeOpen && evt.Key() == tcell.KeyEscape {
+		r.closeDescribePanel()
 		return nil
 	}
 	if r.promptMode {
@@ -512,13 +518,14 @@ func (r *explorerRuntime) openDescribePanel() {
 		return
 	}
 	r.describeText = renderResourceDetails(details)
-	r.describeModal.SetText(r.describeText)
-	r.pages.ShowPage("describe")
+	r.describeDrawer.SetText(r.describeText)
+	r.contentPane.ResizeItem(r.describeDrawer, describeDrawerHeight, 0)
 	r.describeOpen = true
+	r.app.SetFocus(r.body)
 }
 
 func (r *explorerRuntime) closeDescribePanel() {
-	r.pages.HidePage("describe")
+	r.contentPane.ResizeItem(r.describeDrawer, 0, 0)
 	r.describeOpen = false
 	r.app.SetFocus(r.body)
 	row, column := selectionForTable(r.session, r.tableHeaderVisible())
