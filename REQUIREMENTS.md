@@ -167,6 +167,7 @@
   snapshot identifiers/timestamps when present.
 - Acceptance: details panel closes on `Esc` and returns focus to the same table
   row/column without losing marks.
+- Status: fulfilled (2026-02-16).
 
 ## Screenshot Visual Baseline Parity
 

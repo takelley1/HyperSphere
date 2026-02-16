@@ -41,6 +41,7 @@ type explorerRuntime struct {
 	layout        *tview.Flex
 	helpModal     *tview.Modal
 	aliasModal    *tview.Modal
+	describeModal *tview.Modal
 	topHeader     *tview.TextView
 	body          *tview.Table
 	breadcrumb    *tview.TextView
@@ -51,7 +52,9 @@ type explorerRuntime struct {
 	promptMode    bool
 	helpOpen      bool
 	aliasOpen     bool
+	describeOpen  bool
 	helpText      string
+	describeText  string
 	lastWidth     int
 	wideColumns   bool
 	headerVisible bool
@@ -186,6 +189,7 @@ func newExplorerRuntimeWithRenderOptions(
 		pages:         tview.NewPages(),
 		helpModal:     tview.NewModal(),
 		aliasModal:    tview.NewModal(),
+		describeModal: tview.NewModal(),
 		topHeader:     tview.NewTextView(),
 		body:          tview.NewTable(),
 		breadcrumb:    tview.NewTextView(),
@@ -241,6 +245,8 @@ func (r *explorerRuntime) configureWidgets() {
 	r.aliasModal.SetText("Select a resource alias")
 	r.aliasModal.AddButtons(r.aliasEntries)
 	r.aliasModal.SetDoneFunc(r.handleAliasSelection)
+	r.describeModal.SetBorder(true)
+	r.describeModal.SetTitle(" Describe ")
 	r.topHeader.SetDynamicColors(true)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
@@ -255,6 +261,7 @@ func (r *explorerRuntime) configureWidgets() {
 	r.pages.AddPage("main", layout, true, true)
 	r.pages.AddPage("help", r.helpModal, true, false)
 	r.pages.AddPage("alias", r.aliasModal, true, false)
+	r.pages.AddPage("describe", r.describeModal, true, false)
 	r.app.SetRoot(r.pages, true)
 	r.app.SetFocus(r.body)
 }
@@ -308,6 +315,12 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 	}
+	if r.describeOpen {
+		if evt.Key() == tcell.KeyEscape {
+			r.closeDescribePanel()
+		}
+		return nil
+	}
 	if r.promptMode {
 		return evt
 	}
@@ -317,6 +330,10 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	}
 	if evt.Key() == tcell.KeyRune && evt.Rune() == '?' {
 		r.openHelpModal()
+		return nil
+	}
+	if isDescribeEvent(evt) {
+		r.openDescribePanel()
 		return nil
 	}
 	if isPromptActivation(evt) {
@@ -407,6 +424,30 @@ func (r *explorerRuntime) closeAliasPalette() {
 
 func (r *explorerRuntime) isAliasPaletteOpen() bool {
 	return r.aliasOpen
+}
+
+func (r *explorerRuntime) openDescribePanel() {
+	details, err := r.session.SelectedResourceDetails()
+	if err != nil {
+		r.emitStatus(err)
+		return
+	}
+	r.describeText = renderResourceDetails(details)
+	r.describeModal.SetText(r.describeText)
+	r.pages.ShowPage("describe")
+	r.describeOpen = true
+}
+
+func (r *explorerRuntime) closeDescribePanel() {
+	r.pages.HidePage("describe")
+	r.describeOpen = false
+	r.app.SetFocus(r.body)
+	row, column := selectionForTable(r.session, r.tableHeaderVisible())
+	r.body.Select(row, column)
+}
+
+func (r *explorerRuntime) isDescribePanelOpen() bool {
+	return r.describeOpen
 }
 
 func (r *explorerRuntime) handleAliasSelection(_ int, buttonLabel string) {
@@ -949,10 +990,19 @@ func helpModalText(view tui.ResourceView) string {
 		actions = strings.Join(view.Actions, ", ")
 	}
 	return fmt.Sprintf(
-		"View: %s\nActions: %s\nKeys: Esc close | J/K move row | H/L move column",
+		"View: %s\nActions: %s\nKeys: Esc close | J/K move row | H/L move column | D describe",
 		view.Resource,
 		actions,
 	)
+}
+
+func renderResourceDetails(details tui.ResourceDetails) string {
+	builder := &strings.Builder{}
+	builder.WriteString(details.Title + "\n")
+	for _, field := range details.Fields {
+		builder.WriteString(fmt.Sprintf("%s: %s\n", field.Key, field.Value))
+	}
+	return strings.TrimRight(builder.String(), "\n")
 }
 
 func applyPromptCompletion(
@@ -1297,6 +1347,10 @@ func isPromptActivation(evt *tcell.EventKey) bool {
 	}
 	r := evt.Rune()
 	return r == ':' || r == '/' || r == '!'
+}
+
+func isDescribeEvent(evt *tcell.EventKey) bool {
+	return evt.Key() == tcell.KeyRune && evt.Modifiers() == tcell.ModNone && evt.Rune() == 'd'
 }
 
 func isQuitEvent(evt *tcell.EventKey) bool {

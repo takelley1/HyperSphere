@@ -133,3 +133,129 @@ func TestSessionRejectsInvalidActionAndHotkey(t *testing.T) {
 		t.Fatalf("expected invalid hotkey error")
 	}
 }
+
+func TestSelectedResourceDetailsForVMIncludesRequiredFields(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{
+					Name:          "vm-a",
+					PowerState:    "on",
+					CPUCount:      8,
+					MemoryMB:      16384,
+					Comments:      "critical app",
+					Description:   "gold workload",
+					SnapshotCount: 2,
+					Snapshots: []VMSnapshot{
+						{Identifier: "snap-001", Timestamp: "2026-02-16T00:00:00Z"},
+						{Identifier: "snap-002", Timestamp: "2026-02-16T01:00:00Z"},
+					},
+				},
+			},
+		},
+	)
+	details, err := session.SelectedResourceDetails()
+	if err != nil {
+		t.Fatalf("SelectedResourceDetails returned error: %v", err)
+	}
+	expectedKeys := []string{
+		"NAME",
+		"POWER_STATE",
+		"CPU_COUNT",
+		"MEMORY_MB",
+		"COMMENTS",
+		"DESCRIPTION",
+		"SNAPSHOT_COUNT",
+		"SNAPSHOT_1",
+		"SNAPSHOT_2",
+	}
+	for _, key := range expectedKeys {
+		if !hasDetailField(details.Fields, key) {
+			t.Fatalf("expected details to include key %q", key)
+		}
+	}
+	if !hasDetailFieldValue(details.Fields, "SNAPSHOT_1", "snap-001 @ 2026-02-16T00:00:00Z") {
+		t.Fatalf("expected snapshot identifier and timestamp in first snapshot field")
+	}
+}
+
+func TestSelectedResourceDetailsForHostUsesViewColumns(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Hosts: []HostRow{
+				{Name: "esxi-01", Cluster: "cluster-a", ConnectionState: "connected"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	details, err := session.SelectedResourceDetails()
+	if err != nil {
+		t.Fatalf("SelectedResourceDetails returned error: %v", err)
+	}
+	if details.Title != "HOST DETAILS" {
+		t.Fatalf("expected host details title, got %q", details.Title)
+	}
+	if !hasDetailFieldValue(details.Fields, "NAME", "esxi-01") {
+		t.Fatalf("expected host details to include NAME field value")
+	}
+}
+
+func TestSelectedResourceDetailsForVMReturnsErrorWhenIDMissingFromCatalog(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	session.view.IDs[0] = "vm-missing"
+	_, err := session.SelectedResourceDetails()
+	if err == nil {
+		t.Fatalf("expected selected resource details error for unknown vm id")
+	}
+}
+
+func TestSelectedResourceDetailsReturnsErrorWhenSelectionOutOfRange(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	session.selectedRow = 42
+	_, err := session.SelectedResourceDetails()
+	if err == nil {
+		t.Fatalf("expected selected resource details error for out-of-range selection")
+	}
+}
+
+func TestSelectedResourceDetailsForVMUsesSnapshotLengthWhenCountMissing(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs: []VMRow{
+				{
+					Name: "vm-a",
+					Snapshots: []VMSnapshot{
+						{Identifier: "snap-001", Timestamp: "2026-02-16T00:00:00Z"},
+					},
+				},
+			},
+		},
+	)
+	details, err := session.SelectedResourceDetails()
+	if err != nil {
+		t.Fatalf("SelectedResourceDetails returned error: %v", err)
+	}
+	if !hasDetailFieldValue(details.Fields, "SNAPSHOT_COUNT", "1") {
+		t.Fatalf("expected snapshot count fallback to snapshot list length")
+	}
+}
+
+func hasDetailField(fields []DetailField, key string) bool {
+	for _, field := range fields {
+		if field.Key == key {
+			return true
+		}
+	}
+	return false
+}
+
+func hasDetailFieldValue(fields []DetailField, key string, value string) bool {
+	for _, field := range fields {
+		if field.Key == key && field.Value == value {
+			return true
+		}
+	}
+	return false
+}

@@ -714,3 +714,40 @@ func TestNewExplorerRuntimeCrumbslessOmitsBreadcrumbWidget(t *testing.T) {
 		t.Fatalf("expected crumbsless layout to omit breadcrumb widget")
 	}
 }
+
+func TestDescribePanelOpensOnDAndEscRestoresSelectionAndMarks(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone))
+	selectedRow := runtime.session.SelectedRow()
+	selectedColumn := runtime.session.SelectedColumn()
+	selectedID := runtime.session.CurrentView().IDs[selectedRow]
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, ' ', tcell.ModNone))
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+
+	if !runtime.isDescribePanelOpen() {
+		t.Fatalf("expected describe panel to open on d")
+	}
+	if !strings.Contains(runtime.describeText, "NAME: vm-b") {
+		t.Fatalf("expected describe output to include selected VM details")
+	}
+	if !strings.Contains(runtime.describeText, "POWER_STATE: off") {
+		t.Fatalf("expected describe output to include VM power state")
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+
+	if runtime.isDescribePanelOpen() {
+		t.Fatalf("expected describe panel to close on escape")
+	}
+	if runtime.session.SelectedRow() != selectedRow {
+		t.Fatalf("expected selected row %d after escape", selectedRow)
+	}
+	if runtime.session.SelectedColumn() != selectedColumn {
+		t.Fatalf("expected selected column %d after escape", selectedColumn)
+	}
+	if !runtime.session.IsMarked(selectedID) {
+		t.Fatalf("expected marked row to remain marked after describe close")
+	}
+}

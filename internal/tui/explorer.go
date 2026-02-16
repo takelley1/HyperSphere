@@ -53,12 +53,24 @@ var resourceAliasMap = map[string]Resource{
 
 // VMRow represents one VM row in the resource table.
 type VMRow struct {
-	Name       string
-	Tags       string
-	Cluster    string
-	PowerState string
-	Datastore  string
-	Owner      string
+	Name          string
+	Tags          string
+	Cluster       string
+	PowerState    string
+	Datastore     string
+	Owner         string
+	CPUCount      int
+	MemoryMB      int
+	Comments      string
+	Description   string
+	SnapshotCount int
+	Snapshots     []VMSnapshot
+}
+
+// VMSnapshot stores summary fields for one VM snapshot.
+type VMSnapshot struct {
+	Identifier string
+	Timestamp  string
 }
 
 // LUNRow represents one LUN row in the resource table.
@@ -119,6 +131,18 @@ type ResourceView struct {
 	IDs         []string
 	SortHotKeys map[string]string
 	Actions     []string
+}
+
+// DetailField stores one key-value pair for a selected resource detail view.
+type DetailField struct {
+	Key   string
+	Value string
+}
+
+// ResourceDetails stores all fields rendered by the describe panel.
+type ResourceDetails struct {
+	Title  string
+	Fields []DetailField
 }
 
 // ActionExecutor applies bulk actions through a VMware API adapter.
@@ -283,6 +307,18 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 // CurrentView returns the current table snapshot.
 func (s *Session) CurrentView() ResourceView {
 	return s.view
+}
+
+// SelectedResourceDetails builds describe-panel fields for the selected row.
+func (s *Session) SelectedResourceDetails() (ResourceDetails, error) {
+	id, rowIndex, err := s.selectedRowContext()
+	if err != nil {
+		return ResourceDetails{}, err
+	}
+	if s.view.Resource == ResourceVM {
+		return s.vmDetailsByID(id)
+	}
+	return genericDetailsFromRow(s.view, rowIndex), nil
 }
 
 // SelectedRow returns the currently focused row index.
@@ -739,6 +775,14 @@ func (s *Session) selectedIDsFromCurrentRow() []string {
 	return []string{s.view.IDs[s.selectedRow]}
 }
 
+func (s *Session) selectedRowContext() (string, int, error) {
+	row := s.selectedRow
+	if row < 0 || row >= len(s.view.IDs) {
+		return "", 0, fmt.Errorf("%w: no selected rows", ErrInvalidAction)
+	}
+	return s.view.IDs[row], row, nil
+}
+
 func (s *Session) selectedIDs() []string {
 	if len(s.marks) == 0 {
 		return s.selectedIDsFromCurrentRow()
@@ -887,6 +931,82 @@ func rowMatchesFilter(row []string, filter string) bool {
 		}
 	}
 	return false
+}
+
+func (s *Session) vmDetailsByID(id string) (ResourceDetails, error) {
+	vm, ok := findVMRowByID(s.navigator.catalog.VMs, id)
+	if !ok {
+		return ResourceDetails{}, fmt.Errorf("%w: no selected rows", ErrInvalidAction)
+	}
+	return vmDetails(vm), nil
+}
+
+func findVMRowByID(rows []VMRow, id string) (VMRow, bool) {
+	for _, row := range rows {
+		if row.Name == id {
+			return row, true
+		}
+	}
+	return VMRow{}, false
+}
+
+func vmDetails(row VMRow) ResourceDetails {
+	fields := []DetailField{
+		{Key: "NAME", Value: row.Name},
+		{Key: "POWER_STATE", Value: defaultCell(row.PowerState)},
+		{Key: "CPU_COUNT", Value: strconv.Itoa(row.CPUCount)},
+		{Key: "MEMORY_MB", Value: strconv.Itoa(row.MemoryMB)},
+		{Key: "COMMENTS", Value: defaultCell(row.Comments)},
+		{Key: "DESCRIPTION", Value: defaultCell(row.Description)},
+		{Key: "SNAPSHOT_COUNT", Value: strconv.Itoa(vmSnapshotCount(row))},
+	}
+	fields = append(fields, vmSnapshotFields(row.Snapshots)...)
+	return ResourceDetails{Title: "VM DETAILS", Fields: fields}
+}
+
+func vmSnapshotCount(row VMRow) int {
+	if row.SnapshotCount > 0 {
+		return row.SnapshotCount
+	}
+	return len(row.Snapshots)
+}
+
+func vmSnapshotFields(snapshots []VMSnapshot) []DetailField {
+	fields := make([]DetailField, 0, len(snapshots))
+	for index, snapshot := range snapshots {
+		fields = append(fields, DetailField{
+			Key:   fmt.Sprintf("SNAPSHOT_%d", index+1),
+			Value: snapshotFieldValue(snapshot),
+		})
+	}
+	return fields
+}
+
+func snapshotFieldValue(snapshot VMSnapshot) string {
+	return fmt.Sprintf("%s @ %s", defaultCell(snapshot.Identifier), defaultCell(snapshot.Timestamp))
+}
+
+func genericDetailsFromRow(view ResourceView, rowIndex int) ResourceDetails {
+	fields := make([]DetailField, 0, len(view.Columns))
+	if rowIndex >= 0 && rowIndex < len(view.Rows) {
+		fields = detailFieldsFromColumns(view.Columns, view.Rows[rowIndex])
+	}
+	return ResourceDetails{
+		Title:  strings.ToUpper(string(view.Resource)) + " DETAILS",
+		Fields: fields,
+	}
+}
+
+func detailFieldsFromColumns(columns []string, row []string) []DetailField {
+	fields := make([]DetailField, 0, len(columns))
+	for index, key := range columns {
+		value := "-"
+		if index < len(row) {
+			value = defaultCell(row[index])
+		}
+		fields = append(fields, DetailField{Key: key, Value: value})
+	}
+	return fields
 }
 
 func normalizeResourceName(name string) (Resource, bool) {

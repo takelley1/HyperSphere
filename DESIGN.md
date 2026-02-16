@@ -12,9 +12,9 @@
 - [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
 - [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
-- [ ] Sub-task: add `d` describe-panel runtime wiring for selected resources.
-- [ ] Sub-task: add `d` describe-panel tests for Esc-close focus restoration.
 - [ ] Add per-resource status badges in the header line.
+- [ ] Sub-task: extend describe-panel formatting coverage for host/lun/datastore focused fields.
+- [ ] Sub-task: add describe-panel empty-selection status messaging integration coverage.
 - [ ] Sub-task: add integration coverage for repeated terminal resize width changes.
 - [ ] Sub-task: add integration coverage for overflow markers across column-offset transitions.
 - [ ] Sub-task: surface overflow markers in screenshot-baseline frame/title styling.

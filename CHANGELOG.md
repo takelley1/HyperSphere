@@ -1,6 +1,19 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-107 `d` describe-panel parity in explorer runtime with a
+  dedicated describe modal that opens on `d` and closes on `Esc`.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  verify describe-panel open/close behavior, selection/column restoration, and
+  mark preservation after close.
+- Added canonical selected-resource detail modeling in
+  `internal/tui/explorer.go`, including VM required fields and snapshot
+  identifier/timestamp rendering.
+- Added focused detail-coverage tests in `internal/tui/session_test.go` for VM
+  required fields, non-VM fallback detail rendering, and error/fallback paths.
+- Marked `RQ-107` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed describe-panel sub-tasks and adding
+  follow-on detail-format and empty-selection coverage sub-tasks.
 - Implemented RQ-092 three-zone top header layout in the explorer runtime with
   fixed left/center/right zones and deterministic clipping/padding behavior.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
