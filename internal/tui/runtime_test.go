@@ -143,3 +143,26 @@ func TestSpanMarkSwapsRangeBounds(t *testing.T) {
 		t.Fatalf("expected full range marks after swapped bounds, got %d", len(session.marks))
 	}
 }
+
+func TestSessionSelectionAndMarkAccessors(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	_ = session.ExecuteCommand(":vm")
+	if err := session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("unexpected down key error: %v", err)
+	}
+	if err := session.HandleKey("SHIFT+RIGHT"); err != nil {
+		t.Fatalf("unexpected shift+right error: %v", err)
+	}
+	if session.SelectedRow() != 1 || session.SelectedColumn() != 1 {
+		t.Fatalf("unexpected selected coordinates %d,%d", session.SelectedRow(), session.SelectedColumn())
+	}
+	if err := session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("unexpected mark key error: %v", err)
+	}
+	if !session.IsMarked("vm-b") {
+		t.Fatalf("expected vm-b to be marked")
+	}
+	if session.IsMarked("vm-a") {
+		t.Fatalf("did not expect vm-a to be marked")
+	}
+}

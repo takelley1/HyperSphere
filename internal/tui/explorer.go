@@ -270,6 +270,22 @@ func (s *Session) CurrentView() ResourceView {
 	return s.view
 }
 
+// SelectedRow returns the currently focused row index.
+func (s *Session) SelectedRow() int {
+	return s.selectedRow
+}
+
+// SelectedColumn returns the currently focused column index.
+func (s *Session) SelectedColumn() int {
+	return s.selectedColumn
+}
+
+// IsMarked reports whether a specific row ID is marked.
+func (s *Session) IsMarked(id string) bool {
+	_, ok := s.marks[id]
+	return ok
+}
+
 // ReadOnly returns whether mutating actions are blocked.
 func (s *Session) ReadOnly() bool {
 	return s.readOnly

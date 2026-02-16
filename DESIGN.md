@@ -2,17 +2,17 @@
 
 ## Short-Term Goals
 
-### Real-Time Terminal Input Loop
-- [ ] Replace line-buffered scanner input with `tcell/tview` event handling.
-- [ ] Preserve existing command parser semantics for `:view`, `!action`, `/filter`, and `:-`.
-- [ ] Map current hotkeys (`SPACE`, `CTRL+SPACE`, `CTRL+\\`, `SHIFT+O`, `SHIFT+I`) to real key events.
-- [ ] Keep session logic as the single canonical state owner.
-- [ ] Add a persistent footer pane for contextual hotkey hints.
+### Table Widget Parity
+- [ ] Add tab-complete acceptance for the first suggestion in prompt mode.
+- [ ] Sync table focus from mouse selection back into session row/column state.
+- [ ] Add sticky multi-column headers with sort-direction glyphs.
+- [ ] Add per-resource status badges in the header line.
+- [ ] Add column-width autosizing based on terminal resize events.
 
 ### Prompt UX Parity
-- [ ] Add command history navigation (`UP`/`DOWN`) for prompt mode.
-- [ ] Add tab-complete acceptance for active suggestions.
-- [ ] Add explicit prompt mode indicator in the header/status strip.
+- [ ] Add command palette help for `:history`, `:suggest`, and `:ro`.
+- [ ] Add inline prompt validation feedback before submit.
+- [ ] Add contextual completion list rendering for view/action/filter commands.
 
 ## Medium-Term Goals
 
@@ -27,6 +27,12 @@
 - [ ] Add a task/status view for bulk operations.
 - [ ] Add cancellable task hooks where VMware APIs support cancellation.
 - [ ] Add per-action timeout and retry policy wiring.
+
+### Navigation and UX Depth
+- [ ] Add breadcrumb navigation for datacenter -> cluster -> host -> VM context.
+- [ ] Add split-pane detail drawers for selected object metadata.
+- [ ] Add search result jump list with next/previous navigation.
+- [ ] Add keyboard cheatsheet modal with per-view hotkeys.
 
 ### Write-Path UX
 - [ ] Add confirmation dialogs for destructive actions.
@@ -47,6 +53,12 @@
 - [ ] Add integration tests for mark semantics and bulk action execution.
 - [ ] Add integration tests for failure handling, retries, and read-only enforcement.
 - [ ] Add benchmark tests for large inventory rendering and sorting.
+
+### API and Plugin Surface
+- [ ] Add versioned explorer API contracts for external adapters.
+- [ ] Add compatibility tests for plugin action registration.
+- [ ] Add plugin sandboxing and permission prompts for write actions.
+- [ ] Add plugin telemetry hooks for action lifecycle events.
 
 ### Product Parity Hardening
 - [ ] Add cross-view navigation polish and consistent status bars.

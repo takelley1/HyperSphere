@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Switched explorer runtime from line-buffered input to a full-screen real-time `tview`/`tcell` event loop as the default app entrypoint workflow.
+- Replaced text body rendering with a canonical table widget (`tview.Table`) to mirror k9s-style grid interaction semantics.
+- Added table rendering helpers to inject a leading `SEL` column and mark selected objects with `*` for bulk action visibility.
+- Added session accessor APIs (`SelectedRow`, `SelectedColumn`, `IsMarked`) to keep table focus and mark state synchronized without duplicating state ownership.
+- Added prompt-mode status visibility in footer (`Prompt: ON/OFF`) while preserving existing command hints and realtime clock updates.
+- Added cmd-level tests for table row shaping, table selection offsets, status branch behavior, and footer prompt-mode indicator.
+- Added internal session accessor tests and restored internal coverage gate to 100% after runtime integration changes.
 - Added a greenfield Go TUI architecture inspired by k9s layering with `cmd`, `internal/app`, and workflow-focused internal packages.
 - Implemented canonical datastore migration planning and execution logic with threshold checks, source exclusion, candidate re-ranking, fallback tiers, skip-reason taxonomy, dry-run gating, and retry behavior.
 - Implemented canonical pending-deletion lifecycle logic with VM metadata fields (`pd_pending_since`, `pd_delete_on`, `pd_owner_email`, `pd_initial_notice_sent`, `pd_reminder_notice_sent`, `pd_original_name`) and idempotent mark/remind/purge/reset behavior.
