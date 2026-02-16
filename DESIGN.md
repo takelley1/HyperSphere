@@ -79,6 +79,7 @@
 - [ ] Sub-task: add compact-height layout coverage for top stacked header+breadcrumb+status zones.
 - [ ] Sub-task: add top-right path/status truncation tests for very narrow right zones.
 - [ ] Sub-task: add style tuning for deemphasized path/status hints (dim palette option).
+- [ ] Sub-task: add adaptive 2-column vs 3-column center legend packing by width threshold.
 
 ### Rendering Performance
 - [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.

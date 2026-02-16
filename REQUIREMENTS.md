@@ -280,6 +280,15 @@
 - Acceptance: breadcrumbs-less mode suppresses the compact path line.
 - Status: fulfilled (2026-02-16).
 
+### RQ-122: Render top help legend in multi-column layout
+- vSphere mapping: improve scan speed for hotkeys by reducing vertical scanning
+  and using center header width more efficiently.
+- Acceptance: table-mode top help hints render in two or three columns per row
+  (not single-item rows).
+- Acceptance: log-mode hotkey hints also render in multi-column rows.
+- Acceptance: center legend remains cyan-accented in color mode.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

@@ -1774,8 +1774,7 @@ func renderTopHeaderCenter(logMode bool, promptMode bool) string {
 	if logMode {
 		return strings.Join(
 			[]string{
-				"<g> Top",
-				"<G> Bottom",
+				"<g> Top         <G> Bottom",
 				"<PgUp/PgDn> Scroll",
 				fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
 			},
@@ -1784,14 +1783,10 @@ func renderTopHeaderCenter(logMode bool, promptMode bool) string {
 	}
 	return strings.Join(
 		[]string{
-			"<:> Command",
-			"</> Filter",
-			"<?> Help",
-			"<!> Action",
-			"<Tab> Complete",
-			"<h/j/k/l> Move",
-			"<Shift+O> Sort",
-			fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
+			"<:> Command    </> Filter",
+			"<?> Help       <!> Action",
+			"<Tab> Complete <h/j/k/l> Move",
+			fmt.Sprintf("<Shift+O> Sort Prompt: %s | <q> Quit", prompt),
 		},
 		"\n",
 	)

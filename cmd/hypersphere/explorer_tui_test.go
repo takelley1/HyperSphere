@@ -336,14 +336,10 @@ func TestTableRowColorFallsBackToAlternatingPaletteForUnknownStatus(t *testing.T
 func TestRenderTopHeaderCenterIncludesMovedHelpHintsAndPromptState(t *testing.T) {
 	lines := strings.Split(renderTopHeaderCenter(false, true), "\n")
 	want := []string{
-		"<:> Command",
-		"</> Filter",
-		"<?> Help",
-		"<!> Action",
-		"<Tab> Complete",
-		"<h/j/k/l> Move",
-		"<Shift+O> Sort",
-		"Prompt: ON | <q> Quit",
+		"<:> Command    </> Filter",
+		"<?> Help       <!> Action",
+		"<Tab> Complete <h/j/k/l> Move",
+		"<Shift+O> Sort Prompt: ON | <q> Quit",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d center lines, got %d (%q)", len(want), len(lines), lines)
@@ -475,33 +471,26 @@ func TestRenderTopHeaderLineUsesThreeFixedZonesWithoutOverlapAt120Columns(t *tes
 	}
 }
 
-func TestRenderTopHeaderCenterUsesOneAngleBracketEntryPerLine(t *testing.T) {
+func TestRenderTopHeaderCenterUsesMultipleColumnsForTableHints(t *testing.T) {
 	lines := strings.Split(renderTopHeaderCenter(false, false), "\n")
-	want := []string{
-		"<:> Command",
-		"</> Filter",
-		"<?> Help",
+	if len(lines) < 3 {
+		t.Fatalf("expected multi-column legend lines, got %d (%q)", len(lines), lines)
 	}
-	if len(lines) < len(want) {
-		t.Fatalf("expected at least %d center legend lines, got %d (%q)", len(want), len(lines), lines)
-	}
-	for index, expected := range want {
-		if lines[index] != expected {
-			t.Fatalf(
-				"expected center legend line %d to be %q, got %q",
-				index,
-				expected,
-				lines[index],
-			)
+	multiColumnCount := 0
+	for _, line := range lines {
+		if strings.Count(line, "<") >= 2 {
+			multiColumnCount++
 		}
+	}
+	if multiColumnCount < 2 {
+		t.Fatalf("expected at least two multi-column hint rows, got %d (%q)", multiColumnCount, lines)
 	}
 }
 
 func TestRenderTopHeaderCenterUsesLogNavigationLegendInLogView(t *testing.T) {
 	lines := strings.Split(renderTopHeaderCenter(true, false), "\n")
 	want := []string{
-		"<g> Top",
-		"<G> Bottom",
+		"<g> Top         <G> Bottom",
 		"<PgUp/PgDn> Scroll",
 		"Prompt: OFF | <q> Quit",
 	}

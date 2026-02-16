@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-122 by converting top-center help/hotkey hints from a
+  single-column list to compact multi-column rows in both table and log modes.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  multi-column center legend formatting and log-mode legend row packing.
 - Added and fulfilled RQ-121 by de-emphasizing breadcrumbs/status into compact
   top-right header hints (`path:` and `status:`) near the logo.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
