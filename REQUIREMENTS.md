@@ -304,6 +304,7 @@
 ### RQ-030: Add `:network`/`:nw` view
 - vSphere mapping: distributed switch/portgroup visibility.
 - Acceptance: view columns include `NAME`, `TYPE`, `VLAN`, `SWITCH`, `ATTACHED_VMS`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-031: Add `:template`/`:tp` view
 - vSphere mapping: VM templates lifecycle.

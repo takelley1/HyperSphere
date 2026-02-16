@@ -92,6 +92,24 @@ func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestNetworkViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Networks: []NetworkRow{
+				{Name: "dvpg-prod-100", Type: "distributed-portgroup", VLAN: "100", Switch: "dvs-core", AttachedVMs: 41},
+			},
+		},
+	)
+	view, err := navigator.Execute(":nw")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected network columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "c1"}, {Name: "vm-b", Cluster: "c1"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

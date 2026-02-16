@@ -34,6 +34,7 @@ const (
 	ResourceCluster    Resource = "cluster"
 	ResourceDatacenter Resource = "datacenter"
 	ResourcePool       Resource = "resourcepool"
+	ResourceNetwork    Resource = "network"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -52,6 +53,9 @@ var resourceAliasMap = map[string]Resource{
 	"rp":            ResourcePool,
 	"resourcepool":  ResourcePool,
 	"resourcepools": ResourcePool,
+	"nw":            ResourceNetwork,
+	"network":       ResourceNetwork,
+	"networks":      ResourceNetwork,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -120,6 +124,15 @@ type ResourcePoolRow struct {
 	VMCount           int
 }
 
+// NetworkRow represents one network row in the resource table.
+type NetworkRow struct {
+	Name        string
+	Type        string
+	VLAN        string
+	Switch      string
+	AttachedVMs int
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -147,6 +160,7 @@ type Catalog struct {
 	Clusters      []ClusterRow
 	Datacenters   []DatacenterRow
 	ResourcePools []ResourcePoolRow
+	Networks      []NetworkRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -255,6 +269,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return datacenterView(n.catalog.Datacenters), true
 	case ResourcePool:
 		return resourcePoolView(n.catalog.ResourcePools), true
+	case ResourceNetwork:
+		return networkView(n.catalog.Networks), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -622,6 +638,18 @@ func resourcePoolView(rows []ResourcePoolRow) ResourceView {
 	)
 }
 
+func networkView(rows []NetworkRow) ResourceView {
+	columns := []string{"NAME", "TYPE", "VLAN", "SWITCH", "ATTACHED_VMS"}
+	return buildView(
+		ResourceNetwork,
+		columns,
+		networkSortHotKeys(),
+		networkActions(),
+		rows,
+		networkCells,
+	)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
@@ -693,6 +721,16 @@ func resourcePoolCells(row ResourcePoolRow) (string, []string) {
 	}
 }
 
+func networkCells(row NetworkRow) (string, []string) {
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Type),
+		defaultCell(row.VLAN),
+		defaultCell(row.Switch),
+		strconv.Itoa(row.AttachedVMs),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
 }
@@ -722,6 +760,10 @@ func datacenterSortHotKeys() map[string]string {
 
 func resourcePoolSortHotKeys() map[string]string {
 	return map[string]string{"N": "NAME", "C": "CLUSTER", "P": "CPU_RES", "M": "MEM_RES", "V": "VM_COUNT"}
+}
+
+func networkSortHotKeys() map[string]string {
+	return map[string]string{"N": "NAME", "T": "TYPE", "V": "VLAN", "S": "SWITCH", "A": "ATTACHED_VMS"}
 }
 
 func hostSortHotKeys() map[string]string {
@@ -754,6 +796,10 @@ func datacenterActions() []string {
 
 func resourcePoolActions() []string {
 	return []string{"set-reservation", "rebalance", "edit-tags"}
+}
+
+func networkActions() []string {
+	return []string{"attach-vm", "detach-vm", "edit-tags"}
 }
 
 func datastoreActions() []string {

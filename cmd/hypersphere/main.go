@@ -333,6 +333,7 @@ func defaultCatalog() tui.Catalog {
 		Clusters:      defaultClusterRows(),
 		Datacenters:   defaultDatacenterRows(),
 		ResourcePools: defaultResourcePoolRows(),
+		Networks:      defaultNetworkRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -387,6 +388,17 @@ func defaultResourcePoolRows() []tui.ResourcePoolRow {
 		{Name: "rp-dev", Cluster: "cluster-west", CPUReservationMHz: 3200, MemReservationMB: 4096, VMCount: 18},
 		{Name: "rp-qa", Cluster: "cluster-central", CPUReservationMHz: 2800, MemReservationMB: 3072, VMCount: 12},
 		{Name: "rp-edge", Cluster: "cluster-edge", CPUReservationMHz: 2000, MemReservationMB: 2048, VMCount: 9},
+	}
+}
+
+func defaultNetworkRows() []tui.NetworkRow {
+	return []tui.NetworkRow{
+		{Name: "dvpg-prod-100", Type: "distributed-portgroup", VLAN: "100", Switch: "dvs-core-a", AttachedVMs: 41},
+		{Name: "dvpg-dev-200", Type: "distributed-portgroup", VLAN: "200", Switch: "dvs-core-b", AttachedVMs: 27},
+		{Name: "vmk-mgmt", Type: "vmkernel", VLAN: "10", Switch: "vss-mgmt-01", AttachedVMs: 8},
+		{Name: "dvpg-storage-120", Type: "distributed-portgroup", VLAN: "120", Switch: "dvs-storage", AttachedVMs: 19},
+		{Name: "dvpg-backup-130", Type: "distributed-portgroup", VLAN: "130", Switch: "dvs-backup", AttachedVMs: 11},
+		{Name: "dvpg-edge-trunk", Type: "distributed-portgroup", VLAN: "trunk", Switch: "dvs-edge", AttachedVMs: 7},
 	}
 }
 

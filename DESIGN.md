@@ -29,6 +29,8 @@
 - [ ] Sub-task: add integration coverage for startup `--command dc` with seeded datacenter rows.
 - [ ] Sub-task: add resource-pool samples with overcommit and zero-reservation edge cases.
 - [ ] Sub-task: add integration coverage for startup `--command rp` with seeded pool rows.
+- [ ] Sub-task: add network samples spanning trunk and access VLAN shapes for filter coverage.
+- [ ] Sub-task: add integration coverage for startup `--command network` with seeded network rows.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

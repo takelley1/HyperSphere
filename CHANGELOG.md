@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-030 distributed-network view coverage by adding `:network`
+  and `:nw` command aliases with columns `NAME`, `TYPE`, `VLAN`, `SWITCH`,
+  and `ATTACHED_VMS`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for network alias parsing and network view
+  column rendering.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded network
+  rows and added browse-dataset assertions in `cmd/hypersphere/main_test.go`.
+- Marked `RQ-030` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on network dataset and startup-routing
+  coverage sub-tasks.
 - Implemented RQ-029 resource-pool coverage by adding `:rp` and
   `:resourcepool` aliases with a dedicated view exposing `NAME`, `CLUSTER`,
   `CPU_RES`, `MEM_RES`, and `VM_COUNT`.
