@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-053 by standardizing failed action status
+  rendering into structured fields: `code`, `message`, `entity`, `retryable`.
+- Updated action-command handling in `cmd/hypersphere/explorer_tui.go` to emit
+  uniform error payloads and added coverage for read-only error formatting.
 - Implemented and fulfilled RQ-052 by adding action preview summaries with
   target count, target IDs, and expected side-effect hints before execution.
 - Added failing-first coverage in `internal/tui/session_test.go` for preview

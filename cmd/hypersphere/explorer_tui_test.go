@@ -1389,8 +1389,17 @@ func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 	if !keepRunning {
 		t.Fatalf("expected action command to keep runtime alive")
 	}
-	if message != "[red]command error: read-only mode" {
-		t.Fatalf("expected deterministic read-only error, got %q", message)
+	if !strings.Contains(message, "action_error code=ERR_READ_ONLY") {
+		t.Fatalf("expected standardized action error code, got %q", message)
+	}
+	if !strings.Contains(message, "message=\"read-only mode\"") {
+		t.Fatalf("expected standardized action error message, got %q", message)
+	}
+	if !strings.Contains(message, "entity=\"vm-a\"") {
+		t.Fatalf("expected standardized action error entity, got %q", message)
+	}
+	if !strings.Contains(message, "retryable=false") {
+		t.Fatalf("expected standardized action error retryable flag, got %q", message)
 	}
 }
 

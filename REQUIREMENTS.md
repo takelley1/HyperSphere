@@ -543,6 +543,7 @@
 - vSphere mapping: operator triage consistency.
 - Acceptance: all failed actions render standardized error structure:
   code, message, entity, retryable.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-054: Add audit summary for completed bulk actions
 - vSphere mapping: post-action accountability.

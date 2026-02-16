@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -2021,16 +2022,59 @@ func handleSimpleCommandKinds(
 
 func handleActionCommand(
 	session *tui.Session,
-	executor *runtimeActionExecutor,
+	executor tui.ActionExecutor,
 	action string,
 ) string {
 	if err := session.ApplyAction(action, executor); err != nil {
-		return fmt.Sprintf("[red]command error: %s", err.Error())
+		return formatActionError(err, *session)
 	}
-	if executor.last != "" {
-		return executor.last
+	if runtimeExecutor, ok := executor.(*runtimeActionExecutor); ok && runtimeExecutor.last != "" {
+		return runtimeExecutor.last
 	}
 	return "action executed"
+}
+
+func formatActionError(err error, session tui.Session) string {
+	return fmt.Sprintf(
+		"[red]action_error code=%s message=%q entity=%q retryable=%t",
+		actionErrorCode(err),
+		err.Error(),
+		selectedActionEntity(session),
+		isRetriableCommandError(err),
+	)
+}
+
+func actionErrorCode(err error) string {
+	switch {
+	case errors.Is(err, tui.ErrReadOnly):
+		return "ERR_READ_ONLY"
+	case errors.Is(err, tui.ErrActionTimeout):
+		return "ERR_TIMEOUT"
+	case errors.Is(err, tui.ErrConfirmationRequired):
+		return "ERR_CONFIRMATION_REQUIRED"
+	case errors.Is(err, tui.ErrInvalidAction):
+		return "ERR_INVALID_ACTION"
+	default:
+		return "ERR_ACTION"
+	}
+}
+
+func selectedActionEntity(session tui.Session) string {
+	view := session.CurrentView()
+	row := session.SelectedRow()
+	if row < 0 || row >= len(view.IDs) {
+		return "-"
+	}
+	return view.IDs[row]
+}
+
+type retriableCommandError interface {
+	Retriable() bool
+}
+
+func isRetriableCommandError(err error) bool {
+	var retriable retriableCommandError
+	return errors.As(err, &retriable) && retriable.Retriable()
 }
 
 func handleContextCommand(
