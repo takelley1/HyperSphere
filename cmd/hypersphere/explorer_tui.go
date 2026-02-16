@@ -707,14 +707,16 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 		return
 	}
 	leftLines := strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n")
-	centerLines := strings.Split(renderTopHeaderCenter(r.logMode, r.promptMode), "\n")
-	rightLines := strings.Split(
-		renderTopHeaderRightWithContext(
+	centerLines := strings.Split(
+		renderTopHeaderCenterWithContext(
+			r.logMode,
+			r.promptMode,
 			compactTopHeaderPath(r.crumbsless, r.session.CurrentView().Resource),
 			compactTopHeaderStatus(r.status.GetText(true)),
 		),
 		"\n",
 	)
+	rightLines := strings.Split(renderTopHeaderRight(), "\n")
 	centerLines, rightLines = degradeTopHeaderSections(width, centerLines, rightLines)
 	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
@@ -1767,29 +1769,43 @@ func defaultRuntimeLogEntries() []runtimeLogEntry {
 }
 
 func renderTopHeaderCenter(logMode bool, promptMode bool) string {
+	return renderTopHeaderCenterWithContext(logMode, promptMode, "", "")
+}
+
+func renderTopHeaderCenterWithContext(
+	logMode bool,
+	promptMode bool,
+	path string,
+	status string,
+) string {
 	prompt := "OFF"
 	if promptMode {
 		prompt = "ON"
 	}
+	lines := []string{}
 	if logMode {
-		return strings.Join(
-			[]string{
-				"<g> Top         <G> Bottom",
-				"<PgUp/PgDn> Scroll",
-				fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
-			},
-			"\n",
+		lines = append(
+			lines,
+			"<g> Top         <G> Bottom",
+			"<PgUp/PgDn> Scroll",
+			fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
 		)
-	}
-	return strings.Join(
-		[]string{
+	} else {
+		lines = append(
+			lines,
 			"<:> Command    </> Filter",
 			"<?> Help       <!> Action",
 			"<Tab> Complete <h/j/k/l> Move",
 			fmt.Sprintf("<Shift+O> Sort Prompt: %s | <q> Quit", prompt),
-		},
-		"\n",
-	)
+		)
+	}
+	if path != "" {
+		lines = append(lines, "path: "+path)
+	}
+	if status != "" {
+		lines = append(lines, "status: "+status)
+	}
+	return strings.Join(lines, "\n")
 }
 
 func renderTopHeaderRight() string {
@@ -1805,20 +1821,6 @@ func renderTopHeaderRight() string {
 		},
 		"\n",
 	)
-}
-
-func renderTopHeaderRightWithContext(path string, status string) string {
-	lines := strings.Split(renderTopHeaderRight(), "\n")
-	if len(lines) == 0 {
-		return ""
-	}
-	if path != "" {
-		lines[0] = "path: " + path
-	}
-	if len(lines) > 1 && status != "" {
-		lines[1] = "status: " + status
-	}
-	return strings.Join(lines, "\n")
 }
 
 func compactTopHeaderPath(crumbsless bool, resource tui.Resource) string {

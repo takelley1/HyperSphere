@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-128 by moving compact breadcrumb/status hints from the
+  top-right zone into the center header below keyboard shortcut rows.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert path/status ordering below center shortcuts and keep right logo zone
+  dedicated to logo rendering.
+- Updated center-header rendering in `cmd/hypersphere/explorer_tui.go` to append
+  context/status lines under shortcut rows while restoring logo-only right-zone
+  rendering.
 - Added and fulfilled RQ-127 by differentiating hovered/selected row highlight
   color from marked-row highlight color.
 - Updated RQ-126 implementation so selected-row highlight remains yellow while

@@ -84,6 +84,7 @@
 - [ ] Sub-task: add top-right path/status truncation tests for very narrow right zones.
 - [ ] Sub-task: add style tuning for deemphasized path/status hints (dim palette option).
 - [ ] Sub-task: add adaptive 2-column vs 3-column center legend packing by width threshold.
+- [ ] Sub-task: add compact-center collapse policy that preserves both `path` and `status` hints.
 
 ### Rendering Performance
 - [ ] Add batched table diff rendering to avoid full-cell rebuilds on each keystroke.

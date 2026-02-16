@@ -1001,8 +1001,8 @@ func TestRenderTopHeaderWithWidthCollapsesCenterLegendBeforeHidingLogo(t *testin
 	if strings.Contains(text, "<Tab> Complete") {
 		t.Fatalf("expected center legend to collapse before logo hide, got %q", text)
 	}
-	if !strings.Contains(text, "path: home > vm") || !strings.Contains(text, "status: ready") {
-		t.Fatalf("expected compact path/status in top-right zone, got %q", text)
+	if !strings.Contains(text, "status: ready") {
+		t.Fatalf("expected compact status hint in center header, got %q", text)
 	}
 	if !strings.Contains(text, "+------+ |") {
 		t.Fatalf("expected logo body to remain visible before hide threshold, got %q", text)
@@ -1243,15 +1243,21 @@ func TestNewExplorerRuntimeRemovesBottomHelpBarFromLayout(t *testing.T) {
 	}
 }
 
-func TestNewExplorerRuntimeRendersCompactPathAndStatusInTopRightHeader(t *testing.T) {
+func TestNewExplorerRuntimeRendersPathAndStatusBelowCenterShortcuts(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.renderTopHeaderWithWidth(120)
 	header := strings.ToLower(runtime.topHeader.GetText(false))
-	if !strings.Contains(header, "path: home > vm") {
-		t.Fatalf("expected compact breadcrumb path in top header, got %q", header)
+	if !strings.Contains(header, "<shift+o> sort") {
+		t.Fatalf("expected center shortcuts in top header, got %q", header)
 	}
-	if !strings.Contains(header, "status: ready") {
-		t.Fatalf("expected compact status in top header, got %q", header)
+	sortIndex := strings.Index(header, "<shift+o> sort")
+	pathIndex := strings.Index(header, "path: home > vm")
+	statusIndex := strings.Index(header, "status: ready")
+	if pathIndex == -1 || statusIndex == -1 {
+		t.Fatalf("expected compact path/status in top header, got %q", header)
+	}
+	if pathIndex <= sortIndex || statusIndex <= sortIndex {
+		t.Fatalf("expected path/status below center shortcuts, got %q", header)
 	}
 }
 

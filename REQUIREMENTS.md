@@ -328,6 +328,14 @@
   highlight color.
 - Status: fulfilled (2026-02-16).
 
+### RQ-128: Render path/status hints in center header below shortcuts
+- vSphere mapping: keep context/status discoverable in the same glance path as
+  keyboard guidance while preserving right-logo visual identity.
+- Acceptance: compact `path:` and `status:` hints render in the center header.
+- Acceptance: path/status lines appear below shortcut rows.
+- Acceptance: right header zone remains dedicated to logo rendering.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame
