@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Refined the top-right ASCII logo by removing the `TESSERACT` label and
+  enclosing the wireframe square/cube with a circular outline for clearer
+  tetrahedron/tesseract-style geometry in the header.
+- Updated logo snapshot expectations in
+  `cmd/hypersphere/explorer_tui_test.go` to match the new unlabeled circular
+  enclosure while preserving right-zone clipping checks.
 - Updated the top-right ASCII logo to a tesseract-inspired wireframe design so
   the HyperSphere mark reads as 4D geometry instead of stylized text.
 - Updated failing-first header-logo expectations in

@@ -499,13 +499,13 @@ func TestHandlePromptDoneSwitchesHeaderLegendForLogViewAndRestoresTableLegend(t 
 func TestRenderTopHeaderRightUsesMultilineASCIILogoBlock(t *testing.T) {
 	lines := strings.Split(renderTopHeaderRight(), "\n")
 	want := []string{
-		"            +--------+          ",
-		"           /|       /|          ",
-		"          +--------+ |          ",
-		"          | +------+ |          ",
-		"          |/       |/           ",
-		"          +--------+            ",
-		"            TESSERACT           ",
+		"          .------------.        ",
+		"       .-'   +------+   '-.     ",
+		"     .'    /|      /|      '.   ",
+		"    /     +------+ |         \\  ",
+		"    \\     | +----|-+        /   ",
+		"     '.   |/     |/      .-'    ",
+		"       '-. +------+   .-'       ",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d logo lines, got %d (%q)", len(want), len(lines), lines)
