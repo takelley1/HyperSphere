@@ -155,6 +155,29 @@ func TestHandlePromptHistoryTabNormalizesPromptToFirstSuggestion(t *testing.T) {
 	}
 }
 
+func TestHandlePromptChangedShowsValidationBeforeExecution(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.promptMode = true
+
+	runtime.handlePromptChanged(":readonly maybe")
+	if !strings.Contains(runtime.status.GetText(true), "command error: invalid action") {
+		t.Fatalf("expected prompt validation error status, got %q", runtime.status.GetText(true))
+	}
+	labelColor, _, _ := runtime.prompt.GetLabelStyle().Decompose()
+	if labelColor != tcell.ColorRed {
+		t.Fatalf("expected prompt label to highlight validation error, got %v", labelColor)
+	}
+
+	runtime.handlePromptChanged(":readonly on")
+	if strings.Contains(runtime.status.GetText(true), "command error:") {
+		t.Fatalf("expected prompt validation status to clear for valid input")
+	}
+	labelColor, _, _ = runtime.prompt.GetLabelStyle().Decompose()
+	if labelColor != tcell.ColorWhite {
+		t.Fatalf("expected prompt label to reset after valid input, got %v", labelColor)
+	}
+}
+
 func TestHelpModalToggleWithQuestionAndEscape(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone))

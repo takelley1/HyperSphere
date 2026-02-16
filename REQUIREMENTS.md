@@ -147,6 +147,16 @@
 - vSphere mapping: high-density terminal mode.
 - Acceptance: repeated toggle alternates header on/off with no row selection reset.
 
+### RQ-107: Add `d` hotkey to describe selected resource
+- vSphere mapping: k9s-style describe flow for deep object inspection.
+- Acceptance: pressing `d` opens a details panel for the selected row using
+  resource-specific fields.
+- Acceptance: for VM rows, details include at minimum `NAME`, `POWER_STATE`,
+  `CPU_COUNT`, `MEMORY_MB`, `COMMENTS`, `DESCRIPTION`, `SNAPSHOT_COUNT`, and
+  snapshot identifiers/timestamps when present.
+- Acceptance: details panel closes on `Esc` and returns focus to the same table
+  row/column without losing marks.
+
 ## Screenshot Visual Baseline Parity
 
 ### RQ-092: Add three-zone top header layout

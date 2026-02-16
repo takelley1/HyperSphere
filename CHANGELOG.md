@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-016 inline prompt validation state so invalid command syntax is reported before command execution.
+- Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go` to validate pre-submit error status and prompt highlight/reset behavior.
+- Wired prompt changed-event handling in `cmd/hypersphere/explorer_tui.go` to parse command input live and surface deterministic `[red]command error: ...` status output.
+- Added prompt validation styling helpers in `cmd/hypersphere/explorer_tui.go` to highlight invalid prompt input and reset styles when input becomes valid or prompt mode exits.
+- Updated `DESIGN.md` by removing the completed inline prompt validation roadmap item and adding follow-on validation style/reset subtasks.
 - Implemented RQ-014 command-mode history traversal parity for `:history up`
   and `:history down` with bounded, non-skipping cursor behavior.
 - Added failing-first command-runtime coverage in

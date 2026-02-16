@@ -209,6 +209,7 @@ func (r *explorerRuntime) configureWidgets() {
 	r.status.SetBorder(true)
 	r.status.SetTitle(" Status ")
 	r.prompt.SetLabel("Command: ")
+	applyPromptValidationState(r.prompt, "")
 	r.footer.SetDynamicColors(true)
 	r.footer.SetBorder(true)
 	r.footer.SetTitle(" Help ")
@@ -240,6 +241,7 @@ func (r *explorerRuntime) configureHandlers() {
 	r.app.SetInputCapture(r.handleGlobalKey)
 	r.prompt.SetDoneFunc(r.handlePromptDone)
 	r.prompt.SetInputCapture(r.handlePromptHistory)
+	r.prompt.SetChangedFunc(r.handlePromptChanged)
 }
 
 func (r *explorerRuntime) run() error {
@@ -388,6 +390,7 @@ func (r *explorerRuntime) fillPromptFromHistory(direction string) {
 
 func (r *explorerRuntime) startPrompt(prefix string) {
 	r.promptMode = true
+	applyPromptValidationState(r.prompt, "")
 	r.prompt.SetText(prefix)
 	r.app.SetFocus(r.prompt)
 }
@@ -395,7 +398,21 @@ func (r *explorerRuntime) startPrompt(prefix string) {
 func (r *explorerRuntime) endPrompt() {
 	r.promptMode = false
 	r.prompt.SetText("")
+	applyPromptValidationState(r.prompt, "")
 	r.app.SetFocus(r.body)
+}
+
+func (r *explorerRuntime) handlePromptChanged(text string) {
+	if !r.promptMode {
+		return
+	}
+	message := promptValidationMessage(text)
+	applyPromptValidationState(r.prompt, message)
+	if message == "" {
+		r.status.SetText("")
+		return
+	}
+	r.status.SetText(message)
 }
 
 func (r *explorerRuntime) emitStatus(err error) {
@@ -538,6 +555,34 @@ func applyPromptCompletion(
 		return text, "", false
 	}
 	return suggestions[0], "completion: " + suggestions[0], true
+}
+
+func promptValidationMessage(text string) string {
+	trimmed := strings.TrimSpace(text)
+	if isPendingPromptInput(text, trimmed) {
+		return ""
+	}
+	if _, err := tui.ParseExplorerInput(text); err != nil {
+		return fmt.Sprintf("[red]command error: %s", err.Error())
+	}
+	return ""
+}
+
+func isPendingPromptInput(raw string, trimmed string) bool {
+	if trimmed == "" || trimmed == ":" || trimmed == "!" || trimmed == "/" {
+		return true
+	}
+	return strings.HasSuffix(raw, " ")
+}
+
+func applyPromptValidationState(prompt *tview.InputField, message string) {
+	if message == "" {
+		prompt.SetLabelColor(tcell.ColorWhite)
+		prompt.SetFieldTextColor(tcell.ColorWhite)
+		return
+	}
+	prompt.SetLabelColor(tcell.ColorRed)
+	prompt.SetFieldTextColor(tcell.ColorRed)
 }
 
 func readTheme() explorerTheme {
