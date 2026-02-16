@@ -134,6 +134,16 @@ func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, id
 	if resource == tui.ResourceVM {
 		return r.executeVMAction(action, ids)
 	}
+	if resource == tui.ResourceDatastore && action == "evacuate" {
+		r.last = fmt.Sprintf(
+			"vmware-api action=%s resource=%s targets=%s migrated_vm_count=%d",
+			action,
+			resource,
+			strings.Join(ids, ","),
+			len(ids)*3,
+		)
+		return nil
+	}
 	r.last = fmt.Sprintf(
 		"vmware-api action=%s resource=%s targets=%s",
 		action,

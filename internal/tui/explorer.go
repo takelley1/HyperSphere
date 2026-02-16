@@ -1726,7 +1726,7 @@ func tagActions() []string {
 }
 
 func datastoreActions() []string {
-	return []string{"rescan", "rebalance", "mount", "unmount", "edit-tags"}
+	return []string{"enter-maintenance", "exit-maintenance", "evacuate", "refresh", "edit-tags"}
 }
 
 func normalizeKey(key string) string {
@@ -2048,7 +2048,7 @@ func actionSideEffects(action string) []string {
 
 func isDestructiveAction(action string) bool {
 	switch action {
-	case "power-off", "delete", "remove", "revert":
+	case "power-off", "delete", "remove", "revert", "evacuate":
 		return true
 	default:
 		return false

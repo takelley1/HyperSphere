@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-059 by updating datastore actions to include
+  maintenance and `evacuate`, enforcing destructive confirmation on evacuation,
+  and reporting `migrated_vm_count` in runtime action status output.
+- Added failing-first coverage in `internal/tui/session_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for datastore action list parity,
+  confirmation gating, and migrated VM count reporting.
 - Implemented and fulfilled RQ-058 by wiring host maintenance lifecycle state
   updates on `enter-maintenance` and `exit-maintenance`, including host row
   `CONNECTION` state changes and maintenance-specific action transitions.

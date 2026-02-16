@@ -575,6 +575,7 @@
 ### RQ-059: Add datastore maintenance and evacuation action
 - vSphere mapping: storage maintenance workflows.
 - Acceptance: datastore action requires confirmation and reports migrated VM count.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-060: Add tag assign/unassign actions
 - vSphere mapping: metadata management parity.

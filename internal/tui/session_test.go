@@ -152,6 +152,18 @@ func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestDatastoreViewActionsIncludeEvacuation(t *testing.T) {
+	navigator := NewNavigator(Catalog{Datastores: []DatastoreRow{{Name: "ds-1"}}})
+	view, err := navigator.Execute(":datastore")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"enter-maintenance", "exit-maintenance", "evacuate", "refresh", "edit-tags"}
+	if !reflect.DeepEqual(view.Actions, want) {
+		t.Fatalf("unexpected datastore actions: got %v want %v", view.Actions, want)
+	}
+}
+
 func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
@@ -619,6 +631,27 @@ func TestSessionApplyActionHostMaintenanceUpdatesStateAndTransitions(t *testing.
 	transitions = session.ActionTransitions()
 	if transitions[len(transitions)-1].Status != "maintenance-disabled" {
 		t.Fatalf("expected maintenance-disabled transition, got %q", transitions[len(transitions)-1].Status)
+	}
+}
+
+func TestSessionApplyActionDatastoreEvacuateRequiresConfirmation(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Datastores: []DatastoreRow{{Name: "ds-1"}},
+		},
+	)
+	if err := session.ExecuteCommand(":datastore"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("evacuate", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected evacuate action to require confirmation, got %v", err)
+	}
+	if err := session.ApplyAction("evacuate", executor); err != nil {
+		t.Fatalf("expected confirmed evacuate action to succeed: %v", err)
+	}
+	if executor.action != "evacuate" {
+		t.Fatalf("expected evacuate action payload, got %q", executor.action)
 	}
 }
 

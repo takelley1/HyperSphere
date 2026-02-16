@@ -1093,6 +1093,46 @@ func TestRuntimeActionExecutorRoutesVMPowerLifecycleActions(t *testing.T) {
 	}
 }
 
+func TestExecutePromptCommandDatastoreEvacuateReportsMigratedVMCount(t *testing.T) {
+	session := tui.NewSession(defaultCatalog())
+	if err := session.ExecuteCommand(":datastore"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	message, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"!evacuate",
+	)
+	if !keepRunning {
+		t.Fatalf("expected first evacuate command to keep runtime alive")
+	}
+	if !strings.Contains(message, "ERR_CONFIRMATION_REQUIRED") {
+		t.Fatalf("expected confirmation-required error for first evacuate, got %q", message)
+	}
+
+	message, keepRunning = executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"!evacuate",
+	)
+	if !keepRunning {
+		t.Fatalf("expected second evacuate command to keep runtime alive")
+	}
+	if !strings.Contains(message, "migrated_vm_count=") {
+		t.Fatalf("expected migrate count reporting in status, got %q", message)
+	}
+}
+
 func TestExecutePromptCommandCtxListShowsConfiguredEndpoints(t *testing.T) {
 	session := tui.NewSession(defaultCatalog())
 	promptState := tui.NewPromptState(20)
