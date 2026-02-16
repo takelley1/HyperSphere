@@ -704,6 +704,7 @@
 ### RQ-074: Add plugin command runner with environment contract
 - vSphere mapping: run external scripts/tools against selected objects.
 - Acceptance: plugin receives selected object IDs and active endpoint via environment variables.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-075: Add plugin scope binding per view
 - vSphere mapping: only show plugin where resource type is valid.

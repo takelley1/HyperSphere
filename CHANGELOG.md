@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-074 by adding plugin command execution wiring
+  with an environment contract that passes selected object IDs and active
+  endpoint metadata into plugin runs.
+- Added failing-first coverage in `cmd/hypersphere/plugin_runner_test.go` for
+  environment variable contract propagation and missing-command validation.
 - Implemented and fulfilled RQ-073 by loading context-specific overlays for
   aliases, plugins, and hotkeys using active endpoint-specific files before
   falling back to global defaults.
