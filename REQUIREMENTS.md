@@ -62,6 +62,7 @@
 ### RQ-009: Add `--headless` startup flag
 - vSphere mapping: Hide top header line for dense terminal sessions.
 - Acceptance: header line is not rendered when flag is enabled.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-010: Add `--crumbsless` startup flag
 - vSphere mapping: Hide breadcrumb/navigation trail.

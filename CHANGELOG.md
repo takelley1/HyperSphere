@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Marked `RQ-009` as fulfilled in `REQUIREMENTS.md`.
 - Implemented RQ-009 `--headless` startup flag to hide the explorer table header row.
 - Added failing-first tests in `cmd/hypersphere/main_test.go` and
   `cmd/hypersphere/explorer_tui_test.go` to validate CLI parsing and headerless
