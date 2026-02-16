@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added RQ-125 to `REQUIREMENTS.md` to track per-view column selection controls,
+  including per-view persistence and restore behavior for hidden columns.
 - Added and fulfilled RQ-124 by extending VM view with `SNAPSHOT_COUNT` and
   `SNAPSHOT_TOTAL_GB` columns.
 - Added failing-first coverage in `internal/tui/session_test.go` for the

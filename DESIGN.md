@@ -22,6 +22,7 @@
 - [ ] Sub-task: add mouse click row-selection behavior for mixed compact/non-compact views.
 - [ ] Sub-task: add contrast-tuned selected/marked row palettes for low-contrast terminals.
 - [ ] Sub-task: add coverage for full-row highlight behavior when table width is narrower than content.
+- [ ] Sub-task: add per-view column chooser UX and persistence hooks for selected column sets.
 - [ ] Sub-task: add explicit top-help hint for sort inversion (`Shift+I`) alongside primary sort key.
 
 ### Demo Dataset Quality

@@ -306,6 +306,15 @@
 - Acceptance: built-in VM sample rows populate both fields.
 - Status: fulfilled (2026-02-16).
 
+### RQ-125: Add per-view column selection controls
+- vSphere mapping: operators need to tailor dense tables to the fields most
+  relevant for current incident/debug workflows.
+- Acceptance: each resource view supports choosing visible columns from its full
+  schema.
+- Acceptance: selected column sets persist per view while switching between
+  views during a session.
+- Acceptance: hidden columns can be restored without restarting the explorer.
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame
