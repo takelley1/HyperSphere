@@ -33,26 +33,30 @@ const (
 	ResourceLUN        Resource = "lun"
 	ResourceCluster    Resource = "cluster"
 	ResourceDatacenter Resource = "datacenter"
+	ResourcePool       Resource = "resourcepool"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
 
 var resourceAliasMap = map[string]Resource{
-	"vm":          ResourceVM,
-	"vms":         ResourceVM,
-	"lun":         ResourceLUN,
-	"luns":        ResourceLUN,
-	"cluster":     ResourceCluster,
-	"clusters":    ResourceCluster,
-	"cl":          ResourceCluster,
-	"dc":          ResourceDatacenter,
-	"datacenter":  ResourceDatacenter,
-	"datacenters": ResourceDatacenter,
-	"host":        ResourceHost,
-	"hosts":       ResourceHost,
-	"datastore":   ResourceDatastore,
-	"datastores":  ResourceDatastore,
-	"ds":          ResourceDatastore,
+	"vm":            ResourceVM,
+	"vms":           ResourceVM,
+	"lun":           ResourceLUN,
+	"luns":          ResourceLUN,
+	"cluster":       ResourceCluster,
+	"clusters":      ResourceCluster,
+	"cl":            ResourceCluster,
+	"dc":            ResourceDatacenter,
+	"datacenter":    ResourceDatacenter,
+	"datacenters":   ResourceDatacenter,
+	"rp":            ResourcePool,
+	"resourcepool":  ResourcePool,
+	"resourcepools": ResourcePool,
+	"host":          ResourceHost,
+	"hosts":         ResourceHost,
+	"datastore":     ResourceDatastore,
+	"datastores":    ResourceDatastore,
+	"ds":            ResourceDatastore,
 }
 
 // VMRow represents one VM row in the resource table.
@@ -107,6 +111,15 @@ type DatacenterRow struct {
 	DatastoreCount int
 }
 
+// ResourcePoolRow represents one resource pool row in the resource table.
+type ResourcePoolRow struct {
+	Name              string
+	Cluster           string
+	CPUReservationMHz int
+	MemReservationMB  int
+	VMCount           int
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -129,12 +142,13 @@ type DatastoreRow struct {
 
 // Catalog stores rows available for each resource view.
 type Catalog struct {
-	VMs         []VMRow
-	LUNs        []LUNRow
-	Clusters    []ClusterRow
-	Datacenters []DatacenterRow
-	Hosts       []HostRow
-	Datastores  []DatastoreRow
+	VMs           []VMRow
+	LUNs          []LUNRow
+	Clusters      []ClusterRow
+	Datacenters   []DatacenterRow
+	ResourcePools []ResourcePoolRow
+	Hosts         []HostRow
+	Datastores    []DatastoreRow
 }
 
 // ResourceView stores a concrete table to render.
@@ -239,6 +253,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return clusterView(n.catalog.Clusters), true
 	case ResourceDatacenter:
 		return datacenterView(n.catalog.Datacenters), true
+	case ResourcePool:
+		return resourcePoolView(n.catalog.ResourcePools), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -594,6 +610,18 @@ func datacenterView(rows []DatacenterRow) ResourceView {
 	)
 }
 
+func resourcePoolView(rows []ResourcePoolRow) ResourceView {
+	columns := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT"}
+	return buildView(
+		ResourcePool,
+		columns,
+		resourcePoolSortHotKeys(),
+		resourcePoolActions(),
+		rows,
+		resourcePoolCells,
+	)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
@@ -655,6 +683,16 @@ func datacenterCells(row DatacenterRow) (string, []string) {
 	}
 }
 
+func resourcePoolCells(row ResourcePoolRow) (string, []string) {
+	return row.Name, []string{
+		row.Name,
+		defaultCell(row.Cluster),
+		strconv.Itoa(row.CPUReservationMHz),
+		strconv.Itoa(row.MemReservationMB),
+		strconv.Itoa(row.VMCount),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
 }
@@ -680,6 +718,10 @@ func clusterSortHotKeys() map[string]string {
 
 func datacenterSortHotKeys() map[string]string {
 	return map[string]string{"N": "NAME", "C": "CLUSTERS", "H": "HOSTS", "V": "VMS", "D": "DATASTORES"}
+}
+
+func resourcePoolSortHotKeys() map[string]string {
+	return map[string]string{"N": "NAME", "C": "CLUSTER", "P": "CPU_RES", "M": "MEM_RES", "V": "VM_COUNT"}
 }
 
 func hostSortHotKeys() map[string]string {
@@ -708,6 +750,10 @@ func hostActions() []string {
 
 func datacenterActions() []string {
 	return []string{"refresh", "edit-tags"}
+}
+
+func resourcePoolActions() []string {
+	return []string{"set-reservation", "rebalance", "edit-tags"}
 }
 
 func datastoreActions() []string {

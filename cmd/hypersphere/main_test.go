@@ -234,6 +234,12 @@ func TestDefaultCatalogProvidesExpandedBrowsingDataset(t *testing.T) {
 			len(catalog.Datacenters),
 		)
 	}
+	if len(catalog.ResourcePools) < 4 {
+		t.Fatalf(
+			"expected at least 4 resource pool rows for browsing, got %d",
+			len(catalog.ResourcePools),
+		)
+	}
 	if len(catalog.Hosts) < 8 {
 		t.Fatalf("expected at least 8 host rows for browsing, got %d", len(catalog.Hosts))
 	}

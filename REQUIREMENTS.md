@@ -299,6 +299,7 @@
 ### RQ-029: Add `:rp`/`:resourcepool` resource pool view
 - vSphere mapping: scheduler partitioning visibility.
 - Acceptance: view columns include `NAME`, `CLUSTER`, `CPU_RES`, `MEM_RES`, `VM_COUNT`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-030: Add `:network`/`:nw` view
 - vSphere mapping: distributed switch/portgroup visibility.

@@ -328,12 +328,13 @@ func runDeletionWorkflow(application app.App, cfg config.Config) {
 
 func defaultCatalog() tui.Catalog {
 	return tui.Catalog{
-		VMs:         defaultVMRows(),
-		LUNs:        defaultLUNRows(),
-		Clusters:    defaultClusterRows(),
-		Datacenters: defaultDatacenterRows(),
-		Hosts:       defaultHostRows(),
-		Datastores:  defaultDatastoreRows(),
+		VMs:           defaultVMRows(),
+		LUNs:          defaultLUNRows(),
+		Clusters:      defaultClusterRows(),
+		Datacenters:   defaultDatacenterRows(),
+		ResourcePools: defaultResourcePoolRows(),
+		Hosts:         defaultHostRows(),
+		Datastores:    defaultDatastoreRows(),
 	}
 }
 
@@ -377,6 +378,15 @@ func defaultDatacenterRows() []tui.DatacenterRow {
 		{Name: "dc-1", ClusterCount: 2, HostCount: 13, VMCount: 184, DatastoreCount: 6},
 		{Name: "dc-2", ClusterCount: 1, HostCount: 6, VMCount: 90, DatastoreCount: 4},
 		{Name: "dc-3", ClusterCount: 1, HostCount: 4, VMCount: 33, DatastoreCount: 3},
+	}
+}
+
+func defaultResourcePoolRows() []tui.ResourcePoolRow {
+	return []tui.ResourcePoolRow{
+		{Name: "rp-prod", Cluster: "cluster-east", CPUReservationMHz: 6400, MemReservationMB: 8192, VMCount: 24},
+		{Name: "rp-dev", Cluster: "cluster-west", CPUReservationMHz: 3200, MemReservationMB: 4096, VMCount: 18},
+		{Name: "rp-qa", Cluster: "cluster-central", CPUReservationMHz: 2800, MemReservationMB: 3072, VMCount: 12},
+		{Name: "rp-edge", Cluster: "cluster-edge", CPUReservationMHz: 2000, MemReservationMB: 2048, VMCount: 9},
 	}
 }
 

@@ -74,6 +74,24 @@ func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			ResourcePools: []ResourcePoolRow{
+				{Name: "rp-prod", Cluster: "cluster-east", CPUReservationMHz: 6400, MemReservationMB: 8192, VMCount: 24},
+			},
+		},
+	)
+	view, err := navigator.Execute(":rp")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"NAME", "CLUSTER", "CPU_RES", "MEM_RES", "VM_COUNT"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected resource pool columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "c1"}, {Name: "vm-b", Cluster: "c1"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

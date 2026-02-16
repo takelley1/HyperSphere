@@ -21,6 +21,8 @@ func TestParseExplorerInputKinds(t *testing.T) {
 		{line: ":vm /prod", kind: CommandView, value: "vm"},
 		{line: ":dc", kind: CommandView, value: "datacenter"},
 		{line: ":datacenter", kind: CommandView, value: "datacenter"},
+		{line: ":rp", kind: CommandView, value: "resourcepool"},
+		{line: ":resourcepool", kind: CommandView, value: "resourcepool"},
 		{line: ":ds", kind: CommandView, value: "datastore"},
 		{line: "!power-off", kind: CommandAction, value: "power-off"},
 		{line: "shift+o", kind: CommandHotKey, value: "SHIFT+O"},

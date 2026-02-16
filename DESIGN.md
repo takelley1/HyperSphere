@@ -27,6 +27,8 @@
 - [ ] Add deterministic sample snapshots/comments fields for describe-panel browsing depth.
 - [ ] Sub-task: add datacenter samples with uneven cluster/host/vm ratios for sort-behavior checks.
 - [ ] Sub-task: add integration coverage for startup `--command dc` with seeded datacenter rows.
+- [ ] Sub-task: add resource-pool samples with overcommit and zero-reservation edge cases.
+- [ ] Sub-task: add integration coverage for startup `--command rp` with seeded pool rows.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

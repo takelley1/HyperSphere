@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-029 resource-pool coverage by adding `:rp` and
+  `:resourcepool` aliases with a dedicated view exposing `NAME`, `CLUSTER`,
+  `CPU_RES`, `MEM_RES`, and `VM_COUNT`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for resource-pool command parsing and
+  resource-pool column rendering.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded resource
+  pool rows and added browse-dataset coverage in `cmd/hypersphere/main_test.go`.
+- Marked `RQ-029` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on resource-pool dataset and startup-routing
+  coverage sub-tasks.
 - Implemented RQ-028 datacenter resource coverage by adding `:dc` and
   `:datacenter` command aliases and a dedicated datacenter table view with
   columns `NAME`, `CLUSTERS`, `HOSTS`, `VMS`, and `DATASTORES`.
