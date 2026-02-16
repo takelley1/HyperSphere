@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-098 screenshot palette preset parity by mapping header accents
+  to yellow/cyan/magenta, table header background to cyan, and canvas background
+  to black in the explorer theme.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  palette field mapping and runtime top-header accent tag rendering.
+- Marked `RQ-098` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed palette-preset item and adding
+  follow-on sub-tasks for NO_COLOR snapshot parity and palette override plumbing.
 - Implemented RQ-097 centered title-divider parity for the active content frame
   using `ViewName(scope)[count]` formatting and divider segments on both sides.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

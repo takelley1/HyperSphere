@@ -493,6 +493,42 @@ func TestReadThemeRespectsNoColor(t *testing.T) {
 	}
 }
 
+func TestReadThemeUsesScreenshotPalettePreset(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	theme := readTheme()
+	if theme.HeaderBackground != tcell.ColorAqua {
+		t.Fatalf("expected cyan table header background, got %v", theme.HeaderBackground)
+	}
+	if theme.CanvasBackground != tcell.ColorBlack {
+		t.Fatalf("expected black canvas background, got %v", theme.CanvasBackground)
+	}
+	if theme.HeaderAccentLeft != "yellow" {
+		t.Fatalf("expected yellow left header accent, got %q", theme.HeaderAccentLeft)
+	}
+	if theme.HeaderAccentCenter != "aqua" {
+		t.Fatalf("expected cyan center header accent, got %q", theme.HeaderAccentCenter)
+	}
+	if theme.HeaderAccentRight != "fuchsia" {
+		t.Fatalf("expected magenta right header accent, got %q", theme.HeaderAccentRight)
+	}
+}
+
+func TestRenderTopHeaderWithWidthUsesScreenshotAccentColors(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	runtime := newExplorerRuntime()
+	runtime.renderTopHeaderWithWidth(120)
+	text := runtime.topHeader.GetText(false)
+	if !strings.Contains(text, "[yellow]") {
+		t.Fatalf("expected yellow accent in top header, got %q", text)
+	}
+	if !strings.Contains(text, "[aqua]") {
+		t.Fatalf("expected cyan accent in top header, got %q", text)
+	}
+	if !strings.Contains(text, "[fuchsia]") {
+		t.Fatalf("expected magenta accent in top header, got %q", text)
+	}
+}
+
 func TestApplyPromptCompletionUsesFirstSuggestion(t *testing.T) {
 	promptState := tui.NewPromptState(20)
 	view := tui.ResourceView{Actions: []string{"power-on", "power-off"}}

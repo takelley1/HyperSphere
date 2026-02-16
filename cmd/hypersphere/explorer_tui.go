@@ -80,12 +80,16 @@ type inMemoryContextConnector struct {
 }
 
 type explorerTheme struct {
-	UseColor         bool
-	HeaderText       tcell.Color
-	HeaderBackground tcell.Color
-	EvenRowText      tcell.Color
-	OddRowText       tcell.Color
-	StatusError      string
+	UseColor           bool
+	CanvasBackground   tcell.Color
+	HeaderText         tcell.Color
+	HeaderBackground   tcell.Color
+	HeaderAccentLeft   string
+	HeaderAccentCenter string
+	HeaderAccentRight  string
+	EvenRowText        tcell.Color
+	OddRowText         tcell.Color
+	StatusError        string
 }
 
 func (r *runtimeActionExecutor) Execute(resource tui.Resource, action string, ids []string) error {
@@ -229,16 +233,22 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetTitleColor(contentFrameColor(r.theme))
 	r.body.SetTitle(composeTableTitle(r.session.CurrentView(), false, false))
 	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
+	r.topHeader.SetBackgroundColor(r.theme.CanvasBackground)
+	r.body.SetBackgroundColor(r.theme.CanvasBackground)
 	r.breadcrumb.SetDynamicColors(true)
 	r.breadcrumb.SetBorder(true)
+	r.breadcrumb.SetBackgroundColor(r.theme.CanvasBackground)
 	r.breadcrumb.SetTitle(" Breadcrumbs ")
 	r.status.SetDynamicColors(true)
 	r.status.SetBorder(true)
+	r.status.SetBackgroundColor(r.theme.CanvasBackground)
 	r.status.SetTitle(" Status ")
 	r.prompt.SetLabel("Command: ")
+	r.prompt.SetFieldBackgroundColor(r.theme.CanvasBackground)
 	applyPromptValidationState(r.prompt, "")
 	r.footer.SetDynamicColors(true)
 	r.footer.SetBorder(true)
+	r.footer.SetBackgroundColor(r.theme.CanvasBackground)
 	r.footer.SetTitle(" Help ")
 	r.helpModal.SetBorder(true)
 	r.helpModal.SetTitle(" Keymap Help ")
@@ -261,10 +271,12 @@ func (r *explorerRuntime) configureWidgets() {
 	}
 	layout.AddItem(r.status, 3, 0, false).AddItem(r.footer, 3, 0, false)
 	r.layout = layout
+	r.layout.SetBackgroundColor(r.theme.CanvasBackground)
 	r.pages.AddPage("main", layout, true, true)
 	r.pages.AddPage("help", r.helpModal, true, false)
 	r.pages.AddPage("alias", r.aliasModal, true, false)
 	r.pages.AddPage("describe", r.describeModal, true, false)
+	r.pages.SetBackgroundColor(r.theme.CanvasBackground)
 	r.app.SetRoot(r.pages, true)
 	r.app.SetFocus(r.body)
 }
@@ -578,11 +590,12 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 	if r.topHeader == nil {
 		return
 	}
-	headerLines := renderTopHeaderLines(
+	headerLines := renderTopHeaderLinesWithTheme(
 		normalizeTopHeaderWidth(width),
 		strings.Split(renderTopHeaderLeft(r.contexts.Active()), "\n"),
 		strings.Split(renderTopHeaderCenter(), "\n"),
 		strings.Split(renderTopHeaderRight(), "\n"),
+		r.theme,
 	)
 	r.topHeader.SetText(strings.Join(headerLines, "\n"))
 }
@@ -923,6 +936,35 @@ func renderTopHeaderLines(width int, left []string, center []string, right []str
 	return lines
 }
 
+func renderTopHeaderLinesWithTheme(
+	width int,
+	left []string,
+	center []string,
+	right []string,
+	theme explorerTheme,
+) []string {
+	lines := renderTopHeaderLines(width, left, center, right)
+	if !theme.UseColor {
+		return lines
+	}
+	colored := make([]string, 0, len(lines))
+	for index := range lines {
+		leftValue := colorizeHeaderAccent(fitHeaderLeft(topHeaderLineAt(left, index), width/3), theme.HeaderAccentLeft)
+		centerValue := colorizeHeaderAccent(fitHeaderCenter(topHeaderLineAt(center, index), width/3), theme.HeaderAccentCenter)
+		rightWidth := width - (width / 3) - (width / 3)
+		rightValue := colorizeHeaderAccent(fitHeaderRight(topHeaderLineAt(right, index), rightWidth), theme.HeaderAccentRight)
+		colored = append(colored, leftValue+centerValue+rightValue)
+	}
+	return colored
+}
+
+func colorizeHeaderAccent(value string, accent string) string {
+	if accent == "" {
+		return value
+	}
+	return fmt.Sprintf("[%s]%s[-]", accent, value)
+}
+
 func tableOverflowMarkers(
 	widths []int,
 	availableWidth int,
@@ -1131,17 +1173,25 @@ func applyPromptValidationState(prompt *tview.InputField, message string) {
 
 func readTheme() explorerTheme {
 	theme := explorerTheme{
-		UseColor:         true,
-		HeaderText:       tcell.ColorBlack,
-		HeaderBackground: tcell.ColorLightSkyBlue,
-		EvenRowText:      tcell.ColorWhite,
-		OddRowText:       tcell.ColorLightGray,
-		StatusError:      "[red]",
+		UseColor:           true,
+		CanvasBackground:   tcell.ColorBlack,
+		HeaderText:         tcell.ColorBlack,
+		HeaderBackground:   tcell.ColorAqua,
+		HeaderAccentLeft:   "yellow",
+		HeaderAccentCenter: "aqua",
+		HeaderAccentRight:  "fuchsia",
+		EvenRowText:        tcell.ColorWhite,
+		OddRowText:         tcell.ColorLightGray,
+		StatusError:        "[red]",
 	}
 	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
 		theme.UseColor = false
+		theme.CanvasBackground = tcell.ColorBlack
 		theme.HeaderText = tcell.ColorWhite
 		theme.HeaderBackground = tcell.ColorBlack
+		theme.HeaderAccentLeft = ""
+		theme.HeaderAccentCenter = ""
+		theme.HeaderAccentRight = ""
 		theme.EvenRowText = tcell.ColorWhite
 		theme.OddRowText = tcell.ColorWhite
 		theme.StatusError = ""

@@ -25,11 +25,12 @@
 - [ ] Add configurable high-contrast, standard, and dim color palettes.
 - [ ] Add monochrome fallback indicators for status and power-state cells.
 - [ ] Add optional unicode/ASCII symbol mode for compatibility across terminals.
-- [ ] Add screenshot-baseline palette preset (black canvas, cyan frames, yellow/cyan accents).
 - [ ] Add selected-row inversion style for dense table readability.
 - [ ] Add status color mapping for healthy/degraded/faulted rows.
 - [ ] Sub-task: add screenshot-baseline tests that assert the cyan content frame remains visible.
 - [ ] Sub-task: add frame-style tests for border consistency across table modes (`ctrl-w`, compact mode).
+- [ ] Sub-task: add NO_COLOR snapshot tests for clean accent-tag removal and monochrome fallback.
+- [ ] Sub-task: add theme-override plumbing for palette selection via config and CLI.
 
 ### Header Layout Parity
 - [ ] Add responsive header degradation: collapse hotkeys first, then hide logo.

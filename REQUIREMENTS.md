@@ -211,6 +211,7 @@
 - vSphere mapping: recognizable k9s-inspired look-and-feel.
 - Acceptance: preset maps header accents to yellow/cyan/magenta, table header
   background to cyan, and default canvas background to black.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-099: Add status color mapping for table rows
 - vSphere mapping: fast health scan of vSphere objects.
