@@ -1988,8 +1988,10 @@ func handleSimpleCommandKinds(
 	case tui.CommandLastView:
 		return statusFromError(session.LastView(), "switched to last view"), true, true
 	case tui.CommandFilter:
-		session.ApplyFilter(parsed.Value)
-		return fmt.Sprintf("filter: %s", parsed.Value), true, true
+		return statusFromError(
+			session.ApplyRegexFilter(parsed.Value),
+			fmt.Sprintf("filter: %s", parsed.Value),
+		), true, true
 	default:
 		return "", true, false
 	}

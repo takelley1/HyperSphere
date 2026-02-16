@@ -40,6 +40,31 @@ func TestSessionApplyFilterAndClear(t *testing.T) {
 	}
 }
 
+func TestSessionApplyRegexFilterAndRejectInvalidPattern(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}, {Name: "db-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if err := session.ApplyRegexFilter("^vm-"); err != nil {
+		t.Fatalf("ApplyRegexFilter error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected regex filter to keep two vm rows")
+	}
+	if err := session.ApplyRegexFilter("["); err == nil {
+		t.Fatalf("expected invalid regex error")
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected invalid regex to keep prior filtered rows")
+	}
+	if err := session.ApplyRegexFilter("   "); err != nil {
+		t.Fatalf("expected empty regex pattern to clear filter: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 3 {
+		t.Fatalf("expected empty regex pattern to restore all rows")
+	}
+}
+
 func TestSessionLastViewToggle(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.ExecuteCommand(":vm"); err != nil {

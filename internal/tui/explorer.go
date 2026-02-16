@@ -5,6 +5,7 @@ package tui
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -637,6 +638,23 @@ func (s *Session) ApplyFilter(filter string) {
 	}
 	s.view = filterView(s.baseView, s.filterText)
 	s.clampSelectedRow()
+}
+
+// ApplyRegexFilter filters rows by regex match across all columns.
+func (s *Session) ApplyRegexFilter(pattern string) error {
+	trimmed := strings.TrimSpace(pattern)
+	if trimmed == "" {
+		s.ApplyFilter("")
+		return nil
+	}
+	compiled, err := regexp.Compile(trimmed)
+	if err != nil {
+		return err
+	}
+	s.filterText = trimmed
+	s.view = filterViewRegex(s.baseView, compiled)
+	s.clampSelectedRow()
+	return nil
 }
 
 // LastView toggles back to the previous resource view.
@@ -1844,6 +1862,27 @@ func filterView(view ResourceView, filter string) ResourceView {
 	return filtered
 }
 
+func filterViewRegex(view ResourceView, pattern *regexp.Regexp) ResourceView {
+	filtered := ResourceView{
+		Resource:    view.Resource,
+		Columns:     append([]string{}, view.Columns...),
+		Rows:        make([][]string, 0, len(view.Rows)),
+		IDs:         make([]string, 0, len(view.IDs)),
+		SortHotKeys: view.SortHotKeys,
+		Actions:     append([]string{}, view.Actions...),
+	}
+	for index, row := range view.Rows {
+		if !rowMatchesRegex(row, pattern) {
+			continue
+		}
+		filtered.Rows = append(filtered.Rows, append([]string{}, row...))
+		if index < len(view.IDs) {
+			filtered.IDs = append(filtered.IDs, view.IDs[index])
+		}
+	}
+	return filtered
+}
+
 func clampSelectionIndex(value int, length int) int {
 	if length == 0 {
 		return 0
@@ -1860,6 +1899,15 @@ func clampSelectionIndex(value int, length int) int {
 func rowMatchesFilter(row []string, filter string) bool {
 	for _, value := range row {
 		if strings.Contains(strings.ToLower(value), filter) {
+			return true
+		}
+	}
+	return false
+}
+
+func rowMatchesRegex(row []string, pattern *regexp.Regexp) bool {
+	for _, value := range row {
+		if pattern.MatchString(value) {
 			return true
 		}
 	}

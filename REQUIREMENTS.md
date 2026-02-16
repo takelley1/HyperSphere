@@ -490,6 +490,7 @@
 - vSphere mapping: advanced row filtering.
 - Acceptance: `/pattern` applies regex filter; invalid regex returns parse error
   and keeps prior filter.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-044: Add inverse filter mode
 - vSphere mapping: exclude noisy objects.

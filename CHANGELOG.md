@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-043 by adding regex filter-mode execution for
+  `/pattern` commands with regex compile validation before applying row filters.
+- Added failing-first coverage in `internal/tui/runtime_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for regex filtering and invalid-pattern
+  error behavior that preserves the prior filtered result set.
 - Implemented and fulfilled RQ-042 by replacing modal describe behavior with a
   split-pane details drawer inside the main table layout.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

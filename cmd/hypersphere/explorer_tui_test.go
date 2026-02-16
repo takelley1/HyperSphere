@@ -1228,6 +1228,53 @@ func TestExecutePromptCommandCtxSelectRefreshesActiveView(t *testing.T) {
 	}
 }
 
+func TestExecutePromptCommandRegexFilterRejectsInvalidPatternAndKeepsPriorFilter(t *testing.T) {
+	session := tui.NewSession(
+		tui.Catalog{
+			VMs: []tui.VMRow{{Name: "vm-a"}, {Name: "vm-b"}, {Name: "db-a"}},
+		},
+	)
+	promptState := tui.NewPromptState(20)
+	executor := &runtimeActionExecutor{}
+	contexts := newRuntimeContextManager()
+
+	okMessage, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"/^vm-",
+	)
+	if !keepRunning {
+		t.Fatalf("expected regex filter command to keep runtime alive")
+	}
+	if okMessage != "filter: ^vm-" {
+		t.Fatalf("expected regex filter status, got %q", okMessage)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected regex filter to scope rows, got %d", len(session.CurrentView().Rows))
+	}
+
+	errMessage, keepRunning := executePromptCommand(
+		&session,
+		&promptState,
+		executor,
+		&contexts,
+		nil,
+		"/[",
+	)
+	if !keepRunning {
+		t.Fatalf("expected invalid regex command to keep runtime alive")
+	}
+	if !strings.Contains(errMessage, "command error:") {
+		t.Fatalf("expected command error status for invalid regex, got %q", errMessage)
+	}
+	if len(session.CurrentView().Rows) != 2 {
+		t.Fatalf("expected invalid regex to preserve prior filtered rows")
+	}
+}
+
 func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
 	runtime := newExplorerRuntimeWithReadOnly(true)
 	message, keepRunning := executePromptCommand(
