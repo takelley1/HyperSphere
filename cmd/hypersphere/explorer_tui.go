@@ -110,6 +110,9 @@ type explorerTheme struct {
 	RowHealthy         tcell.Color
 	RowDegraded        tcell.Color
 	RowFaulted         tcell.Color
+	RowSelected        tcell.Color
+	RowMarked          tcell.Color
+	RowMarkedSelected  tcell.Color
 	StatusError        string
 }
 
@@ -253,7 +256,11 @@ func (r *explorerRuntime) configureWidgets() {
 	r.body.SetTitleAlign(tview.AlignCenter)
 	r.body.SetTitleColor(contentFrameColor(r.theme))
 	r.body.SetTitle(composeTableTitle(r.session.CurrentView(), false, false))
-	r.body.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorDarkSlateGray).Foreground(tcell.ColorWhite))
+	r.body.SetSelectedStyle(
+		tcell.StyleDefault.
+			Background(selectedRowBackgroundColor(r.theme)).
+			Foreground(tcell.ColorBlack),
+	)
 	r.topHeader.SetBackgroundColor(r.theme.CanvasBackground)
 	r.body.SetBackgroundColor(r.theme.CanvasBackground)
 	r.breadcrumb.SetDynamicColors(true)
@@ -763,6 +770,7 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	view = compactViewForWidth(view, availableWidth)
 	rows := tableRows(view, r.session.IsMarked, includeHeader)
 	widths := autosizedColumnWidths(view, rows, availableWidth)
+	rowFillWidth := tableRowFillWidth(widths, availableWidth)
 	_, columnOffset := r.body.GetOffset()
 	leftOverflow, rightOverflow := tableOverflowMarkers(
 		widths,
@@ -773,6 +781,10 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	r.body.SetTitle(composeRuntimeTitle(r, view, leftOverflow, rightOverflow))
 	r.body.Clear()
 	for rowIndex, row := range rows {
+		dataRowIndex := renderedDataRowIndex(rowIndex, includeHeader)
+		rowID := selectedIDForRow(view, dataRowIndex)
+		isMarked := rowID != "" && r.session.IsMarked(rowID)
+		isSelected := dataRowIndex == r.session.SelectedRow()
 		for columnIndex, value := range row {
 			cell := tview.NewTableCell(value)
 			if columnIndex < len(widths) {
@@ -784,20 +796,56 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 				cell.SetBackgroundColor(r.theme.HeaderBackground)
 				cell.SetAttributes(tcell.AttrBold)
 			} else {
-				dataRowIndex := rowIndex
-				if includeHeader {
-					dataRowIndex--
-				}
-				cell.SetTextColor(tableRowColor(r.theme, view, dataRowIndex))
-				if dataRowIndex == r.session.SelectedRow() {
-					cell.SetAttributes(tcell.AttrReverse)
-				}
+				cell.SetTextColor(tableTextColor(r.theme, view, dataRowIndex, isMarked, isSelected))
+				cell.SetBackgroundColor(tableRowBackgroundColor(r.theme, isMarked, isSelected))
 			}
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
+		appendRowFillCell(r, rowIndex, len(row), rowFillWidth, includeHeader, view, dataRowIndex, isMarked, isSelected)
 	}
 	selectedRow, selectedColumn := selectionForRenderedView(r.session, view, includeHeader)
 	r.body.Select(selectedRow, selectedColumn)
+}
+
+func appendRowFillCell(
+	r *explorerRuntime,
+	rowIndex int,
+	columnIndex int,
+	fillWidth int,
+	includeHeader bool,
+	view tui.ResourceView,
+	dataRowIndex int,
+	isMarked bool,
+	isSelected bool,
+) {
+	if fillWidth <= 0 {
+		return
+	}
+	fill := tview.NewTableCell(strings.Repeat(" ", fillWidth))
+	fill.SetMaxWidth(fillWidth)
+	fill.SetSelectable(false)
+	if includeHeader && rowIndex == 0 {
+		fill.SetBackgroundColor(r.theme.HeaderBackground)
+	} else {
+		fill.SetTextColor(tableTextColor(r.theme, view, dataRowIndex, isMarked, isSelected))
+		fill.SetBackgroundColor(tableRowBackgroundColor(r.theme, isMarked, isSelected))
+	}
+	r.body.SetCell(rowIndex, columnIndex, fill)
+}
+
+func renderedDataRowIndex(rowIndex int, includeHeader bool) int {
+	if includeHeader {
+		return rowIndex - 1
+	}
+	return rowIndex
+}
+
+func tableRowFillWidth(widths []int, availableWidth int) int {
+	remainder := availableWidth - tableRenderWidth(widths) - 1
+	if remainder <= 0 {
+		return 0
+	}
+	return remainder
 }
 
 func selectedIDForRow(view tui.ResourceView, row int) string {
@@ -1244,6 +1292,40 @@ func tableRowColor(theme explorerTheme, view tui.ResourceView, rowIndex int) tce
 	return theme.OddRowText
 }
 
+func tableTextColor(
+	theme explorerTheme,
+	view tui.ResourceView,
+	rowIndex int,
+	isMarked bool,
+	isSelected bool,
+) tcell.Color {
+	if isSelected || isMarked {
+		return tcell.ColorBlack
+	}
+	return tableRowColor(theme, view, rowIndex)
+}
+
+func tableRowBackgroundColor(theme explorerTheme, isMarked bool, isSelected bool) tcell.Color {
+	if isSelected && isMarked {
+		return theme.RowMarkedSelected
+	}
+	if isSelected {
+		return selectedRowBackgroundColor(theme)
+	}
+	if isMarked {
+		return markedRowBackgroundColor(theme)
+	}
+	return theme.CanvasBackground
+}
+
+func selectedRowBackgroundColor(theme explorerTheme) tcell.Color {
+	return theme.RowSelected
+}
+
+func markedRowBackgroundColor(theme explorerTheme) tcell.Color {
+	return theme.RowMarked
+}
+
 func rowStatusAt(view tui.ResourceView, rowIndex int) string {
 	if rowIndex < 0 || rowIndex >= len(view.Rows) {
 		return ""
@@ -1561,6 +1643,9 @@ func readTheme() explorerTheme {
 		RowHealthy:         tcell.ColorGreen,
 		RowDegraded:        tcell.ColorYellow,
 		RowFaulted:         tcell.ColorRed,
+		RowSelected:        tcell.ColorDarkCyan,
+		RowMarked:          tcell.ColorDarkOliveGreen,
+		RowMarkedSelected:  tcell.ColorCadetBlue,
 		StatusError:        "[red]",
 	}
 	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
@@ -1576,6 +1661,9 @@ func readTheme() explorerTheme {
 		theme.RowHealthy = tcell.ColorWhite
 		theme.RowDegraded = tcell.ColorWhite
 		theme.RowFaulted = tcell.ColorWhite
+		theme.RowSelected = tcell.ColorGray
+		theme.RowMarked = tcell.ColorDarkGray
+		theme.RowMarkedSelected = tcell.ColorSilver
 		theme.StatusError = ""
 	}
 	return theme

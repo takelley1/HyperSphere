@@ -20,6 +20,8 @@
 - [ ] Sub-task: surface overflow markers in screenshot-baseline frame/title styling.
 - [ ] Sub-task: add selection-sync integration coverage for headless mode table clicks.
 - [ ] Sub-task: add mouse click row-selection behavior for mixed compact/non-compact views.
+- [ ] Sub-task: add contrast-tuned selected/marked row palettes for low-contrast terminals.
+- [ ] Sub-task: add coverage for full-row highlight behavior when table width is narrower than content.
 
 ### Demo Dataset Quality
 - [ ] Add sample inventory variants for dense environments (50+ rows) to validate scrolling ergonomics.

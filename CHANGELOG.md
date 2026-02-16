@@ -1,6 +1,18 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-117 by changing resource-table selection styling from
+  text-only reverse attributes to full-row background highlighting.
+- Added and fulfilled RQ-118 by applying full-row background colors for marked
+  selections (including a distinct marked+selected combination), so selection
+  state is no longer glyph-only.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
+  full-width selected-row highlighting and full-row marked-selection coloring.
+- Updated `cmd/hypersphere/explorer_tui.go` table rendering to append a trailing
+  fill cell so selected/marked row backgrounds span the rendered table width.
+- Updated theme wiring in `cmd/hypersphere/explorer_tui.go` with canonical row
+  background colors for selected, marked, and marked+selected states, including
+  NO_COLOR fallbacks.
 - Added and fulfilled RQ-116 by expanding every resource table schema with
   additional operational columns to better use horizontal terminal space.
 - Added failing-first coverage in `internal/tui/session_test.go` and

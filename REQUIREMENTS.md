@@ -238,6 +238,23 @@
   columns so local browsing uses the wider schemas immediately.
 - Status: fulfilled (2026-02-16).
 
+### RQ-117: Highlight full selected resource row across terminal width
+- vSphere mapping: improve scanability so active focus is obvious in dense
+  operational tables.
+- Acceptance: selected row highlight applies to all rendered cells in the row,
+  not only text glyphs/characters.
+- Acceptance: selected row highlight includes trailing fill so highlight visually
+  spans the full table width in the terminal viewport.
+- Status: fulfilled (2026-02-16).
+
+### RQ-118: Use full-row color highlight for marked table selections
+- vSphere mapping: multi-select state should be obvious for bulk actions without
+  relying on marker glyphs alone.
+- Acceptance: marking a row changes the background color of the entire row.
+- Acceptance: marked+selected rows use a distinct combined background color.
+- Acceptance: marker glyph may remain, but row color is the primary state cue.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame

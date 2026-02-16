@@ -220,7 +220,7 @@ func TestRenderTableWithWidthInLogModeShowsTimestampedMonospaceRows(t *testing.T
 	runtime := newExplorerRuntime()
 	runtime.startPrompt(":log")
 	runtime.handlePromptDone(tcell.KeyEnter)
-	runtime.renderTableWithWidth(compactModeWidthThreshold + 20)
+	runtime.renderTableWithWidth(220)
 	logCell := runtime.body.GetCell(1, 1).Text
 	if !regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T`).MatchString(logCell) {
 		t.Fatalf("expected timestamped log cell, got %q", logCell)
@@ -354,21 +354,69 @@ func TestRenderTopHeaderCenterIncludesMovedHelpHintsAndPromptState(t *testing.T)
 	}
 }
 
-func TestRenderTableWithWidthAppliesInversionStyleToSelectedRowWithoutTextMutation(t *testing.T) {
+func TestRenderTableWithWidthHighlightsSelectedRowAcrossFullTableWidth(t *testing.T) {
 	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
 	if err := runtime.session.HandleKey("DOWN"); err != nil {
 		t.Fatalf("expected row move to succeed: %v", err)
 	}
-	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+	runtime.renderTableWithWidth(220)
 
 	selectedRow, selectedColumn := selectionForTable(runtime.session, true)
 	cell := runtime.body.GetCell(selectedRow, selectedColumn)
 	if cell.Text != "vm-b" {
 		t.Fatalf("expected selected cell text to remain unchanged, got %q", cell.Text)
 	}
-	_, _, attributes := cell.Style.Decompose()
-	if attributes&tcell.AttrReverse == 0 {
-		t.Fatalf("expected selected row to include reverse attribute, got %v", attributes)
+	if runtime.body.GetColumnCount() <= len(runtime.session.CurrentView().Columns)+1 {
+		t.Fatalf("expected filler column for full-width highlight")
+	}
+	expected := selectedRowBackgroundColor(runtime.theme)
+	for columnIndex := 0; columnIndex < runtime.body.GetColumnCount(); columnIndex++ {
+		rowCell := runtime.body.GetCell(selectedRow, columnIndex)
+		if rowCell == nil {
+			t.Fatalf("expected selected row cell at column %d", columnIndex)
+		}
+		_, background, _ := rowCell.Style.Decompose()
+		if background != expected {
+			t.Fatalf(
+				"expected selected row background %v at column %d, got %v",
+				expected,
+				columnIndex,
+				background,
+			)
+		}
+	}
+}
+
+func TestRenderTableWithWidthUsesMarkedRowColorAcrossEntireRow(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	selectedID := runtime.session.CurrentView().IDs[runtime.session.SelectedRow()]
+	if err := runtime.session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("expected mark key to succeed: %v", err)
+	}
+	if err := runtime.session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("expected row move to succeed: %v", err)
+	}
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 20)
+	markedDataRow := rowIndexForID(runtime.session.CurrentView(), selectedID)
+	if markedDataRow < 0 {
+		t.Fatalf("expected marked row id to exist")
+	}
+	markedRow := markedDataRow + 1
+	expected := markedRowBackgroundColor(runtime.theme)
+	for columnIndex := 0; columnIndex < runtime.body.GetColumnCount(); columnIndex++ {
+		rowCell := runtime.body.GetCell(markedRow, columnIndex)
+		if rowCell == nil {
+			t.Fatalf("expected marked row cell at column %d", columnIndex)
+		}
+		_, background, _ := rowCell.Style.Decompose()
+		if background != expected {
+			t.Fatalf(
+				"expected marked row background %v at column %d, got %v",
+				expected,
+				columnIndex,
+				background,
+			)
+		}
 	}
 }
 
