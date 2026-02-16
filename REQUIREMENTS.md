@@ -314,6 +314,7 @@
 - Acceptance: selected column sets persist per view while switching between
   views during a session.
 - Acceptance: hidden columns can be restored without restarting the explorer.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-126: Change selected-row highlight to yellow
 - vSphere mapping: selected-row visibility should be high-contrast without

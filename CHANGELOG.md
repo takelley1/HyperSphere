@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-125 by adding per-view column selection controls
+  (`:cols set ...`, `:cols list`, `:cols reset`) with in-session persistence
+  across view switches.
+- Added failing-first coverage in `internal/tui/session_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for per-view column selection,
+  persistence, and reset behavior.
+- Updated `internal/tui/explorer.go` session state to persist per-resource
+  visible column sets and restore defaults on reset.
 - Added and fulfilled RQ-128 by moving compact breadcrumb/status hints from the
   top-right zone into the center header below keyboard shortcut rows.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to

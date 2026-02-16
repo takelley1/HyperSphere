@@ -536,6 +536,42 @@ func TestHandlePromptDoneSwitchesHeaderLegendForLogViewAndRestoresTableLegend(t 
 	}
 }
 
+func TestHandlePromptDoneColumnSelectionPersistsPerViewAndResets(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+
+	runtime.startPrompt(":cols set NAME,POWER")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	if runtime.body.GetCell(0, 1).Text != "NAME" || runtime.body.GetCell(0, 2).Text != "POWER" {
+		t.Fatalf("expected vm columns NAME/POWER after :cols set")
+	}
+	for columnIndex := 0; columnIndex < runtime.body.GetColumnCount(); columnIndex++ {
+		if runtime.body.GetCell(0, columnIndex).Text == "USED_CPU_PERCENT" {
+			t.Fatalf("did not expect hidden vm column after :cols set")
+		}
+	}
+
+	runtime.startPrompt(":host")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	runtime.startPrompt(":vm")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	if runtime.body.GetCell(0, 1).Text != "NAME" || runtime.body.GetCell(0, 2).Text != "POWER" {
+		t.Fatalf("expected per-view vm column selection to persist across view switches")
+	}
+
+	runtime.startPrompt(":cols reset")
+	runtime.handlePromptDone(tcell.KeyEnter)
+	runtime.renderTableWithWidth(500)
+	foundUsedCPU := false
+	for columnIndex := 0; columnIndex < runtime.body.GetColumnCount(); columnIndex++ {
+		if runtime.body.GetCell(0, columnIndex).Text == "USED_CPU_PERCENT" {
+			foundUsedCPU = true
+		}
+	}
+	if !foundUsedCPU {
+		t.Fatalf("expected vm full columns restored after :cols reset")
+	}
+}
+
 func TestRenderTopHeaderRightUsesMultilineASCIILogoBlock(t *testing.T) {
 	lines := strings.Split(renderTopHeaderRight(), "\n")
 	want := []string{

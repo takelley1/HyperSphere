@@ -279,6 +279,46 @@ func TestSessionRejectsInvalidActionAndHotkey(t *testing.T) {
 	}
 }
 
+func TestSessionVisibleColumnsPersistPerViewAndReset(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:   []VMRow{{Name: "vm-a", PowerState: "on", Cluster: "cluster-a"}},
+			Hosts: []HostRow{{Name: "esxi-01", Cluster: "cluster-a", ConnectionState: "connected"}},
+		},
+	)
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.SetVisibleColumns([]string{"NAME", "POWER"}); err != nil {
+		t.Fatalf("SetVisibleColumns returned error: %v", err)
+	}
+	if !reflect.DeepEqual(session.CurrentView().Columns, []string{"NAME", "POWER"}) {
+		t.Fatalf("expected narrowed vm columns, got %v", session.CurrentView().Columns)
+	}
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	if !reflect.DeepEqual(session.CurrentView().Columns, []string{"NAME", "POWER"}) {
+		t.Fatalf("expected vm column selection to persist, got %v", session.CurrentView().Columns)
+	}
+	if err := session.ResetVisibleColumns(); err != nil {
+		t.Fatalf("ResetVisibleColumns returned error: %v", err)
+	}
+	if findColumnIndex(session.CurrentView().Columns, "USED_CPU_PERCENT") == -1 {
+		t.Fatalf("expected reset to restore full vm columns, got %v", session.CurrentView().Columns)
+	}
+}
+
+func TestSessionSetVisibleColumnsRejectsUnknownColumn(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.SetVisibleColumns([]string{"NAME", "NOT_REAL"}); err == nil {
+		t.Fatalf("expected invalid column selection error")
+	}
+}
+
 func TestSelectedResourceDetailsForVMIncludesRequiredFields(t *testing.T) {
 	session := NewSession(
 		Catalog{

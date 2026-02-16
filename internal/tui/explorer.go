@@ -23,6 +23,8 @@ var (
 	ErrNoPreviousView = errors.New("no previous view")
 	// ErrReadOnly indicates write actions are blocked by read-only mode.
 	ErrReadOnly = errors.New("read-only mode")
+	// ErrInvalidColumns indicates a requested column set is invalid.
+	ErrInvalidColumns = errors.New("invalid columns")
 )
 
 // Resource identifies a table view namespace.
@@ -256,18 +258,19 @@ type Navigator struct {
 
 // Session tracks interactive table state for one active view.
 type Session struct {
-	navigator      Navigator
-	view           ResourceView
-	baseView       ResourceView
-	previousView   Resource
-	selectedRow    int
-	selectedColumn int
-	sortColumn     string
-	sortAsc        bool
-	filterText     string
-	readOnly       bool
-	marks          map[string]struct{}
-	markAnchor     int
+	navigator       Navigator
+	view            ResourceView
+	baseView        ResourceView
+	previousView    Resource
+	selectedRow     int
+	selectedColumn  int
+	sortColumn      string
+	sortAsc         bool
+	filterText      string
+	readOnly        bool
+	marks           map[string]struct{}
+	markAnchor      int
+	columnSelection map[Resource][]string
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -280,11 +283,12 @@ func NewSession(catalog Catalog) Session {
 	navigator := NewNavigator(catalog)
 	view, _ := navigator.TableFor(ResourceVM)
 	return Session{
-		navigator:  navigator,
-		view:       view,
-		baseView:   view,
-		marks:      map[string]struct{}{},
-		markAnchor: -1,
+		navigator:       navigator,
+		view:            view,
+		baseView:        view,
+		marks:           map[string]struct{}{},
+		markAnchor:      -1,
+		columnSelection: map[Resource][]string{},
 	}
 }
 
@@ -346,6 +350,10 @@ func (s *Session) ExecuteCommand(command string) error {
 	if err != nil {
 		return err
 	}
+	view, err = s.applyStoredColumns(view)
+	if err != nil {
+		return err
+	}
 	if s.view.Resource != view.Resource {
 		s.previousView = s.view.Resource
 	}
@@ -359,6 +367,62 @@ func (s *Session) ExecuteCommand(command string) error {
 	s.marks = map[string]struct{}{}
 	s.markAnchor = -1
 	return nil
+}
+
+// SetVisibleColumns sets the visible columns for the current view and persists the selection per view.
+func (s *Session) SetVisibleColumns(columns []string) error {
+	resource := s.view.Resource
+	fullView, err := s.navigator.TableFor(resource)
+	if err != nil {
+		return err
+	}
+	filteredView, normalized, err := selectVisibleColumns(fullView, columns)
+	if err != nil {
+		return err
+	}
+	s.columnSelection[resource] = normalized
+	s.view = filteredView
+	s.baseView = filteredView
+	s.sortColumn = ""
+	s.sortAsc = true
+	s.selectedColumn = clampSelectionIndex(s.selectedColumn, len(s.view.Columns))
+	if s.filterText != "" {
+		s.ApplyFilter(s.filterText)
+	}
+	return nil
+}
+
+// ResetVisibleColumns clears custom visible columns for the current view.
+func (s *Session) ResetVisibleColumns() error {
+	resource := s.view.Resource
+	delete(s.columnSelection, resource)
+	fullView, err := s.navigator.TableFor(resource)
+	if err != nil {
+		return err
+	}
+	s.view = fullView
+	s.baseView = fullView
+	s.sortColumn = ""
+	s.sortAsc = true
+	s.selectedColumn = clampSelectionIndex(s.selectedColumn, len(s.view.Columns))
+	if s.filterText != "" {
+		s.ApplyFilter(s.filterText)
+	}
+	return nil
+}
+
+// VisibleColumns returns the currently displayed columns.
+func (s *Session) VisibleColumns() []string {
+	return append([]string{}, s.view.Columns...)
+}
+
+// AvailableColumns returns the full column set for the active resource.
+func (s *Session) AvailableColumns() ([]string, error) {
+	fullView, err := s.navigator.TableFor(s.view.Resource)
+	if err != nil {
+		return nil, err
+	}
+	return append([]string{}, fullView.Columns...), nil
 }
 
 // HandleKey applies one k9s-inspired table hotkey.
@@ -1508,6 +1572,97 @@ func detailFieldsFromColumns(columns []string, row []string) []DetailField {
 func normalizeResourceName(name string) (Resource, bool) {
 	resource, ok := resourceAliasMap[strings.ToLower(strings.TrimSpace(name))]
 	return resource, ok
+}
+
+func (s *Session) applyStoredColumns(view ResourceView) (ResourceView, error) {
+	stored, ok := s.columnSelection[view.Resource]
+	if !ok {
+		return view, nil
+	}
+	filteredView, _, err := selectVisibleColumns(view, stored)
+	return filteredView, err
+}
+
+func selectVisibleColumns(view ResourceView, columns []string) (ResourceView, []string, error) {
+	normalized := normalizeColumnSelection(columns)
+	if len(normalized) == 0 {
+		return ResourceView{}, nil, fmt.Errorf("%w: empty selection", ErrInvalidColumns)
+	}
+	indexByColumn := map[string]int{}
+	for index, column := range view.Columns {
+		indexByColumn[strings.ToUpper(column)] = index
+	}
+	indexes := make([]int, 0, len(normalized))
+	for _, column := range normalized {
+		index, ok := indexByColumn[column]
+		if !ok {
+			return ResourceView{}, nil, fmt.Errorf("%w: unknown column %s", ErrInvalidColumns, column)
+		}
+		indexes = append(indexes, index)
+	}
+	rows := make([][]string, len(view.Rows))
+	for rowIndex, row := range view.Rows {
+		rows[rowIndex] = visibleColumnsRow(row, indexes)
+	}
+	return ResourceView{
+		Resource:    view.Resource,
+		Columns:     resolvedColumns(view.Columns, indexes),
+		Rows:        rows,
+		IDs:         append([]string{}, view.IDs...),
+		SortHotKeys: visibleSortHotKeys(view.SortHotKeys, resolvedColumns(view.Columns, indexes)),
+		Actions:     append([]string{}, view.Actions...),
+	}, normalized, nil
+}
+
+func visibleColumnsRow(row []string, indexes []int) []string {
+	visible := make([]string, len(indexes))
+	for index, columnIndex := range indexes {
+		if columnIndex >= 0 && columnIndex < len(row) {
+			visible[index] = row[columnIndex]
+		}
+	}
+	return visible
+}
+
+func normalizeColumnSelection(columns []string) []string {
+	normalized := make([]string, 0, len(columns))
+	seen := map[string]struct{}{}
+	for _, raw := range columns {
+		value := strings.ToUpper(strings.TrimSpace(raw))
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		normalized = append(normalized, value)
+	}
+	return normalized
+}
+
+func resolvedColumns(all []string, indexes []int) []string {
+	columns := make([]string, 0, len(indexes))
+	for _, index := range indexes {
+		if index >= 0 && index < len(all) {
+			columns = append(columns, all[index])
+		}
+	}
+	return columns
+}
+
+func visibleSortHotKeys(hotKeys map[string]string, visibleColumns []string) map[string]string {
+	visible := map[string]struct{}{}
+	for _, column := range visibleColumns {
+		visible[column] = struct{}{}
+	}
+	filtered := map[string]string{}
+	for key, column := range hotKeys {
+		if _, ok := visible[column]; ok {
+			filtered[key] = column
+		}
+	}
+	return filtered
 }
 
 // ResourceCommandAliases returns all supported resource aliases as colon commands.

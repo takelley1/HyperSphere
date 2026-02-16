@@ -580,9 +580,44 @@ func (r *explorerRuntime) handleLocalPromptCommand(line string) (string, bool) {
 		r.logObjectPath = ""
 		r.logTarget = ""
 		return fmt.Sprintf("view: %s", r.session.CurrentView().Resource), true
+	case ":cols", ":columns":
+		return handleColumnsPromptCommand(&r.session, fields, line), true
 	default:
 		return "", false
 	}
+}
+
+func handleColumnsPromptCommand(session *tui.Session, fields []string, raw string) string {
+	if len(fields) == 1 || strings.EqualFold(fields[1], "list") {
+		return "columns: " + strings.Join(session.VisibleColumns(), ",")
+	}
+	action := strings.ToLower(strings.TrimSpace(fields[1]))
+	if action == "reset" {
+		return statusFromError(session.ResetVisibleColumns(), "columns: reset")
+	}
+	if action != "set" {
+		return fmt.Sprintf("command error: %s", tui.ErrInvalidColumns)
+	}
+	selection := parseColumnSelection(raw)
+	return statusFromError(session.SetVisibleColumns(selection), "columns: "+strings.Join(selection, ","))
+}
+
+func parseColumnSelection(raw string) []string {
+	trimmed := strings.TrimSpace(raw)
+	lower := strings.ToLower(trimmed)
+	index := strings.Index(lower, " set ")
+	if index == -1 {
+		return nil
+	}
+	values := strings.Split(trimmed[index+len(" set "):], ",")
+	selection := make([]string, 0, len(values))
+	for _, value := range values {
+		column := strings.TrimSpace(value)
+		if column != "" {
+			selection = append(selection, column)
+		}
+	}
+	return selection
 }
 
 func resolveLogCommandArguments(
@@ -1596,8 +1631,12 @@ func isLocalPromptCommand(trimmed string) bool {
 	return value == ":table" ||
 		value == ":log" ||
 		value == ":logs" ||
+		value == ":cols" ||
+		value == ":columns" ||
 		strings.HasPrefix(value, ":log ") ||
-		strings.HasPrefix(value, ":logs ")
+		strings.HasPrefix(value, ":logs ") ||
+		strings.HasPrefix(value, ":cols ") ||
+		strings.HasPrefix(value, ":columns ")
 }
 
 func isPendingPromptInput(raw string, trimmed string) bool {

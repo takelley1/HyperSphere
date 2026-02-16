@@ -258,6 +258,63 @@ func TestStickyHeaderPersistsAcrossVerticalScroll(t *testing.T) {
 	}
 }
 
+func TestSessionColumnSelectionBranchCoverage(t *testing.T) {
+	session := NewSession(Catalog{
+		VMs: []VMRow{
+			{Name: "vm-a", PowerState: "on"},
+			{Name: "vm-b", PowerState: "off"},
+		},
+		Hosts: []HostRow{{Name: "esxi-01"}},
+	})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.ApplyFilter("vm-a")
+	if err := session.SetVisibleColumns([]string{" NAME ", "", "POWER", "POWER"}); err != nil {
+		t.Fatalf("SetVisibleColumns error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 1 {
+		t.Fatalf("expected filter to remain applied after SetVisibleColumns")
+	}
+	visible := session.VisibleColumns()
+	if len(visible) != 2 || visible[0] != "NAME" || visible[1] != "POWER" {
+		t.Fatalf("unexpected visible columns: %v", visible)
+	}
+	available, err := session.AvailableColumns()
+	if err != nil {
+		t.Fatalf("AvailableColumns error: %v", err)
+	}
+	if len(available) <= len(visible) {
+		t.Fatalf("expected available columns to include full view schema")
+	}
+	if err := session.ResetVisibleColumns(); err != nil {
+		t.Fatalf("ResetVisibleColumns error: %v", err)
+	}
+	if len(session.CurrentView().Rows) != 1 {
+		t.Fatalf("expected filter to remain applied after ResetVisibleColumns")
+	}
+	if err := session.SetVisibleColumns([]string{"", "   "}); err == nil {
+		t.Fatalf("expected invalid empty column selection")
+	}
+
+	session.view.Resource = Resource("unknown")
+	if _, err := session.AvailableColumns(); err == nil {
+		t.Fatalf("expected AvailableColumns error for unknown resource")
+	}
+	if err := session.SetVisibleColumns([]string{"NAME"}); err == nil {
+		t.Fatalf("expected SetVisibleColumns error for unknown resource")
+	}
+	if err := session.ResetVisibleColumns(); err == nil {
+		t.Fatalf("expected ResetVisibleColumns error for unknown resource")
+	}
+
+	session = NewSession(Catalog{Hosts: []HostRow{{Name: "esxi-01"}}})
+	session.columnSelection[ResourceHost] = []string{"NOT_REAL"}
+	if err := session.ExecuteCommand(":host"); err == nil {
+		t.Fatalf("expected ExecuteCommand error for invalid stored columns")
+	}
+}
+
 func manyVMRows(count int) []VMRow {
 	rows := make([]VMRow, 0, count)
 	for index := 0; index < count; index++ {
