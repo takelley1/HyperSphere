@@ -461,6 +461,7 @@
 - vSphere mapping: hierarchical navigation parity.
 - Acceptance: selecting drill-down updates breadcrumb trail and back-navigation
   restores parent view.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-039: Add `Shift+J` owner jump analog
 - vSphere mapping: jump from child object to parent owner.

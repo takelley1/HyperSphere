@@ -56,6 +56,123 @@ func TestSessionLastViewToggle(t *testing.T) {
 	}
 }
 
+func TestSessionBreadcrumbPathHierarchyAndLastView(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			VMs:         []VMRow{{Name: "vm-a", Cluster: "cluster-a", Host: "esxi-01"}},
+			Clusters:    []ClusterRow{{Name: "cluster-a", Datacenter: "dc-1"}},
+			Datacenters: []DatacenterRow{{Name: "dc-1"}},
+			Hosts:       []HostRow{{Name: "esxi-01", Cluster: "cluster-a"}},
+		},
+	)
+	if err := session.ExecuteCommand(":dc"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > dc-1" {
+		t.Fatalf("unexpected datacenter breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":cluster"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > dc-1 > cluster-a" {
+		t.Fatalf("unexpected cluster breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > dc-1 > cluster-a > esxi-01" {
+		t.Fatalf("unexpected host breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > dc-1 > cluster-a > esxi-01 > vm-a" {
+		t.Fatalf("unexpected vm breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.LastView(); err != nil {
+		t.Fatalf("LastView error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > dc-1 > cluster-a > esxi-01" {
+		t.Fatalf("unexpected breadcrumb after last view: %q", session.BreadcrumbPath())
+	}
+}
+
+func TestSessionBreadcrumbPathFallbackBranches(t *testing.T) {
+	missing := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "cluster-x", Host: "esxi-x"}}})
+	if err := missing.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if missing.BreadcrumbPath() != "home > cluster-x > esxi-x > vm-a" {
+		t.Fatalf("unexpected vm breadcrumb without datacenter mapping: %q", missing.BreadcrumbPath())
+	}
+	missing.view.IDs[0] = "missing-vm"
+	if missing.BreadcrumbPath() != "home > vm" {
+		t.Fatalf("unexpected vm lookup fallback breadcrumb: %q", missing.BreadcrumbPath())
+	}
+
+	empty := NewSession(Catalog{})
+	if err := empty.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if empty.BreadcrumbPath() != "home > vm" {
+		t.Fatalf("unexpected empty vm fallback breadcrumb: %q", empty.BreadcrumbPath())
+	}
+	if err := empty.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if empty.BreadcrumbPath() != "home > host" {
+		t.Fatalf("unexpected empty host fallback breadcrumb: %q", empty.BreadcrumbPath())
+	}
+	if err := empty.ExecuteCommand(":cluster"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if empty.BreadcrumbPath() != "home > cluster" {
+		t.Fatalf("unexpected empty cluster fallback breadcrumb: %q", empty.BreadcrumbPath())
+	}
+	if err := empty.ExecuteCommand(":dc"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if empty.BreadcrumbPath() != "home > datacenter" {
+		t.Fatalf("unexpected empty datacenter fallback breadcrumb: %q", empty.BreadcrumbPath())
+	}
+
+	session := NewSession(
+		Catalog{
+			Hosts:       []HostRow{{Name: "esxi-01", Cluster: "cluster-a"}},
+			Clusters:    []ClusterRow{{Name: "cluster-a", Datacenter: "dc-1"}},
+			Datacenters: []DatacenterRow{{Name: "dc-1"}},
+			LUNs:        []LUNRow{{Name: "lun-1", CapacityGB: 10, UsedGB: 2}},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.view.IDs[0] = "missing-host"
+	if session.BreadcrumbPath() != "home > host" {
+		t.Fatalf("unexpected host fallback breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":cluster"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.view.IDs[0] = "missing-cluster"
+	if session.BreadcrumbPath() != "home > cluster" {
+		t.Fatalf("unexpected cluster fallback breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":dc"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	session.view.IDs[0] = "missing-dc"
+	if session.BreadcrumbPath() != "home > datacenter" {
+		t.Fatalf("unexpected datacenter fallback breadcrumb: %q", session.BreadcrumbPath())
+	}
+	if err := session.ExecuteCommand(":lun"); err != nil {
+		t.Fatalf("ExecuteCommand error: %v", err)
+	}
+	if session.BreadcrumbPath() != "home > lun" {
+		t.Fatalf("unexpected default-resource breadcrumb: %q", session.BreadcrumbPath())
+	}
+}
+
 func TestSessionLastViewFailsWithoutHistory(t *testing.T) {
 	session := NewSession(Catalog{})
 	if err := session.LastView(); err == nil {

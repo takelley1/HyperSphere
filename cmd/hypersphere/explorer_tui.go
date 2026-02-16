@@ -747,7 +747,7 @@ func (r *explorerRuntime) renderTopHeaderWithWidth(width int) {
 		renderTopHeaderCenterWithContext(
 			r.logMode,
 			r.promptMode,
-			compactTopHeaderPath(r.crumbsless, r.session.CurrentView().Resource),
+			compactTopHeaderPath(r.crumbsless, r.session.BreadcrumbPath()),
 			compactTopHeaderStatus(r.status.GetText(true)),
 		),
 		"\n",
@@ -793,7 +793,7 @@ func (r *explorerRuntime) renderBreadcrumb() {
 	if r.crumbsless || r.breadcrumb == nil {
 		return
 	}
-	r.breadcrumb.SetText("home > " + string(r.session.CurrentView().Resource))
+	r.breadcrumb.SetText(r.session.BreadcrumbPath())
 }
 
 func (r *explorerRuntime) renderTable() {
@@ -1865,11 +1865,11 @@ func renderTopHeaderRight() string {
 	)
 }
 
-func compactTopHeaderPath(crumbsless bool, resource tui.Resource) string {
+func compactTopHeaderPath(crumbsless bool, path string) string {
 	if crumbsless {
 		return ""
 	}
-	return "home > " + string(resource)
+	return path
 }
 
 func compactTopHeaderStatus(status string) string {

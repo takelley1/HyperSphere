@@ -1269,7 +1269,7 @@ func TestNewExplorerRuntimeHeadlessOmitsTableHeader(t *testing.T) {
 
 func TestNewExplorerRuntimeRendersBreadcrumbByDefault(t *testing.T) {
 	runtime := newExplorerRuntimeWithRenderOptions(false, "host", false, false)
-	if !strings.Contains(runtime.breadcrumb.GetText(true), "home > host") {
+	if !strings.Contains(runtime.breadcrumb.GetText(true), "home > dc-1 > cluster-east > esxi-01") {
 		t.Fatalf("expected breadcrumb text to render active view")
 	}
 }
@@ -1293,13 +1293,13 @@ func TestNewExplorerRuntimeRemovesBottomHelpBarFromLayout(t *testing.T) {
 
 func TestNewExplorerRuntimeRendersPathAndStatusBelowCenterShortcuts(t *testing.T) {
 	runtime := newExplorerRuntime()
-	runtime.renderTopHeaderWithWidth(120)
+	runtime.renderTopHeaderWithWidth(200)
 	header := strings.ToLower(runtime.topHeader.GetText(false))
 	if !strings.Contains(header, "<shift+o> sort") {
 		t.Fatalf("expected center shortcuts in top header, got %q", header)
 	}
 	sortIndex := strings.Index(header, "<shift+o> sort")
-	pathIndex := strings.Index(header, "path: home > vm")
+	pathIndex := strings.Index(header, "path: home > dc-1 > cluster-east > esxi-01 > vm-a")
 	statusIndex := strings.Index(header, "status: ready")
 	if pathIndex == -1 || statusIndex == -1 {
 		t.Fatalf("expected compact path/status in top header, got %q", header)

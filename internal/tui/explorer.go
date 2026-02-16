@@ -555,6 +555,22 @@ func (s *Session) CurrentView() ResourceView {
 	return s.view
 }
 
+// BreadcrumbPath returns the hierarchical path for the selected row context.
+func (s *Session) BreadcrumbPath() string {
+	switch s.view.Resource {
+	case ResourceVM:
+		return s.vmBreadcrumbPath()
+	case ResourceHost:
+		return s.hostBreadcrumbPath()
+	case ResourceCluster:
+		return s.clusterBreadcrumbPath()
+	case ResourceDatacenter:
+		return s.datacenterBreadcrumbPath()
+	default:
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+}
+
 // SelectedResourceDetails builds describe-panel fields for the selected row.
 func (s *Session) SelectedResourceDetails() (ResourceDetails, error) {
 	id, rowIndex, err := s.selectedRowContext()
@@ -1728,6 +1744,108 @@ func findVMRowByID(rows []VMRow, id string) (VMRow, bool) {
 		}
 	}
 	return VMRow{}, false
+}
+
+func findHostRowByID(rows []HostRow, id string) (HostRow, bool) {
+	for _, row := range rows {
+		if row.Name == id {
+			return row, true
+		}
+	}
+	return HostRow{}, false
+}
+
+func findClusterRowByID(rows []ClusterRow, id string) (ClusterRow, bool) {
+	for _, row := range rows {
+		if row.Name == id {
+			return row, true
+		}
+	}
+	return ClusterRow{}, false
+}
+
+func findDatacenterRowByID(rows []DatacenterRow, id string) (DatacenterRow, bool) {
+	for _, row := range rows {
+		if row.Name == id {
+			return row, true
+		}
+	}
+	return DatacenterRow{}, false
+}
+
+func datacenterForCluster(rows []ClusterRow, cluster string) string {
+	for _, row := range rows {
+		if row.Name == cluster {
+			return row.Datacenter
+		}
+	}
+	return ""
+}
+
+func joinBreadcrumb(parts ...string) string {
+	filtered := make([]string, 0, len(parts))
+	for _, part := range parts {
+		value := strings.TrimSpace(part)
+		if value == "" {
+			continue
+		}
+		filtered = append(filtered, value)
+	}
+	return strings.Join(filtered, " > ")
+}
+
+func fallbackBreadcrumbPath(resource string) string {
+	return joinBreadcrumb("home", resource)
+}
+
+func (s *Session) vmBreadcrumbPath() string {
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	vm, ok := findVMRowByID(s.navigator.catalog.VMs, id)
+	if !ok {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	datacenter := datacenterForCluster(s.navigator.catalog.Clusters, vm.Cluster)
+	return joinBreadcrumb("home", datacenter, vm.Cluster, vm.Host, vm.Name)
+}
+
+func (s *Session) hostBreadcrumbPath() string {
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	host, ok := findHostRowByID(s.navigator.catalog.Hosts, id)
+	if !ok {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	datacenter := datacenterForCluster(s.navigator.catalog.Clusters, host.Cluster)
+	return joinBreadcrumb("home", datacenter, host.Cluster, host.Name)
+}
+
+func (s *Session) clusterBreadcrumbPath() string {
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	cluster, ok := findClusterRowByID(s.navigator.catalog.Clusters, id)
+	if !ok {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	return joinBreadcrumb("home", cluster.Datacenter, cluster.Name)
+}
+
+func (s *Session) datacenterBreadcrumbPath() string {
+	id, _, err := s.selectedRowContext()
+	if err != nil {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	datacenter, ok := findDatacenterRowByID(s.navigator.catalog.Datacenters, id)
+	if !ok {
+		return fallbackBreadcrumbPath(string(s.view.Resource))
+	}
+	return joinBreadcrumb("home", datacenter.Name)
 }
 
 func vmDetails(row VMRow) ResourceDetails {

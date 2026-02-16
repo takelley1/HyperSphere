@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-038 by adding hierarchical breadcrumb path
+  rendering (`home > dc > cluster > host > vm`) derived from selected row
+  context for datacenter/cluster/host/vm views.
+- Added failing-first coverage in `internal/tui/runtime_test.go` for breadcrumb
+  chain updates during drill-down and for `LastView` restoring parent path.
+- Updated runtime header and breadcrumb widgets in
+  `cmd/hypersphere/explorer_tui.go` to consume `Session.BreadcrumbPath()` and
+  added coverage in `cmd/hypersphere/explorer_tui_test.go`.
 - Implemented and fulfilled RQ-037 by adding the `:tag`/`:tags` view with
   columns `TAG`, `CATEGORY`, `CARDINALITY`, and `ATTACHED_OBJECTS`.
 - Added failing-first coverage in `internal/tui/command_test.go` and
