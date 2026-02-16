@@ -32,6 +32,17 @@
   integration coverage.
 
 ## 2026-02-15
+- Implemented RQ-015 Tab completion parity so pressing `Tab` in prompt mode
+  always applies the first suggestion when suggestions exist, including
+  whitespace-normalization cases.
+- Added failing-first runtime coverage in
+  `cmd/hypersphere/explorer_tui_test.go` to verify Tab completion updates
+  prompt input text to canonical suggestion index `0`.
+- Updated `cmd/hypersphere/explorer_tui.go` completion behavior to compare the
+  full input value (not only trimmed input) before deciding no-op completion.
+- Marked `RQ-015` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed prompt Tab-accept sub-task.
+
 - Implemented RQ-012 `ctrl-a` alias palette behavior in the explorer runtime.
 - Added failing-first runtime tests in `cmd/hypersphere/explorer_tui_test.go` to validate `ctrl-a` palette open behavior, sorted alias ordering, and alias-command execution.
 - Added an alias palette modal to `cmd/hypersphere/explorer_tui.go` with explicit open/close state tracking and selection handlers that execute the selected `:alias` command.

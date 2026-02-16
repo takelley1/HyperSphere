@@ -94,6 +94,7 @@
 ### RQ-015: Add tab-complete acceptance of first suggestion
 - vSphere mapping: k9s-like prompt completion flow.
 - Acceptance: pressing `Tab` on a non-empty suggestion list accepts index 0 and updates input text.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-016: Add inline prompt validation state
 - vSphere mapping: immediate feedback for invalid view/action/filter syntax.

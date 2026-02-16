@@ -145,6 +145,16 @@ func TestHandlePromptHistoryTabCompletesPrompt(t *testing.T) {
 	}
 }
 
+func TestHandlePromptHistoryTabNormalizesPromptToFirstSuggestion(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.prompt.SetText(":vm ")
+	evt := tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone)
+	_ = runtime.handlePromptHistory(evt)
+	if runtime.prompt.GetText() != ":vm" {
+		t.Fatalf("expected prompt text normalized to first suggestion, got %q", runtime.prompt.GetText())
+	}
+}
+
 func TestHelpModalToggleWithQuestionAndEscape(t *testing.T) {
 	runtime := newExplorerRuntime()
 	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone))

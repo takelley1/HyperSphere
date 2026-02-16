@@ -45,7 +45,6 @@
 - [ ] Add alias-registry parse error surfacing in prompt status and startup status.
 - [ ] Add alias-registry hot-reload command for iterative alias editing.
 - [ ] Add integration coverage for help-modal lifecycle across view switches.
-- [ ] Add tab-accept behavior for first prompt suggestion.
 - [ ] Add `:ctx` completion hints for configured endpoint names.
 - [ ] Add context switch status badge to the header metadata area.
 - [ ] Add prompt validation for unknown `:ctx` endpoint names before submit.

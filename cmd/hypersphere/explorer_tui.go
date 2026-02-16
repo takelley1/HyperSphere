@@ -534,7 +534,7 @@ func applyPromptCompletion(
 	if len(suggestions) == 0 {
 		return text, "", false
 	}
-	if strings.TrimSpace(text) == suggestions[0] {
+	if text == suggestions[0] {
 		return text, "", false
 	}
 	return suggestions[0], "completion: " + suggestions[0], true
