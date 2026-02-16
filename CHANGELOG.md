@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-048 by adding per-action cancellation support
+  through `Session.CancelLastAction`, with terminal `cancelled` state recording
+  when backend cancellation succeeds.
+- Added failing-first coverage in `internal/tui/session_test.go` for successful
+  cancellation transitions and no-prior-action rejection behavior.
 - Implemented and fulfilled RQ-047 by adding task-like action transition
   tracking in `Session.ApplyAction` with timestamped
   `queued -> running -> success|failure` lifecycle states.

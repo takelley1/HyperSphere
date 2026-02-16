@@ -22,6 +22,20 @@ func (f *fakeExecutor) Execute(resource Resource, action string, ids []string) e
 	return f.err
 }
 
+type fakeCanceler struct {
+	resource Resource
+	action   string
+	ids      []string
+	err      error
+}
+
+func (f *fakeCanceler) Cancel(resource Resource, action string, ids []string) error {
+	f.resource = resource
+	f.action = action
+	f.ids = append([]string{}, ids...)
+	return f.err
+}
+
 func TestVMViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(Catalog{VMs: []VMRow{{Name: "vm-a", Tags: "prod", Cluster: "c1", PowerState: "on", Datastore: "ds-1", Owner: "a@example.com"}}})
 	view, err := navigator.Execute(":vm")
@@ -384,6 +398,69 @@ func TestSessionApplyActionRecordsFailureTransition(t *testing.T) {
 	}
 	if transitions[2].Status != "failure" {
 		t.Fatalf("expected terminal failure transition, got %q", transitions[2].Status)
+	}
+}
+
+func TestSessionCancelLastActionRecordsCancelledTransition(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("ApplyAction returned error: %v", err)
+	}
+	canceler := &fakeCanceler{}
+	if err := session.CancelLastAction(canceler); err != nil {
+		t.Fatalf("CancelLastAction returned error: %v", err)
+	}
+	transitions := session.ActionTransitions()
+	if transitions[len(transitions)-1].Status != "cancelled" {
+		t.Fatalf("expected terminal cancelled transition, got %q", transitions[len(transitions)-1].Status)
+	}
+	if canceler.action != "power-on" || len(canceler.ids) != 1 || canceler.ids[0] != "vm-a" {
+		t.Fatalf("expected cancel request context to match last action")
+	}
+}
+
+func TestSessionCancelLastActionReturnsErrorWhenUnsupported(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	canceler := &fakeCanceler{}
+	if err := session.CancelLastAction(canceler); err == nil {
+		t.Fatalf("expected cancel error when no prior action request exists")
+	}
+}
+
+func TestSessionCancelLastActionReturnsErrorWhenCancelerUnavailable(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("ApplyAction returned error: %v", err)
+	}
+	if err := session.CancelLastAction(nil); err == nil {
+		t.Fatalf("expected cancel error when canceler is nil")
+	}
+}
+
+func TestSessionCancelLastActionPropagatesCancelerError(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("ApplyAction returned error: %v", err)
+	}
+	canceler := &fakeCanceler{err: errors.New("cancel failed")}
+	if err := session.CancelLastAction(canceler); err == nil {
+		t.Fatalf("expected canceler error to be returned")
+	}
+	transitions := session.ActionTransitions()
+	if transitions[len(transitions)-1].Status == "cancelled" {
+		t.Fatalf("did not expect cancelled transition when canceler returns error")
 	}
 }
 

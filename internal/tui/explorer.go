@@ -324,10 +324,21 @@ type ActionExecutor interface {
 	Execute(resource Resource, action string, ids []string) error
 }
 
+// ActionCanceler cancels a previously started action when supported by backend.
+type ActionCanceler interface {
+	Cancel(resource Resource, action string, ids []string) error
+}
+
 // Navigator handles command-mode resource switching.
 type Navigator struct {
 	catalog Catalog
 	active  Resource
+}
+
+type actionRequest struct {
+	resource Resource
+	action   string
+	ids      []string
 }
 
 // Session tracks interactive table state for one active view.
@@ -347,6 +358,8 @@ type Session struct {
 	columnSelection map[Resource][]string
 	transitions     []ActionTransition
 	now             func() time.Time
+	lastAction      actionRequest
+	hasLastAction   bool
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -367,6 +380,8 @@ func NewSession(catalog Catalog) Session {
 		columnSelection: map[Resource][]string{},
 		transitions:     []ActionTransition{},
 		now:             time.Now,
+		lastAction:      actionRequest{},
+		hasLastAction:   false,
 	}
 }
 
@@ -573,6 +588,12 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	if len(ids) == 0 {
 		return fmt.Errorf("%w: no selected rows", ErrInvalidAction)
 	}
+	s.lastAction = actionRequest{
+		resource: s.view.Resource,
+		action:   normalized,
+		ids:      append([]string{}, ids...),
+	}
+	s.hasLastAction = true
 	s.recordTransition(normalized, "queued")
 	s.recordTransition(normalized, "running")
 	if err := executor.Execute(s.view.Resource, normalized, ids); err != nil {
@@ -586,6 +607,22 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 // ActionTransitions returns the recorded action lifecycle transitions.
 func (s *Session) ActionTransitions() []ActionTransition {
 	return append([]ActionTransition{}, s.transitions...)
+}
+
+// CancelLastAction requests cancellation for the most recent action.
+func (s *Session) CancelLastAction(canceler ActionCanceler) error {
+	if !s.hasLastAction {
+		return fmt.Errorf("%w: no pending action", ErrInvalidAction)
+	}
+	if canceler == nil {
+		return fmt.Errorf("%w: canceler unavailable", ErrInvalidAction)
+	}
+	request := s.lastAction
+	if err := canceler.Cancel(request.resource, request.action, request.ids); err != nil {
+		return err
+	}
+	s.recordTransition(request.action, "cancelled")
+	return nil
 }
 
 // CurrentView returns the current table snapshot.

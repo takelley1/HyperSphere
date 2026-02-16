@@ -517,6 +517,7 @@
 ### RQ-048: Add per-action cancellation support
 - vSphere mapping: cancel migrates/snapshot tasks where API supports cancel.
 - Acceptance: cancel request updates task state to `cancelled` when backend supports it.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-049: Add per-action timeout policy
 - vSphere mapping: avoid hung operations.
