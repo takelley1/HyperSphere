@@ -136,6 +136,7 @@
 ### RQ-023: Add compact mode for narrow terminals
 - vSphere mapping: prioritized columns for VM/host/datastore views.
 - Acceptance: when width is below threshold, only compact column set renders per resource.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-024: Add row focus sync from mouse click
 - vSphere mapping: mixed mouse/keyboard parity.
@@ -572,6 +573,10 @@
 - vSphere mapping: objective release gates.
 - Acceptance: checklist includes required pass criteria for tests, benchmarks,
   docs, and parity matrix.
+
+### RQ-901: Add all hotkeys, controls, commands, etc. to the ? menu
+- vSphere mapping: objective release gates.
+- Acceptance: ? menu includes list of all controls, commands, and hotkeys
 
 ## Suggested Delivery Order
 - Phase 1: RQ-001 to RQ-027 (CLI + command/table interaction baseline).

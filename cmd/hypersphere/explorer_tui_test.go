@@ -109,7 +109,7 @@ func TestRenderTableWithWidthRecalculatesAndPreservesFixedColumns(t *testing.T) 
 
 func TestRenderTableWithWidthShowsOverflowMarkersForHiddenColumns(t *testing.T) {
 	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
-	runtime.renderTableWithWidth(16)
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 1)
 
 	title := runtime.body.GetTitle()
 	if strings.Contains(title, "◀") {
@@ -120,7 +120,7 @@ func TestRenderTableWithWidthShowsOverflowMarkersForHiddenColumns(t *testing.T) 
 	}
 
 	runtime.body.SetOffset(0, 1)
-	runtime.renderTableWithWidth(16)
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 1)
 	title = runtime.body.GetTitle()
 	if !strings.Contains(title, "◀") || !strings.Contains(title, "▶") {
 		t.Fatalf("expected left and right overflow markers after horizontal offset, got %q", title)
@@ -136,6 +136,45 @@ func TestRenderTableWithWidthHidesOverflowMarkersWhenAllColumnsVisible(t *testin
 	title := runtime.body.GetTitle()
 	if strings.Contains(title, "◀") || strings.Contains(title, "▶") {
 		t.Fatalf("did not expect overflow markers when all columns fit, got %q", title)
+	}
+}
+
+func TestRenderTableWithWidthUsesResourceCompactColumnsOnNarrowWidths(t *testing.T) {
+	testCases := []struct {
+		command string
+		want    []string
+	}{
+		{command: "vm", want: []string{"NAME", "POWER", "DATASTORE"}},
+		{command: "lun", want: []string{"NAME", "DATASTORE", "USED_GB"}},
+		{command: "cluster", want: []string{"NAME", "HOSTS", "VMS"}},
+		{command: "host", want: []string{"NAME", "CLUSTER", "CONNECTION"}},
+		{command: "datastore", want: []string{"NAME", "CLUSTER", "FREE_GB"}},
+	}
+	for _, tc := range testCases {
+		runtime := newExplorerRuntimeWithStartupCommand(false, tc.command)
+		runtime.renderTableWithWidth(compactModeWidthThreshold - 1)
+		if runtime.body.GetColumnCount() != len(tc.want)+1 {
+			t.Fatalf(
+				"expected compact column count %d for %s, got %d",
+				len(tc.want)+1,
+				tc.command,
+				runtime.body.GetColumnCount(),
+			)
+		}
+		if runtime.body.GetCell(0, 0).Text != "SEL" {
+			t.Fatalf("expected marker header to remain present for %s", tc.command)
+		}
+		for index, expected := range tc.want {
+			if runtime.body.GetCell(0, index+1).Text != expected {
+				t.Fatalf(
+					"expected compact header %q at index %d for %s, got %q",
+					expected,
+					index+1,
+					tc.command,
+					runtime.body.GetCell(0, index+1).Text,
+				)
+			}
+		}
 	}
 }
 
@@ -517,6 +556,7 @@ func TestNewExplorerRuntimeWithStartupCommandSelectsInitialView(t *testing.T) {
 	if runtime.session.CurrentView().Resource != tui.ResourceHost {
 		t.Fatalf("expected startup command host to set host view")
 	}
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 1)
 	if runtime.body.GetCell(0, 2).Text != "TAGS" {
 		t.Fatalf("expected host table to render immediately for startup command")
 	}

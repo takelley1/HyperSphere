@@ -15,8 +15,17 @@ import (
 
 const defaultPromptHistorySize = 200
 const minAutosizeColumnWidth = 3
+const compactModeWidthThreshold = 15
 const explorerTableTitle = "HyperSphere Explorer"
 const fixedTableColumns = 1
+
+var compactColumnsByResource = map[tui.Resource][]string{
+	tui.ResourceVM:        {"NAME", "POWER", "DATASTORE"},
+	tui.ResourceLUN:       {"NAME", "DATASTORE", "USED_GB"},
+	tui.ResourceCluster:   {"NAME", "HOSTS", "VMS"},
+	tui.ResourceHost:      {"NAME", "CLUSTER", "CONNECTION"},
+	tui.ResourceDatastore: {"NAME", "CLUSTER", "FREE_GB"},
+}
 
 type explorerRuntime struct {
 	app          *tview.Application
@@ -467,8 +476,9 @@ func (r *explorerRuntime) renderTable() {
 
 func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	includeHeader := !r.headless
-	rows := tableRows(r.session.CurrentView(), r.session.IsMarked, includeHeader)
-	widths := autosizedColumnWidths(r.session.CurrentView(), rows, availableWidth)
+	view := compactViewForWidth(r.session.CurrentView(), availableWidth)
+	rows := tableRows(view, r.session.IsMarked, includeHeader)
+	widths := autosizedColumnWidths(view, rows, availableWidth)
 	_, columnOffset := r.body.GetOffset()
 	leftOverflow, rightOverflow := tableOverflowMarkers(
 		widths,
@@ -495,8 +505,79 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
 	}
-	selectedRow, selectedColumn := selectionForTable(r.session, includeHeader)
+	selectedRow, selectedColumn := selectionForRenderedView(r.session, view, includeHeader)
 	r.body.Select(selectedRow, selectedColumn)
+}
+
+func compactViewForWidth(view tui.ResourceView, availableWidth int) tui.ResourceView {
+	if availableWidth <= 0 || availableWidth >= compactModeWidthThreshold {
+		return view
+	}
+	columns, ok := compactColumnsByResource[view.Resource]
+	if !ok {
+		return view
+	}
+	return selectCompactColumns(view, columns)
+}
+
+func selectCompactColumns(view tui.ResourceView, columns []string) tui.ResourceView {
+	indexes, resolved := compactColumnIndexes(view.Columns, columns)
+	if len(indexes) == 0 {
+		return view
+	}
+	rows := make([][]string, len(view.Rows))
+	for rowIndex, row := range view.Rows {
+		rows[rowIndex] = compactRow(row, indexes)
+	}
+	return tui.ResourceView{
+		Resource:    view.Resource,
+		Columns:     resolved,
+		Rows:        rows,
+		IDs:         append([]string{}, view.IDs...),
+		SortHotKeys: appendSortHotKeys(view.SortHotKeys),
+		Actions:     append([]string{}, view.Actions...),
+	}
+}
+
+func compactColumnIndexes(all []string, wanted []string) ([]int, []string) {
+	indexes := make([]int, 0, len(wanted))
+	resolved := make([]string, 0, len(wanted))
+	for _, name := range wanted {
+		index := indexOfColumn(all, name)
+		if index < 0 {
+			continue
+		}
+		indexes = append(indexes, index)
+		resolved = append(resolved, name)
+	}
+	return indexes, resolved
+}
+
+func compactRow(row []string, indexes []int) []string {
+	compact := make([]string, len(indexes))
+	for index, columnIndex := range indexes {
+		if columnIndex >= 0 && columnIndex < len(row) {
+			compact[index] = row[columnIndex]
+		}
+	}
+	return compact
+}
+
+func appendSortHotKeys(values map[string]string) map[string]string {
+	copyValues := make(map[string]string, len(values))
+	for key, value := range values {
+		copyValues[key] = value
+	}
+	return copyValues
+}
+
+func indexOfColumn(columns []string, name string) int {
+	for index, column := range columns {
+		if column == name {
+			return index
+		}
+	}
+	return -1
 }
 
 func tableAvailableWidth(table *tview.Table) int {
@@ -698,7 +779,14 @@ func maxInt(left int, right int) int {
 }
 
 func selectionForTable(session tui.Session, includeHeader bool) (int, int) {
-	view := session.CurrentView()
+	return selectionForRenderedView(session, session.CurrentView(), includeHeader)
+}
+
+func selectionForRenderedView(
+	session tui.Session,
+	view tui.ResourceView,
+	includeHeader bool,
+) (int, int) {
 	row := session.SelectedRow()
 	if includeHeader {
 		row++
