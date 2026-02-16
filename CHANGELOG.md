@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Added screenshot-driven visual parity requirements (RQ-092 to RQ-106) to
+  define the target k9s-style look for HyperSphere.
+- Added atomic UI requirements for header zoning, cyan framing, centered title
+  dividers, palette mapping, row status coloring, and log-view formatting.
+- Updated delivery phases so screenshot visual parity is implemented before
+  broader resource and action surface expansion.
+- Added matching short-term `DESIGN.md` tasks for header layout and screenshot
+  baseline style parity.
 - Removed periodic 1-second explorer redraw loop and switched to input-driven rendering to reduce flicker/stutter.
 - Removed footer realtime clock to avoid forced full-screen repaint cadence unrelated to user interaction.
 - Added cmd-level regression test to keep footer clock-free for event-driven redraw behavior.

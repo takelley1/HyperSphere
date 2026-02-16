@@ -1,0 +1,53 @@
+[lint]
+# See https://docs.astral.sh/ruff/rules
+select = [
+    "A",
+    "ARG",
+    "B",
+    "C4",
+    "COM",
+    "D",
+    "DJ",
+    "DTZ",
+    "E",
+    "EXE",
+    "F",
+    "FA",
+    "FIX",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "INP",
+    "INT",
+    "ISC",
+    "LOG",
+    "N",
+    "PERF",
+    "PGH",
+    "PGH",
+    "PIE",
+    "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLOT",
+    "TRY",
+    "UP",
+    "W"
+]
+
+ignore = [
+    # Missing trailing comma.
+    "COM812",
+    "D203",
+    "D213",
+    # Module level import not at top of file
+    "E402",
+    # Line length
+    "E501"
+]
