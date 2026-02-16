@@ -54,6 +54,7 @@ const (
 	ResourceDatastore  Resource = "datastore"
 	ResourcePulse      Resource = "pulse"
 	ResourceXRay       Resource = "xray"
+	ResourcePerf       Resource = "perf"
 )
 
 var resourceAliasMap = map[string]Resource{
@@ -99,6 +100,8 @@ var resourceAliasMap = map[string]Resource{
 	"pulses":        ResourcePulse,
 	"xray":          ResourceXRay,
 	"xr":            ResourceXRay,
+	"perf":          ResourcePerf,
+	"benchmark":     ResourcePerf,
 }
 
 // VMRow represents one VM row in the resource table.
@@ -501,6 +504,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return pulseView(n.catalog), true
 	case ResourceXRay:
 		return xrayView(n.catalog, 1), true
+	case ResourcePerf:
+		return perfView(n.catalog.Tasks), true
 	default:
 		return ResourceView{}, false
 	}
@@ -1340,6 +1345,57 @@ func xrayView(catalog Catalog, depth int) ResourceView {
 	}
 }
 
+func perfView(tasks []TaskRow) ResourceView {
+	columns := []string{"ACTION", "P50_DURATION", "P95_DURATION", "SUCCESS_RATE"}
+	type taskStats struct {
+		durations []int
+		successes int
+		total     int
+	}
+	statsByAction := map[string]*taskStats{}
+	for _, task := range tasks {
+		action := strings.TrimSpace(task.Action)
+		if action == "" {
+			action = "unknown"
+		}
+		stats, ok := statsByAction[action]
+		if !ok {
+			stats = &taskStats{}
+			statsByAction[action] = stats
+		}
+		stats.durations = append(stats.durations, parseDurationSeconds(task.Duration))
+		stats.total++
+		if strings.EqualFold(strings.TrimSpace(task.State), "success") {
+			stats.successes++
+		}
+	}
+	actions := make([]string, 0, len(statsByAction))
+	for action := range statsByAction {
+		actions = append(actions, action)
+	}
+	sort.Strings(actions)
+	rows := make([][]string, 0, len(actions))
+	for _, action := range actions {
+		stats := statsByAction[action]
+		sort.Ints(stats.durations)
+		row := []string{
+			action,
+			fmt.Sprintf("%ds", percentile(stats.durations, 50)),
+			fmt.Sprintf("%ds", percentile(stats.durations, 95)),
+			fmt.Sprintf("%d%%", successRate(stats.successes, stats.total)),
+		}
+		rows = append(rows, row)
+	}
+	return ResourceView{
+		Resource:    ResourcePerf,
+		Columns:     columns,
+		Rows:        rows,
+		IDs:         actions,
+		SortHotKeys: map[string]string{},
+		Actions:     []string{"refresh"},
+	}
+}
+
 func buildView[T any](
 	resource Resource,
 	columns []string,
@@ -1632,6 +1688,38 @@ func xrayRows(catalog Catalog, depth int) [][]string {
 		})
 	}
 	return rows
+}
+
+func parseDurationSeconds(value string) int {
+	parsed, err := time.ParseDuration(strings.TrimSpace(value))
+	if err != nil {
+		return 0
+	}
+	return int(parsed / time.Second)
+}
+
+func percentile(sortedValues []int, percent int) int {
+	if len(sortedValues) == 0 {
+		return 0
+	}
+	if len(sortedValues) == 1 {
+		return sortedValues[0]
+	}
+	index := (percent*(len(sortedValues)-1) + 99) / 100
+	if index < 0 {
+		index = 0
+	}
+	if index >= len(sortedValues) {
+		index = len(sortedValues) - 1
+	}
+	return sortedValues[index]
+}
+
+func successRate(successes int, total int) int {
+	if total <= 0 {
+		return 0
+	}
+	return (successes*100 + total/2) / total
 }
 
 func defaultCell(value string) string {

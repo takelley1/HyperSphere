@@ -602,6 +602,7 @@
 ### RQ-064: Add benchmark/perf panel for heavy operations
 - vSphere mapping: action duration and throughput metrics.
 - Acceptance: panel shows p50/p95 duration and success rate for selected action type.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-065: Add event watch mode
 - vSphere mapping: continuous vCenter event tailing.

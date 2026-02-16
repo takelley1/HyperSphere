@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-064 by adding a `:perf` panel that aggregates
+  task history into per-action p50/p95 duration and success-rate metrics.
+- Added failing-first coverage in `internal/tui/session_test.go` for perf panel
+  columns and expected percentile/success-rate calculations.
 - Implemented and fulfilled RQ-063 by adding a `Shift+F` fault toggle hotkey
   that filters current tables to degraded/fault-signaled rows and restores the
   full row set on the next toggle.

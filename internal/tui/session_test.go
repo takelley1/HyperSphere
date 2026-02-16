@@ -345,6 +345,64 @@ func TestRowHasFaultSignalMatchesKeywordsAndCleanRows(t *testing.T) {
 	}
 }
 
+func TestPerfViewShowsPercentilesAndSuccessRateByActionType(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Tasks: []TaskRow{
+				{Action: "power-off", State: "success", Duration: "10s"},
+				{Action: "power-off", State: "error", Duration: "30s"},
+				{Action: "power-off", State: "success", Duration: "20s"},
+				{Action: "migrate", State: "success", Duration: "40s"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":perf")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	wantColumns := []string{"ACTION", "P50_DURATION", "P95_DURATION", "SUCCESS_RATE"}
+	if !reflect.DeepEqual(view.Columns, wantColumns) {
+		t.Fatalf("unexpected perf columns: got %v want %v", view.Columns, wantColumns)
+	}
+	if len(view.Rows) != 2 {
+		t.Fatalf("expected two action rows in perf view, got %d", len(view.Rows))
+	}
+	if !reflect.DeepEqual(view.Rows[1], []string{"power-off", "20s", "30s", "67%"}) {
+		t.Fatalf("unexpected power-off perf row: %v", view.Rows[1])
+	}
+}
+
+func TestPerfHelpersHandleEdgeCases(t *testing.T) {
+	if value := parseDurationSeconds("invalid"); value != 0 {
+		t.Fatalf("expected invalid duration parse to return 0, got %d", value)
+	}
+	if value := percentile(nil, 95); value != 0 {
+		t.Fatalf("expected empty percentile to return 0, got %d", value)
+	}
+	if value := percentile([]int{7}, 95); value != 7 {
+		t.Fatalf("expected single-value percentile to return element, got %d", value)
+	}
+	if value := percentile([]int{1, 2, 3}, 500); value != 3 {
+		t.Fatalf("expected high percentile to clamp to max, got %d", value)
+	}
+	if value := percentile([]int{1, 2, 3}, -200); value != 1 {
+		t.Fatalf("expected low percentile to clamp to min, got %d", value)
+	}
+	if value := successRate(0, 0); value != 0 {
+		t.Fatalf("expected zero total success rate to be zero, got %d", value)
+	}
+}
+
+func TestPerfViewUsesUnknownActionForBlankTaskAction(t *testing.T) {
+	view := perfView([]TaskRow{{Action: "", State: "success", Duration: "1s"}})
+	if len(view.Rows) != 1 {
+		t.Fatalf("expected single perf row for unknown action, got %d", len(view.Rows))
+	}
+	if view.Rows[0][0] != "unknown" {
+		t.Fatalf("expected blank action to map to unknown, got %q", view.Rows[0][0])
+	}
+}
+
 func TestResourcePoolViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
