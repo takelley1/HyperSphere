@@ -1678,13 +1678,13 @@ func renderTopHeaderCenter(logMode bool, promptMode bool) string {
 func renderTopHeaderRight() string {
 	return strings.Join(
 		[]string{
-			"          .-''''''''-.          ",
-			"      .-''  .-''''-.  ''-.      ",
-			"    .'    .'  .--.  '.    '.    ",
-			"   /    .'   ( () )   '.    \\   ",
-			"  ;    |   .-\\_  _/-.   |    ;  ",
-			"  |    |  (___/\\___)    |    |  ",
-			"  ';    '.   '--'    .'    ;'   ",
+			"            +--------+          ",
+			"           /|       /|          ",
+			"          +--------+ |          ",
+			"          | +------+ |          ",
+			"          |/       |/           ",
+			"          +--------+            ",
+			"            TESSERACT           ",
 		},
 		"\n",
 	)

@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Updated the top-right ASCII logo to a tesseract-inspired wireframe design so
+  the HyperSphere mark reads as 4D geometry instead of stylized text.
+- Updated failing-first header-logo expectations in
+  `cmd/hypersphere/explorer_tui_test.go` for the new tesseract shape while
+  retaining right-zone clipping/alignment coverage.
 - Implemented RQ-105 log viewport controls with deterministic shortcuts for
   `Top`, `Bottom`, `PageUp`, and `PageDown` in log mode.
 - Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` for
