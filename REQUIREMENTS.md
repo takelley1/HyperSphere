@@ -79,6 +79,7 @@
 ### RQ-012: Add `ctrl-a` alias palette
 - vSphere mapping: browse all resource aliases/shortcuts.
 - Acceptance: palette lists aliases sorted alphabetically and executes selected alias command.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-013: Add command alias registry file
 - vSphere mapping: user-defined aliases for `:vm`, `:host`, `:ds`, etc.

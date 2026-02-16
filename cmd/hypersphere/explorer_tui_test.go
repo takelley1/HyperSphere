@@ -159,6 +159,37 @@ func TestHelpModalToggleWithQuestionAndEscape(t *testing.T) {
 	}
 }
 
+func TestAliasPaletteOpensOnCtrlAWithSortedAliases(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyCtrlA, 0, tcell.ModCtrl))
+	if !runtime.isAliasPaletteOpen() {
+		t.Fatalf("expected alias palette to open on ctrl-a")
+	}
+	if len(runtime.aliasEntries) == 0 {
+		t.Fatalf("expected alias entries to be populated")
+	}
+	for index := 1; index < len(runtime.aliasEntries); index++ {
+		if runtime.aliasEntries[index-1] > runtime.aliasEntries[index] {
+			t.Fatalf("expected aliases sorted alphabetically: %v", runtime.aliasEntries)
+		}
+	}
+}
+
+func TestAliasPaletteSelectionExecutesAliasCommand(t *testing.T) {
+	runtime := newExplorerRuntime()
+	runtime.openAliasPalette()
+	runtime.handleAliasSelection(0, ":host")
+	if runtime.session.CurrentView().Resource != tui.ResourceHost {
+		t.Fatalf("expected alias selection to switch to host view")
+	}
+	if runtime.isAliasPaletteOpen() {
+		t.Fatalf("expected alias palette to close after selection")
+	}
+	if !strings.Contains(runtime.status.GetText(true), "view: host") {
+		t.Fatalf("expected status to report selected alias execution")
+	}
+}
+
 func TestRenderFooterOmitsClockForEventDrivenRedraw(t *testing.T) {
 	footer := renderFooter(true)
 	clock := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\b`)

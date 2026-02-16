@@ -16,25 +16,28 @@ import (
 const defaultPromptHistorySize = 200
 
 type explorerRuntime struct {
-	app         *tview.Application
-	session     tui.Session
-	promptState tui.PromptState
-	actionExec  *runtimeActionExecutor
-	contexts    runtimeContextManager
-	headless    bool
-	crumbsless  bool
-	theme       explorerTheme
-	pages       *tview.Pages
-	layout      *tview.Flex
-	helpModal   *tview.Modal
-	body        *tview.Table
-	breadcrumb  *tview.TextView
-	status      *tview.TextView
-	prompt      *tview.InputField
-	footer      *tview.TextView
-	promptMode  bool
-	helpOpen    bool
-	helpText    string
+	app          *tview.Application
+	session      tui.Session
+	promptState  tui.PromptState
+	actionExec   *runtimeActionExecutor
+	contexts     runtimeContextManager
+	headless     bool
+	crumbsless   bool
+	theme        explorerTheme
+	pages        *tview.Pages
+	layout       *tview.Flex
+	helpModal    *tview.Modal
+	aliasModal   *tview.Modal
+	body         *tview.Table
+	breadcrumb   *tview.TextView
+	status       *tview.TextView
+	prompt       *tview.InputField
+	footer       *tview.TextView
+	aliasEntries []string
+	promptMode   bool
+	helpOpen     bool
+	aliasOpen    bool
+	helpText     string
 }
 
 type runtimeActionExecutor struct {
@@ -165,6 +168,7 @@ func newExplorerRuntimeWithRenderOptions(
 		theme:       readTheme(),
 		pages:       tview.NewPages(),
 		helpModal:   tview.NewModal(),
+		aliasModal:  tview.NewModal(),
 		body:        tview.NewTable(),
 		breadcrumb:  tview.NewTextView(),
 		status:      tview.NewTextView(),
@@ -210,6 +214,12 @@ func (r *explorerRuntime) configureWidgets() {
 	r.footer.SetTitle(" Help ")
 	r.helpModal.SetBorder(true)
 	r.helpModal.SetTitle(" Keymap Help ")
+	r.aliasEntries = tui.ResourceCommandAliases()
+	r.aliasModal.SetBorder(true)
+	r.aliasModal.SetTitle(" Alias Palette ")
+	r.aliasModal.SetText("Select a resource alias")
+	r.aliasModal.AddButtons(r.aliasEntries)
+	r.aliasModal.SetDoneFunc(r.handleAliasSelection)
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(r.body, 0, 1, true).
@@ -221,6 +231,7 @@ func (r *explorerRuntime) configureWidgets() {
 	r.layout = layout
 	r.pages.AddPage("main", layout, true, true)
 	r.pages.AddPage("help", r.helpModal, true, false)
+	r.pages.AddPage("alias", r.aliasModal, true, false)
 	r.app.SetRoot(r.pages, true)
 	r.app.SetFocus(r.body)
 }
@@ -242,8 +253,18 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 	}
+	if r.aliasOpen {
+		if evt.Key() == tcell.KeyEscape {
+			r.closeAliasPalette()
+		}
+		return nil
+	}
 	if r.promptMode {
 		return evt
+	}
+	if evt.Key() == tcell.KeyCtrlA {
+		r.openAliasPalette()
+		return nil
 	}
 	if evt.Key() == tcell.KeyRune && evt.Rune() == '?' {
 		r.openHelpModal()
@@ -280,6 +301,29 @@ func (r *explorerRuntime) closeHelpModal() {
 
 func (r *explorerRuntime) isHelpModalOpen() bool {
 	return r.helpOpen
+}
+
+func (r *explorerRuntime) openAliasPalette() {
+	r.pages.ShowPage("alias")
+	r.aliasOpen = true
+}
+
+func (r *explorerRuntime) closeAliasPalette() {
+	r.pages.HidePage("alias")
+	r.aliasOpen = false
+}
+
+func (r *explorerRuntime) isAliasPaletteOpen() bool {
+	return r.aliasOpen
+}
+
+func (r *explorerRuntime) handleAliasSelection(_ int, buttonLabel string) {
+	r.closeAliasPalette()
+	message := statusFromError(
+		r.session.ExecuteCommand(buttonLabel),
+		"view: "+strings.TrimPrefix(buttonLabel, ":"),
+	)
+	r.render(message)
 }
 
 func (r *explorerRuntime) handlePromptDone(key tcell.Key) {

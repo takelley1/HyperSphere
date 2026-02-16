@@ -42,11 +42,11 @@
 - [ ] Add contextual completion list rendering for view/action/filter commands.
 - [ ] Add ghost-text suggestion preview while typing in prompt mode.
 - [ ] Add integration coverage for help-modal lifecycle across view switches.
-- [ ] Add `ctrl-a` alias palette to browse and execute command shortcuts.
 - [ ] Add tab-accept behavior for first prompt suggestion.
 - [ ] Add `:ctx` completion hints for configured endpoint names.
 - [ ] Add context switch status badge to the header metadata area.
 - [ ] Add prompt validation for unknown `:ctx` endpoint names before submit.
+- [ ] Add integration coverage for alias-palette lifecycle (`ctrl-a`, `Esc`, alias execution).
 
 ## Medium-Term Goals
 

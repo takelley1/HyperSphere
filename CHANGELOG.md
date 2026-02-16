@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-012 `ctrl-a` alias palette behavior in the explorer runtime.
+- Added failing-first runtime tests in `cmd/hypersphere/explorer_tui_test.go` to validate `ctrl-a` palette open behavior, sorted alias ordering, and alias-command execution.
+- Added an alias palette modal to `cmd/hypersphere/explorer_tui.go` with explicit open/close state tracking and selection handlers that execute the selected `:alias` command.
+- Refactored resource alias handling to a canonical alias map in `internal/tui/explorer.go` and reused it from prompt suggestion generation in `internal/tui/prompt.go`.
+- Updated `DESIGN.md` by removing the completed `ctrl-a` palette sub-task and adding follow-on integration coverage for alias-palette lifecycle behavior.
+- Marked `RQ-012` as fulfilled in `REQUIREMENTS.md`.
 - Implemented RQ-011 `?` key behavior to open a keymap help modal in explorer runtime and close it with `Esc`.
 - Added failing-first cmd-level coverage in `cmd/hypersphere/explorer_tui_test.go` for help modal open/close lifecycle and action-content rendering.
 - Refactored runtime root layout to use `tview.Pages` with a dedicated help modal page and explicit modal state tracking.

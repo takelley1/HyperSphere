@@ -36,6 +36,21 @@ const (
 	ResourceDatastore Resource = "datastore"
 )
 
+var resourceAliasMap = map[string]Resource{
+	"vm":         ResourceVM,
+	"vms":        ResourceVM,
+	"lun":        ResourceLUN,
+	"luns":       ResourceLUN,
+	"cluster":    ResourceCluster,
+	"clusters":   ResourceCluster,
+	"cl":         ResourceCluster,
+	"host":       ResourceHost,
+	"hosts":      ResourceHost,
+	"datastore":  ResourceDatastore,
+	"datastores": ResourceDatastore,
+	"ds":         ResourceDatastore,
+}
+
 // VMRow represents one VM row in the resource table.
 type VMRow struct {
 	Name       string
@@ -830,20 +845,18 @@ func rowMatchesFilter(row []string, filter string) bool {
 }
 
 func normalizeResourceName(name string) (Resource, bool) {
-	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "vm", "vms":
-		return ResourceVM, true
-	case "lun", "luns":
-		return ResourceLUN, true
-	case "cluster", "clusters", "cl":
-		return ResourceCluster, true
-	case "host", "hosts":
-		return ResourceHost, true
-	case "datastore", "datastores", "ds":
-		return ResourceDatastore, true
-	default:
-		return "", false
+	resource, ok := resourceAliasMap[strings.ToLower(strings.TrimSpace(name))]
+	return resource, ok
+}
+
+// ResourceCommandAliases returns all supported resource aliases as colon commands.
+func ResourceCommandAliases() []string {
+	aliases := make([]string, 0, len(resourceAliasMap))
+	for alias := range resourceAliasMap {
+		aliases = append(aliases, ":"+alias)
 	}
+	sort.Strings(aliases)
+	return aliases
 }
 
 type tableRow struct {
