@@ -340,6 +340,7 @@ func defaultCatalog() tui.Catalog {
 		Events:        defaultEventRows(),
 		Alarms:        defaultAlarmRows(),
 		Folders:       defaultFolderRows(),
+		Tags:          defaultTagRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -471,6 +472,17 @@ func defaultFolderRows() []tui.FolderRow {
 		{Path: "/Datacenters/dc-3/vm/Edge", Type: "vm-folder", Children: 2, VMCount: 17},
 		{Path: "/Datacenters/dc-1/host/Compute", Type: "host-folder", Children: 4, VMCount: 0},
 		{Path: "/Datacenters/dc-2/network/Distributed", Type: "network-folder", Children: 7, VMCount: 0},
+	}
+}
+
+func defaultTagRows() []tui.TagRow {
+	return []tui.TagRow{
+		{Tag: "env:prod", Category: "environment", Cardinality: "single", AttachedObjects: 74},
+		{Tag: "env:dev", Category: "environment", Cardinality: "single", AttachedObjects: 53},
+		{Tag: "tier:gold", Category: "service-tier", Cardinality: "single", AttachedObjects: 38},
+		{Tag: "tier:silver", Category: "service-tier", Cardinality: "single", AttachedObjects: 47},
+		{Tag: "backup:daily", Category: "backup-policy", Cardinality: "multiple", AttachedObjects: 26},
+		{Tag: "compliance:pci", Category: "compliance", Cardinality: "multiple", AttachedObjects: 12},
 	}
 }
 

@@ -34,6 +34,7 @@ func TestParseExplorerInputKinds(t *testing.T) {
 		{line: ":event", kind: CommandView, value: "event"},
 		{line: ":alarm", kind: CommandView, value: "alarm"},
 		{line: ":folder", kind: CommandView, value: "folder"},
+		{line: ":tag", kind: CommandView, value: "tag"},
 		{line: ":ds", kind: CommandView, value: "datastore"},
 		{line: "!power-off", kind: CommandAction, value: "power-off"},
 		{line: "shift+o", kind: CommandHotKey, value: "SHIFT+O"},

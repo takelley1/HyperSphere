@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-037 by adding the `:tag`/`:tags` view with
+  columns `TAG`, `CATEGORY`, `CARDINALITY`, and `ATTACHED_OBJECTS`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for tag alias parsing and tag view column
+  rendering.
+- Extended `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded tag rows
+  and added browse-dataset assertions in `cmd/hypersphere/main_test.go`.
 - Implemented and fulfilled RQ-036 by adding the `:folder`/`:folders` view
   with columns `PATH`, `TYPE`, `CHILDREN`, and `VM_COUNT`.
 - Added failing-first coverage in `internal/tui/command_test.go` and

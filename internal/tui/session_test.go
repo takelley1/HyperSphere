@@ -235,6 +235,24 @@ func TestFolderViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestTagViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Tags: []TagRow{
+				{Tag: "env:prod", Category: "environment", Cardinality: "single", AttachedObjects: 74},
+			},
+		},
+	)
+	view, err := navigator.Execute(":tag")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"TAG", "CATEGORY", "CARDINALITY", "ATTACHED_OBJECTS"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected tag columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 	navigator := NewNavigator(Catalog{
 		VMs:           []VMRow{{Name: "vm-a"}},
@@ -249,6 +267,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		Events:        []EventRow{{Time: "2026-02-16T00:00:00Z", Severity: "info", Entity: "vm-a", Message: "vm powered on", User: "ops@example.com"}},
 		Alarms:        []AlarmRow{{Entity: "vm-a", Alarm: "CPU usage high", Status: "yellow", Triggered: "2026-02-16T00:00:00Z", AckedBy: "ops@example.com"}},
 		Folders:       []FolderRow{{Path: "/Datacenters/dc-1/vm/Prod", Type: "vm-folder", Children: 4, VMCount: 23}},
+		Tags:          []TagRow{{Tag: "env:prod", Category: "environment", Cardinality: "single", AttachedObjects: 74}},
 		Hosts:         []HostRow{{Name: "host-a", CoreCount: 24, ThreadCount: 48, VMCount: 50}},
 		Datastores:    []DatastoreRow{{Name: "ds-a", CapacityGB: 1000, UsedGB: 600, FreeGB: 400, Type: "vsan", LatencyMS: 3}},
 	})
@@ -268,6 +287,7 @@ func TestExpandedColumnsArePresentForEveryResourceView(t *testing.T) {
 		{command: ":event", column: "MESSAGE"},
 		{command: ":alarm", column: "ACKED_BY"},
 		{command: ":folder", column: "VM_COUNT"},
+		{command: ":tag", column: "ATTACHED_OBJECTS"},
 		{command: ":host", column: "THREADS"},
 		{command: ":datastore", column: "LATENCY_MS"},
 	}

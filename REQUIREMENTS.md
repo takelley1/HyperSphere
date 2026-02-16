@@ -453,6 +453,7 @@
 ### RQ-037: Add `:tag` view
 - vSphere mapping: tag/category management parity.
 - Acceptance: view columns include `TAG`, `CATEGORY`, `CARDINALITY`, `ATTACHED_OBJECTS`.
+- Status: fulfilled (2026-02-16).
 
 ## Navigation Depth and Context
 

@@ -43,6 +43,7 @@ const (
 	ResourceEvent      Resource = "event"
 	ResourceAlarm      Resource = "alarm"
 	ResourceFolder     Resource = "folder"
+	ResourceTag        Resource = "tag"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -79,6 +80,8 @@ var resourceAliasMap = map[string]Resource{
 	"alarms":        ResourceAlarm,
 	"folder":        ResourceFolder,
 	"folders":       ResourceFolder,
+	"tag":           ResourceTag,
+	"tags":          ResourceTag,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -232,6 +235,14 @@ type FolderRow struct {
 	VMCount  int
 }
 
+// TagRow represents one tag/category row in the resource table.
+type TagRow struct {
+	Tag             string
+	Category        string
+	Cardinality     string
+	AttachedObjects int
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -271,6 +282,7 @@ type Catalog struct {
 	Events        []EventRow
 	Alarms        []AlarmRow
 	Folders       []FolderRow
+	Tags          []TagRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -395,6 +407,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return alarmView(n.catalog.Alarms), true
 	case ResourceFolder:
 		return folderView(n.catalog.Folders), true
+	case ResourceTag:
+		return tagView(n.catalog.Tags), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -914,6 +928,11 @@ func folderView(rows []FolderRow) ResourceView {
 	return buildView(ResourceFolder, columns, folderSortHotKeys(), folderActions(), rows, folderCells)
 }
 
+func tagView(rows []TagRow) ResourceView {
+	columns := []string{"TAG", "CATEGORY", "CARDINALITY", "ATTACHED_OBJECTS"}
+	return buildView(ResourceTag, columns, tagSortHotKeys(), tagActions(), rows, tagCells)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{
 		"NAME",
@@ -1142,6 +1161,15 @@ func folderCells(row FolderRow) (string, []string) {
 	}
 }
 
+func tagCells(row TagRow) (string, []string) {
+	return defaultCell(row.Tag), []string{
+		defaultCell(row.Tag),
+		defaultCell(row.Category),
+		defaultCell(row.Cardinality),
+		strconv.Itoa(row.AttachedObjects),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{
 		row.Name,
@@ -1324,6 +1352,15 @@ func folderSortHotKeys() map[string]string {
 	}
 }
 
+func tagSortHotKeys() map[string]string {
+	return map[string]string{
+		"T": "TAG",
+		"C": "CATEGORY",
+		"R": "CARDINALITY",
+		"A": "ATTACHED_OBJECTS",
+	}
+}
+
 func hostSortHotKeys() map[string]string {
 	return map[string]string{
 		"N": "NAME",
@@ -1401,6 +1438,10 @@ func alarmActions() []string {
 
 func folderActions() []string {
 	return []string{"open", "rename"}
+}
+
+func tagActions() []string {
+	return []string{"assign", "unassign"}
 }
 
 func datastoreActions() []string {
