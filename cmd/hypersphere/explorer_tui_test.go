@@ -231,6 +231,44 @@ func TestEventToHotKeyVimColumnMovement(t *testing.T) {
 	}
 }
 
+func TestHandleGlobalKeyCtrlWTogglesWideColumnsAndPreservesSelectedIdentity(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	if err := runtime.session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("expected row move to succeed: %v", err)
+	}
+	selectedID := runtime.session.CurrentView().IDs[runtime.session.SelectedRow()]
+	wideWidth := compactModeWidthThreshold + 10
+	runtime.renderTableWithWidth(wideWidth)
+	defaultColumns := runtime.body.GetColumnCount()
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyCtrlW, 0, tcell.ModCtrl))
+	runtime.renderTableWithWidth(wideWidth)
+
+	narrowColumns := runtime.body.GetColumnCount()
+	if narrowColumns >= defaultColumns {
+		t.Fatalf(
+			"expected ctrl-w to switch to fewer columns, got default=%d toggled=%d",
+			defaultColumns,
+			narrowColumns,
+		)
+	}
+	currentID := runtime.session.CurrentView().IDs[runtime.session.SelectedRow()]
+	if currentID != selectedID {
+		t.Fatalf("expected selected id to stay %q, got %q", selectedID, currentID)
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyCtrlW, 0, tcell.ModCtrl))
+	runtime.renderTableWithWidth(wideWidth)
+
+	if runtime.body.GetColumnCount() != defaultColumns {
+		t.Fatalf(
+			"expected second ctrl-w toggle to restore default columns %d, got %d",
+			defaultColumns,
+			runtime.body.GetColumnCount(),
+		)
+	}
+}
+
 func TestReadThemeRespectsNoColor(t *testing.T) {
 	t.Setenv("NO_COLOR", "1")
 	theme := readTheme()

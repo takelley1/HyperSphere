@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-026 `ctrl-w` wide-column toggle parity in the explorer runtime.
+- Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`
+  to verify schema toggling and selected-row identity preservation across toggles.
+- Updated `cmd/hypersphere/explorer_tui.go` to map `ctrl-w`, switch between
+  standard and wide column schemas, and keep the selected object stable.
+- Marked `RQ-026` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `ctrl-w` sub-tasks and adding the
+  next `ctrl-e` header-toggle follow-on sub-tasks.
 - Implemented RQ-025 mark-count badge parity by rendering header mark totals as
   `Marks[n]` and updating the count after mark, unmark, and clear flows.
 - Added failing-first runtime coverage in `internal/tui/runtime_test.go` to

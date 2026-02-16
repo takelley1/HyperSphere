@@ -151,6 +151,7 @@
 ### RQ-026: Add `ctrl-w` wide-column toggle
 - vSphere mapping: switch between standard and extended column sets.
 - Acceptance: toggling key changes table schema and preserves selected object identity.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-027: Add `ctrl-e` header visibility toggle
 - vSphere mapping: high-density terminal mode.

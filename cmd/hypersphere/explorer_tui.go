@@ -51,6 +51,7 @@ type explorerRuntime struct {
 	aliasOpen    bool
 	helpText     string
 	lastWidth    int
+	wideColumns  bool
 }
 
 type runtimeActionExecutor struct {
@@ -187,6 +188,7 @@ func newExplorerRuntimeWithRenderOptions(
 		status:      tview.NewTextView(),
 		prompt:      tview.NewInputField(),
 		footer:      tview.NewTextView(),
+		wideColumns: true,
 	}
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
@@ -321,9 +323,26 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	if !ok {
 		return evt
 	}
+	if command == "CTRL+W" {
+		r.toggleWideColumns()
+		r.render("")
+		return nil
+	}
 	r.emitStatus(r.session.HandleKey(command))
 	r.render("")
 	return nil
+}
+
+func (r *explorerRuntime) toggleWideColumns() {
+	selectedID := selectedIDForRow(r.session.CurrentView(), r.session.SelectedRow())
+	r.wideColumns = !r.wideColumns
+	if selectedID == "" {
+		return
+	}
+	nextRow := rowIndexForID(r.session.CurrentView(), selectedID)
+	if nextRow >= 0 {
+		r.session.SetSelection(nextRow, r.session.SelectedColumn())
+	}
 }
 
 func (r *explorerRuntime) openHelpModal() {
@@ -485,7 +504,8 @@ func (r *explorerRuntime) renderTable() {
 
 func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	includeHeader := !r.headless
-	view := compactViewForWidth(r.session.CurrentView(), availableWidth)
+	view := viewForColumnMode(r.session.CurrentView(), r.wideColumns)
+	view = compactViewForWidth(view, availableWidth)
 	rows := tableRows(view, r.session.IsMarked, includeHeader)
 	widths := autosizedColumnWidths(view, rows, availableWidth)
 	_, columnOffset := r.body.GetOffset()
@@ -516,6 +536,33 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 	}
 	selectedRow, selectedColumn := selectionForRenderedView(r.session, view, includeHeader)
 	r.body.Select(selectedRow, selectedColumn)
+}
+
+func selectedIDForRow(view tui.ResourceView, row int) string {
+	if row < 0 || row >= len(view.IDs) {
+		return ""
+	}
+	return view.IDs[row]
+}
+
+func rowIndexForID(view tui.ResourceView, id string) int {
+	for index, candidate := range view.IDs {
+		if candidate == id {
+			return index
+		}
+	}
+	return -1
+}
+
+func viewForColumnMode(view tui.ResourceView, wideColumns bool) tui.ResourceView {
+	if wideColumns {
+		return view
+	}
+	columns, ok := compactColumnsByResource[view.Resource]
+	if !ok {
+		return view
+	}
+	return selectCompactColumns(view, columns)
 }
 
 func compactViewForWidth(view tui.ResourceView, availableWidth int) tui.ResourceView {
@@ -1138,6 +1185,9 @@ func isQuitEvent(evt *tcell.EventKey) bool {
 }
 
 func eventToHotKey(evt *tcell.EventKey) (string, bool) {
+	if evt.Key() == tcell.KeyCtrlW {
+		return "CTRL+W", true
+	}
 	if evt.Key() == tcell.KeyCtrlSpace {
 		return "CTRL+SPACE", true
 	}
