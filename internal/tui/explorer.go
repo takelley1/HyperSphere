@@ -331,6 +331,10 @@ type ActionCanceler interface {
 	Cancel(resource Resource, action string, ids []string) error
 }
 
+type retriableError interface {
+	Retriable() bool
+}
+
 // Navigator handles command-mode resource switching.
 type Navigator struct {
 	catalog Catalog
@@ -363,6 +367,7 @@ type Session struct {
 	lastAction      actionRequest
 	hasLastAction   bool
 	actionTimeouts  map[string]time.Duration
+	actionRetries   map[string]int
 }
 
 // NewNavigator builds a command navigator with a VM default view.
@@ -386,6 +391,7 @@ func NewSession(catalog Catalog) Session {
 		lastAction:      actionRequest{},
 		hasLastAction:   false,
 		actionTimeouts:  map[string]time.Duration{},
+		actionRetries:   map[string]int{},
 	}
 }
 
@@ -600,17 +606,23 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 	s.hasLastAction = true
 	s.recordTransition(normalized, "queued")
 	s.recordTransition(normalized, "running")
-	started := s.now()
-	if err := executor.Execute(s.view.Resource, normalized, ids); err != nil {
-		s.recordTransition(normalized, "failure")
-		return err
+	retryLimit := s.actionRetryLimit(normalized)
+	for attempt := 0; ; attempt++ {
+		started := s.now()
+		execErr := executor.Execute(s.view.Resource, normalized, ids)
+		if execErr == nil {
+			if timeout, ok := s.actionTimeout(normalized); ok && s.now().Sub(started) > timeout {
+				execErr = fmt.Errorf("%w: %s", ErrActionTimeout, normalized)
+			} else {
+				s.recordTransition(normalized, "success")
+				return nil
+			}
+		}
+		if !isRetriableError(execErr) || attempt >= retryLimit {
+			s.recordTransition(normalized, "failure")
+			return execErr
+		}
 	}
-	if timeout, ok := s.actionTimeout(normalized); ok && s.now().Sub(started) > timeout {
-		s.recordTransition(normalized, "failure")
-		return fmt.Errorf("%w: %s", ErrActionTimeout, normalized)
-	}
-	s.recordTransition(normalized, "success")
-	return nil
 }
 
 // ActionTransitions returns the recorded action lifecycle transitions.
@@ -645,6 +657,19 @@ func (s *Session) SetActionTimeout(action string, timeout time.Duration) {
 		return
 	}
 	s.actionTimeouts[normalized] = timeout
+}
+
+// SetActionRetryLimit sets retriable retry attempts beyond the initial action call.
+func (s *Session) SetActionRetryLimit(action string, retries int) {
+	normalized := strings.ToLower(strings.TrimSpace(action))
+	if normalized == "" {
+		return
+	}
+	if retries <= 0 {
+		delete(s.actionRetries, normalized)
+		return
+	}
+	s.actionRetries[normalized] = retries
 }
 
 // CurrentView returns the current table snapshot.
@@ -1826,6 +1851,22 @@ func (s *Session) recordTransition(action string, status string) {
 func (s *Session) actionTimeout(action string) (time.Duration, bool) {
 	timeout, ok := s.actionTimeouts[action]
 	return timeout, ok
+}
+
+func (s *Session) actionRetryLimit(action string) int {
+	retries, ok := s.actionRetries[action]
+	if !ok {
+		return 0
+	}
+	return retries
+}
+
+func isRetriableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var retriable retriableError
+	return errors.As(err, &retriable) && retriable.Retriable()
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {

@@ -527,6 +527,7 @@
 ### RQ-050: Add retry policy wiring
 - vSphere mapping: transient vCenter/API failures.
 - Acceptance: retriable error retries up to policy limit; non-retriable error fails immediately.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-051: Add destructive-action confirmation dialogs
 - vSphere mapping: power-off/delete/snapshot-remove safeguards.

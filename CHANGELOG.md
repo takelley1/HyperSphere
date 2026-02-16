@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-050 by wiring per-action retry policies for
+  retriable errors, while keeping non-retriable failures immediate.
+- Added failing-first coverage in `internal/tui/session_test.go` for retry
+  limit behavior across retriable and non-retriable error flows.
 - Implemented and fulfilled RQ-049 by wiring per-action timeout policies into
   action execution, marking timed-out actions as `failure` with timeout errors.
 - Added failing-first coverage in `internal/tui/session_test.go` for timeout

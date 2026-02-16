@@ -14,13 +14,33 @@ type fakeExecutor struct {
 	action   string
 	ids      []string
 	err      error
+	errors   []error
+	calls    int
 }
 
 func (f *fakeExecutor) Execute(resource Resource, action string, ids []string) error {
 	f.resource = resource
 	f.action = action
 	f.ids = append([]string{}, ids...)
+	f.calls++
+	if len(f.errors) > 0 {
+		err := f.errors[0]
+		f.errors = f.errors[1:]
+		return err
+	}
 	return f.err
+}
+
+type retriableExecutorError struct {
+	message string
+}
+
+func (e retriableExecutorError) Error() string {
+	return e.message
+}
+
+func (e retriableExecutorError) Retriable() bool {
+	return true
 }
 
 type fakeCanceler struct {
@@ -505,6 +525,84 @@ func TestSessionSetActionTimeoutBranchCoverage(t *testing.T) {
 	session.SetActionTimeout("   ", time.Second)
 	if len(session.actionTimeouts) != 0 {
 		t.Fatalf("expected empty action name to be ignored")
+	}
+}
+
+func TestSessionApplyActionRetriesRetriableErrorsUpToLimit(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.SetActionRetryLimit("power-on", 1)
+	executor := &fakeExecutor{
+		errors: []error{
+			retriableExecutorError{message: "temporary"},
+			nil,
+		},
+	}
+	if err := session.ApplyAction("power-on", executor); err != nil {
+		t.Fatalf("expected retry flow to succeed, got error: %v", err)
+	}
+	if executor.calls != 2 {
+		t.Fatalf("expected two execution attempts, got %d", executor.calls)
+	}
+}
+
+func TestSessionApplyActionDoesNotRetryNonRetriableError(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.SetActionRetryLimit("power-on", 3)
+	executor := &fakeExecutor{
+		errors: []error{
+			errors.New("fatal"),
+		},
+	}
+	if err := session.ApplyAction("power-on", executor); err == nil {
+		t.Fatalf("expected non-retriable error")
+	}
+	if executor.calls != 1 {
+		t.Fatalf("expected one execution attempt for non-retriable error, got %d", executor.calls)
+	}
+}
+
+func TestSessionApplyActionStopsAfterRetryLimitExhausted(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
+	if err := session.ExecuteCommand(":vm"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	session.SetActionRetryLimit("power-on", 1)
+	executor := &fakeExecutor{
+		errors: []error{
+			retriableExecutorError{message: "temporary-1"},
+			retriableExecutorError{message: "temporary-2"},
+		},
+	}
+	if err := session.ApplyAction("power-on", executor); err == nil {
+		t.Fatalf("expected retry exhaustion error")
+	}
+	if executor.calls != 2 {
+		t.Fatalf("expected two attempts when retry limit is one, got %d", executor.calls)
+	}
+}
+
+func TestSessionSetActionRetryLimitBranchCoverage(t *testing.T) {
+	session := NewSession(Catalog{})
+	session.SetActionRetryLimit("power-on", 2)
+	if retries, ok := session.actionRetries["power-on"]; !ok || retries != 2 {
+		t.Fatalf("expected action retry policy to be stored")
+	}
+	session.SetActionRetryLimit("power-on", 0)
+	if _, ok := session.actionRetries["power-on"]; ok {
+		t.Fatalf("expected non-positive retry limit to remove retry policy")
+	}
+	session.SetActionRetryLimit("   ", 1)
+	if len(session.actionRetries) != 0 {
+		t.Fatalf("expected empty action name to be ignored")
+	}
+	if isRetriableError(nil) {
+		t.Fatalf("expected nil error to not be retriable")
 	}
 }
 
