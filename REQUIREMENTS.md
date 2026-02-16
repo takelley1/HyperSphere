@@ -141,6 +141,7 @@
 ### RQ-024: Add row focus sync from mouse click
 - vSphere mapping: mixed mouse/keyboard parity.
 - Acceptance: clicking a row updates internal selection state used by hotkeys and action targets.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-025: Add mark count badge in header
 - vSphere mapping: bulk action confidence.

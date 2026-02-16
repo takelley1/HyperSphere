@@ -253,9 +253,18 @@ func (r *explorerRuntime) configureWidgets() {
 func (r *explorerRuntime) configureHandlers() {
 	r.app.SetInputCapture(r.handleGlobalKey)
 	r.app.SetBeforeDrawFunc(r.handleScreenResize)
+	r.body.SetSelectionChangedFunc(r.handleTableSelectionChanged)
 	r.prompt.SetDoneFunc(r.handlePromptDone)
 	r.prompt.SetInputCapture(r.handlePromptHistory)
 	r.prompt.SetChangedFunc(r.handlePromptChanged)
+}
+
+func (r *explorerRuntime) handleTableSelectionChanged(row int, column int) {
+	selectedRow := row
+	if !r.headless {
+		selectedRow--
+	}
+	r.session.SetSelection(selectedRow, column-1)
 }
 
 func (r *explorerRuntime) handleScreenResize(screen tcell.Screen) bool {

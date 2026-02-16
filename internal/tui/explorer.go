@@ -295,6 +295,12 @@ func (s *Session) SelectedColumn() int {
 	return s.selectedColumn
 }
 
+// SetSelection updates focused row and column with bounds clamping.
+func (s *Session) SetSelection(row int, column int) {
+	s.selectedRow = clampSelectionIndex(row, len(s.view.Rows))
+	s.selectedColumn = clampSelectionIndex(column, len(s.view.Columns))
+}
+
 // IsMarked reports whether a specific row ID is marked.
 func (s *Session) IsMarked(id string) bool {
 	_, ok := s.marks[id]
@@ -859,6 +865,19 @@ func filterView(view ResourceView, filter string) ResourceView {
 		}
 	}
 	return filtered
+}
+
+func clampSelectionIndex(value int, length int) int {
+	if length == 0 {
+		return 0
+	}
+	if value < 0 {
+		return 0
+	}
+	if value >= length {
+		return length - 1
+	}
+	return value
 }
 
 func rowMatchesFilter(row []string, filter string) bool {

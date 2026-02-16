@@ -50,6 +50,23 @@ func TestSelectionForTableOffsetsHeaderAndMarkerColumns(t *testing.T) {
 	}
 }
 
+func TestHandleTableSelectionChangedSyncsSessionSelectionForHotkeys(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	clickedID := runtime.session.CurrentView().IDs[1]
+
+	runtime.handleTableSelectionChanged(2, 1)
+
+	if runtime.session.SelectedRow() != 1 {
+		t.Fatalf("expected selected row 1 after click, got %d", runtime.session.SelectedRow())
+	}
+	if err := runtime.session.HandleKey("SPACE"); err != nil {
+		t.Fatalf("HandleKey error: %v", err)
+	}
+	if !runtime.session.IsMarked(clickedID) {
+		t.Fatalf("expected clicked row id %q to be marked", clickedID)
+	}
+}
+
 func TestAutosizedColumnWidthsPreserveFixedPriorityColumns(t *testing.T) {
 	view := tui.ResourceView{
 		Resource: tui.ResourceVM,

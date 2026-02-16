@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-024 row-focus sync parity by wiring table selection-change events to session selection state.
+- Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go` to verify click-selected rows become hotkey/action targets.
+- Added `Session.SetSelection` clamping support in `internal/tui/explorer.go` and internal coverage for in-range, negative, high, and empty-view bounds.
+- Marked `RQ-024` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing the completed mouse selection-sync item and adding follow-on selection-sync integration subtasks.
 - Implemented RQ-022 overflow indicator parity so the explorer table title renders
   left/right markers (`◀`/`▶`) only when additional columns are off-screen.
 - Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`

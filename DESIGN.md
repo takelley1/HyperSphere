@@ -9,7 +9,6 @@
 - [ ] Sub-task: add integration coverage for `--crumbsless` with startup view routing.
 
 ### Table Widget Parity
-- [ ] Sync table focus from mouse selection back into session row/column state.
 - [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
 - [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
@@ -17,12 +16,12 @@
 - [ ] Sub-task: add integration coverage for repeated terminal resize width changes.
 - [ ] Sub-task: add integration coverage for overflow markers across column-offset transitions.
 - [ ] Sub-task: surface overflow markers in screenshot-baseline frame/title styling.
+- [ ] Sub-task: add selection-sync integration coverage for headless mode table clicks.
+- [ ] Sub-task: add mouse click row-selection behavior for mixed compact/non-compact views.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.
 - [ ] Add monochrome fallback indicators for status and power-state cells.
-- [ ] Add narrow-terminal compact mode with prioritized column sets per resource.
-- [ ] Add horizontal scrolling indicators when columns overflow.
 - [ ] Add optional unicode/ASCII symbol mode for compatibility across terminals.
 - [ ] Add screenshot-baseline palette preset (black canvas, cyan frames, yellow/cyan accents).
 - [ ] Add selected-row inversion style for dense table readability.

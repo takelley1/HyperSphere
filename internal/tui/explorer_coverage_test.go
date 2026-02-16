@@ -202,3 +202,26 @@ func TestViewportHelpersBranchCoverage(t *testing.T) {
 		t.Fatalf("expected all rows when under viewport limit, got %d", len(visible))
 	}
 }
+
+func TestSetSelectionAndClampSelectionIndexCoverage(t *testing.T) {
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}, {Name: "vm-b"}}})
+	_ = session.ExecuteCommand(":vm")
+	session.SetSelection(1, 1)
+	if session.selectedRow != 1 || session.selectedColumn != 1 {
+		t.Fatalf("expected in-range selection to be retained")
+	}
+	session.SetSelection(-1, -1)
+	if session.selectedRow != 0 || session.selectedColumn != 0 {
+		t.Fatalf("expected negative selection to clamp to zero")
+	}
+	session.SetSelection(99, 99)
+	if session.selectedRow != 1 || session.selectedColumn != len(session.view.Columns)-1 {
+		t.Fatalf("expected high selection to clamp to max indexes")
+	}
+	empty := NewSession(Catalog{})
+	empty.view = ResourceView{}
+	empty.SetSelection(5, 5)
+	if empty.selectedRow != 0 || empty.selectedColumn != 0 {
+		t.Fatalf("expected empty selection to clamp to zero")
+	}
+}
