@@ -28,3 +28,7 @@
 - Updated project workflow to keep `.scratchpad.txt` for active execution notes and commit in regular validated increments.
 - Reorganized `DESIGN.md` into short-term, medium-term, and long-term goals, each with explicit sub-tasks.
 - Established `DESIGN.md` as the canonical active roadmap where completed goals/sub-tasks are removed when fulfilled.
+- Added read-only mode command parsing (`:ro`, `:readonly on|off|toggle`) in explorer command handling.
+- Added read-only state indicator in table headers (`Mode: RO` / `Mode: RW`) for top-level explorer visibility.
+- Added read-only runtime APIs on session state and tests for parser branches, header rendering, and action gating behavior.
+- Removed fulfilled roadmap items from `DESIGN.md` and expanded remaining short/medium/long-term subtasks.

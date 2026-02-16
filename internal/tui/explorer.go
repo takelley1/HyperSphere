@@ -270,6 +270,11 @@ func (s *Session) CurrentView() ResourceView {
 	return s.view
 }
 
+// ReadOnly returns whether mutating actions are blocked.
+func (s *Session) ReadOnly() bool {
+	return s.readOnly
+}
+
 // SetReadOnly toggles read-only mode for mutating actions.
 func (s *Session) SetReadOnly(readOnly bool) {
 	s.readOnly = readOnly
@@ -302,12 +307,20 @@ func (s *Session) LastView() error {
 
 // Render returns a k9s-style interactive table representation.
 func (s *Session) Render() string {
-	return RenderInteractiveView(s.view, s.selectedRow, s.selectedColumn, s.sortColumn, s.sortAsc, s.marks)
+	return RenderInteractiveView(
+		s.view,
+		s.selectedRow,
+		s.selectedColumn,
+		s.sortColumn,
+		s.sortAsc,
+		s.marks,
+		s.readOnly,
+	)
 }
 
 // RenderResourceView renders a static table view.
 func RenderResourceView(view ResourceView) string {
-	return RenderInteractiveView(view, 0, 0, "", true, map[string]struct{}{})
+	return RenderInteractiveView(view, 0, 0, "", true, map[string]struct{}{}, false)
 }
 
 // RenderInteractiveView renders a table with sort and mark indicators.
@@ -318,9 +331,10 @@ func RenderInteractiveView(
 	sortColumn string,
 	sortAsc bool,
 	marks map[string]struct{},
+	readOnly bool,
 ) string {
 	builder := &strings.Builder{}
-	builder.WriteString(headerLine(view.Resource, sortColumn, sortAsc, len(marks)))
+	builder.WriteString(headerLine(view.Resource, sortColumn, sortAsc, len(marks), readOnly))
 	if len(view.Rows) == 0 {
 		builder.WriteString("No resources found.\n")
 		return builder.String()
@@ -337,15 +351,37 @@ func RenderInteractiveView(
 	return builder.String()
 }
 
-func headerLine(resource Resource, sortColumn string, sortAsc bool, marked int) string {
+func headerLine(
+	resource Resource,
+	sortColumn string,
+	sortAsc bool,
+	marked int,
+	readOnly bool,
+) string {
+	mode := "RW"
+	if readOnly {
+		mode = "RO"
+	}
 	if sortColumn == "" {
-		return fmt.Sprintf("HyperSphere :: %s | Sort: - | Marked: %d\n", resource, marked)
+		return fmt.Sprintf(
+			"HyperSphere :: %s | Mode: %s | Sort: - | Marked: %d\n",
+			resource,
+			mode,
+			marked,
+		)
 	}
 	arrow := "↑"
 	if !sortAsc {
 		arrow = "↓"
 	}
-	return fmt.Sprintf("HyperSphere :: %s | Sort: %s%s | Marked: %d\n", resource, sortColumn, arrow, marked)
+	return fmt.Sprintf(
+		"HyperSphere :: %s | Mode: %s | Sort: %s%s | Marked: %d\n",
+		resource,
+		mode,
+		sortColumn,
+		arrow,
+		marked,
+	)
 }
 
 func actionLine(actions []string) string {

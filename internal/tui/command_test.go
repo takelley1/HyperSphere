@@ -14,11 +14,16 @@ func TestParseExplorerInputKinds(t *testing.T) {
 		{line: "", kind: CommandNoop, value: ""},
 		{line: ":q", kind: CommandQuit, value: ""},
 		{line: ":help", kind: CommandHelp, value: ""},
+		{line: ":ro", kind: CommandReadOnly, value: "toggle"},
+		{line: ":readonly on", kind: CommandReadOnly, value: "on"},
+		{line: ":readonly off", kind: CommandReadOnly, value: "off"},
 		{line: ":vms", kind: CommandView, value: "vm"},
 		{line: ":ds", kind: CommandView, value: "datastore"},
 		{line: "!power-off", kind: CommandAction, value: "power-off"},
 		{line: "shift+o", kind: CommandHotKey, value: "SHIFT+O"},
 		{line: "!", kind: "", hasError: true},
+		{line: ":readonly maybe", kind: "", hasError: true},
+		{line: ":rock", kind: "", hasError: true},
 		{line: ":unknown", kind: "", hasError: true},
 	}
 	for _, tc := range cases {
@@ -45,5 +50,14 @@ func TestParseExplorerInputHandlesSpacebar(t *testing.T) {
 	}
 	if parsed.Kind != CommandHotKey || parsed.Value != "SPACE" {
 		t.Fatalf("unexpected space parse: %+v", parsed)
+	}
+}
+
+func TestParseReadOnlyCommandEdgeBranches(t *testing.T) {
+	if _, err := parseReadOnlyCommand(":"); err == nil {
+		t.Fatalf("expected empty readonly command error")
+	}
+	if _, err := parseReadOnlyCommand(":notreadonly"); err == nil {
+		t.Fatalf("expected invalid readonly command error")
 	}
 }

@@ -14,6 +14,7 @@ const (
 	CommandNoop     CommandKind = "noop"
 	CommandQuit     CommandKind = "quit"
 	CommandHelp     CommandKind = "help"
+	CommandReadOnly CommandKind = "readonly"
 	CommandLastView CommandKind = "last_view"
 	CommandFilter   CommandKind = "filter"
 	CommandView     CommandKind = "view"
@@ -42,6 +43,9 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 	if trimmed == ":help" || trimmed == ":h" || trimmed == "?" {
 		return ExplorerCommand{Kind: CommandHelp}, nil
 	}
+	if strings.HasPrefix(trimmed, ":ro") || strings.HasPrefix(trimmed, ":readonly") {
+		return parseReadOnlyCommand(trimmed)
+	}
 	if trimmed == ":-" {
 		return ExplorerCommand{Kind: CommandLastView}, nil
 	}
@@ -66,4 +70,22 @@ func ParseExplorerInput(line string) (ExplorerCommand, error) {
 		return ExplorerCommand{Kind: CommandAction, Value: action}, nil
 	}
 	return ExplorerCommand{Kind: CommandHotKey, Value: normalizeKey(trimmed)}, nil
+}
+
+func parseReadOnlyCommand(line string) (ExplorerCommand, error) {
+	fields := strings.Fields(strings.TrimPrefix(line, ":"))
+	if len(fields) == 0 {
+		return ExplorerCommand{}, fmt.Errorf("%w: empty command", ErrInvalidAction)
+	}
+	if fields[0] != "ro" && fields[0] != "readonly" {
+		return ExplorerCommand{}, fmt.Errorf("%w: %s", ErrUnsupportedHotKey, line)
+	}
+	if len(fields) == 1 {
+		return ExplorerCommand{Kind: CommandReadOnly, Value: "toggle"}, nil
+	}
+	value := strings.ToLower(strings.TrimSpace(fields[1]))
+	if value != "on" && value != "off" && value != "toggle" {
+		return ExplorerCommand{}, fmt.Errorf("%w: readonly %s", ErrInvalidAction, value)
+	}
+	return ExplorerCommand{Kind: CommandReadOnly, Value: value}, nil
 }

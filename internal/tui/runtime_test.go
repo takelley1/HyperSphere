@@ -2,7 +2,10 @@
 // Description: Validate extended runtime parity behaviors: filter, last-view, and read-only gating.
 package tui
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseExplorerInputFilterAndLastView(t *testing.T) {
 	filterCmd, err := ParseExplorerInput("/vm-a")
@@ -66,6 +69,19 @@ func TestReadOnlyBlocksActions(t *testing.T) {
 	executor := &fakeExecutor{}
 	if err := session.ApplyAction("power-off", executor); err == nil {
 		t.Fatalf("expected read-only action rejection")
+	}
+	if !session.ReadOnly() {
+		t.Fatalf("expected read-only getter true")
+	}
+	if !strings.Contains(session.Render(), "Mode: RO") {
+		t.Fatalf("expected read-only mode indicator in render")
+	}
+	session.SetReadOnly(false)
+	if session.ReadOnly() {
+		t.Fatalf("expected read-only getter false")
+	}
+	if !strings.Contains(session.Render(), "Mode: RW") {
+		t.Fatalf("expected read-write mode indicator in render")
 	}
 }
 

@@ -107,6 +107,9 @@ func handleExplorerLine(
 	case tui.CommandHelp:
 		printExplorerHelp(output)
 		return true
+	case tui.CommandReadOnly:
+		applyReadOnlyMode(session, parsed.Value)
+		return true
 	case tui.CommandLastView:
 		emitIfError(output, session.LastView())
 		return true
@@ -125,6 +128,17 @@ func handleExplorerLine(
 	}
 }
 
+func applyReadOnlyMode(session *tui.Session, mode string) {
+	switch mode {
+	case "on":
+		session.SetReadOnly(true)
+	case "off":
+		session.SetReadOnly(false)
+	default:
+		session.SetReadOnly(!session.ReadOnly())
+	}
+}
+
 func emitIfError(output io.Writer, err error) {
 	if err != nil {
 		_, _ = fmt.Fprintf(output, "command error: %v\n", err)
@@ -137,6 +151,7 @@ func printExplorerHelp(output io.Writer) {
 	_, _ = fmt.Fprintln(output, "Navigation: :- toggles previous view")
 	_, _ = fmt.Fprintln(output, "Aliases: :vms :luns :hosts :ds")
 	_, _ = fmt.Fprintln(output, "Filter: /text (clear with /)")
+	_, _ = fmt.Fprintln(output, "Modes: :ro [on|off|toggle] for read-only")
 	_, _ = fmt.Fprintln(output, "Hotkeys: SPACE, CTRL+SPACE, CTRL+\\, J/K, SHIFT+LEFT, SHIFT+RIGHT, SHIFT+O")
 	_, _ = fmt.Fprintln(output, "Actions: !<action> (for example !power-off in :vm)")
 }

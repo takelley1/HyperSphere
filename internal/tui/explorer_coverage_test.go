@@ -13,10 +13,10 @@ func TestSessionRenderAndHelperBranches(t *testing.T) {
 	if !strings.Contains(out, "No resources found") {
 		t.Fatalf("expected empty render message, got %s", out)
 	}
-	if !strings.Contains(headerLine(ResourceVM, "", true, 0), "Sort: -") {
+	if !strings.Contains(headerLine(ResourceVM, "", true, 0, false), "Sort: -") {
 		t.Fatalf("expected unsorted header")
 	}
-	if !strings.Contains(headerLine(ResourceVM, "NAME", false, 2), "NAME↓") {
+	if !strings.Contains(headerLine(ResourceVM, "NAME", false, 2, true), "NAME↓") {
 		t.Fatalf("expected sorted header")
 	}
 	if actionLine(nil) != "Actions: none\n" {
