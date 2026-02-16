@@ -1792,7 +1792,8 @@ func readTheme() explorerTheme {
 	if skinPath := strings.TrimSpace(os.Getenv("HYPERSPHERE_SKIN_FILE")); skinPath != "" {
 		theme = applySkinOverrides(theme, skinPath)
 	}
-	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
+	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" ||
+		strings.TrimSpace(os.Getenv("HYPERSPHERE_ASCII")) != "" {
 		theme.UseColor = false
 		theme.CanvasBackground = tcell.ColorBlack
 		theme.HeaderText = tcell.ColorWhite

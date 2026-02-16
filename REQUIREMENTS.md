@@ -644,6 +644,7 @@
 ### RQ-072: Add `NO_COLOR` and ASCII symbol compatibility mode
 - vSphere mapping: terminal compatibility.
 - Acceptance: when enabled, unicode glyphs are replaced with ASCII symbols and color is disabled.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-108: Add full Unicode glyph rendering support
 - vSphere mapping: richer visual parity for headers, tables, borders, and status icons.

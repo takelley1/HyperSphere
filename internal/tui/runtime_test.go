@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -587,6 +588,8 @@ func TestSortInvertHotkey(t *testing.T) {
 }
 
 func TestSortedColumnHeaderUsesDirectionGlyph(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("HYPERSPHERE_ASCII", "")
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-z"}, {Name: "vm-a"}}})
 	_ = session.ExecuteCommand(":vm")
 	_ = session.HandleKey("N")
@@ -599,6 +602,23 @@ func TestSortedColumnHeaderUsesDirectionGlyph(t *testing.T) {
 	if !strings.Contains(descendingHeader, "[NAME↓]") {
 		t.Fatalf("expected descending glyph in selected header: %s", descendingHeader)
 	}
+}
+
+func TestSortedColumnHeaderUsesASCIIGlyphsInCompatibilityMode(t *testing.T) {
+	t.Setenv("NO_COLOR", "1")
+	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-z"}, {Name: "vm-a"}}})
+	_ = session.ExecuteCommand(":vm")
+	_ = session.HandleKey("N")
+	ascendingHeader := strings.Split(session.Render(), "\n")[1]
+	if !strings.Contains(ascendingHeader, "[NAME^]") {
+		t.Fatalf("expected ASCII ascending glyph in compatibility mode: %s", ascendingHeader)
+	}
+	_ = session.HandleKey("N")
+	descendingHeader := strings.Split(session.Render(), "\n")[1]
+	if !strings.Contains(descendingHeader, "[NAMEv]") {
+		t.Fatalf("expected ASCII descending glyph in compatibility mode: %s", descendingHeader)
+	}
+	os.Unsetenv("NO_COLOR")
 }
 
 func TestLastViewReturnsUnderlyingExecuteError(t *testing.T) {

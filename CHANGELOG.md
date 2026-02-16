@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-072 by extending compatibility mode so
+  `NO_COLOR` or `HYPERSPHERE_ASCII` disables color rendering and sort-direction
+  glyphs downgrade from Unicode arrows to ASCII (`^`/`v`).
+- Added failing-first coverage in `internal/tui/runtime_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` for ASCII glyph fallback and
+  color-disable behavior in ASCII compatibility mode.
 - Implemented and fulfilled RQ-071 by adding skin-file theme overrides via
   `HYPERSPHERE_SKIN_FILE`, enabling selected skin palettes to update header,
   body, and status-region rendering colors/tags.

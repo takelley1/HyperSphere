@@ -1110,10 +1110,23 @@ func markColumn(
 }
 
 func sortDirectionGlyph(sortAsc bool) string {
+	if asciiCompatibilityMode() {
+		if sortAsc {
+			return "^"
+		}
+		return "v"
+	}
 	if sortAsc {
 		return "↑"
 	}
 	return "↓"
+}
+
+func asciiCompatibilityMode() bool {
+	if strings.TrimSpace(os.Getenv("NO_COLOR")) != "" {
+		return true
+	}
+	return strings.TrimSpace(os.Getenv("HYPERSPHERE_ASCII")) != ""
 }
 
 func decorateRows(view ResourceView, selectedRow int, marks map[string]struct{}) [][]string {

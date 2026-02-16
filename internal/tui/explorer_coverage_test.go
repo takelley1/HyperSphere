@@ -25,6 +25,8 @@ func TestSessionRenderAndHelperBranches(t *testing.T) {
 }
 
 func TestMarkColumnDecorateAndNormalizeBranches(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("HYPERSPHERE_ASCII", "")
 	marked := markColumn([]string{"M", ">", "NAME"}, 2, "NAME", true)
 	if marked[2] != "[NAME↑]" {
 		t.Fatalf("unexpected marked column: %v", marked)

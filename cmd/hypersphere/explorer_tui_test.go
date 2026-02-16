@@ -839,6 +839,15 @@ func TestReadThemeRespectsNoColor(t *testing.T) {
 	}
 }
 
+func TestReadThemeRespectsASCIIMode(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("HYPERSPHERE_ASCII", "1")
+	theme := readTheme()
+	if theme.UseColor {
+		t.Fatalf("expected ASCII compatibility mode to disable color")
+	}
+}
+
 func TestReadThemeUsesScreenshotPalettePreset(t *testing.T) {
 	t.Setenv("NO_COLOR", "")
 	theme := readTheme()
