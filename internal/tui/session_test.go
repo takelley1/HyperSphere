@@ -40,6 +40,8 @@ func TestVMViewColumnsAreRelevant(t *testing.T) {
 		"TOTAL_CPU_CORES",
 		"TOTAL_RAM_MB",
 		"LARGEST_DISK_GB",
+		"SNAPSHOT_COUNT",
+		"SNAPSHOT_TOTAL_GB",
 		"ATTACHED_STORAGE",
 	}
 	if !reflect.DeepEqual(view.Columns, want) {

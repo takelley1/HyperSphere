@@ -90,6 +90,7 @@ type VMRow struct {
 	UsedMemoryMB    int
 	UsedStorageGB   int
 	LargestDiskGB   int
+	SnapshotTotalGB int
 	Owner           string
 	Comments        string
 	Description     string
@@ -673,6 +674,8 @@ func vmView(rows []VMRow) ResourceView {
 		"TOTAL_CPU_CORES",
 		"TOTAL_RAM_MB",
 		"LARGEST_DISK_GB",
+		"SNAPSHOT_COUNT",
+		"SNAPSHOT_TOTAL_GB",
 		"ATTACHED_STORAGE",
 	}
 	return buildView(ResourceVM, columns, vmSortHotKeys(), vmActions(), rows, vmCells)
@@ -840,6 +843,8 @@ func vmCells(row VMRow) (string, []string) {
 		strconv.Itoa(row.CPUCount),
 		strconv.Itoa(row.MemoryMB),
 		strconv.Itoa(row.LargestDiskGB),
+		strconv.Itoa(vmSnapshotCount(row)),
+		strconv.Itoa(row.SnapshotTotalGB),
 		attachedStorage,
 	}
 }
@@ -999,6 +1004,8 @@ func vmSortHotKeys() map[string]string {
 		"T": "TOTAL_CPU_CORES",
 		"R": "TOTAL_RAM_MB",
 		"L": "LARGEST_DISK_GB",
+		"S": "SNAPSHOT_COUNT",
+		"Z": "SNAPSHOT_TOTAL_GB",
 		"A": "ATTACHED_STORAGE",
 	}
 }

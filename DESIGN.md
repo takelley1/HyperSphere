@@ -41,6 +41,7 @@
 - [ ] Sub-task: add long-string samples for newly added wide columns to stress truncation behavior.
 - [ ] Sub-task: add compact-mode assertions that widened schemas degrade to stable key columns.
 - [ ] Sub-task: add VM edge samples for multi-NIC and multi-datastore attachments in wide view.
+- [ ] Sub-task: add VM snapshot-size variance samples (0 GB, small, large) for sorting coverage.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

@@ -220,7 +220,7 @@ func TestRenderTableWithWidthInLogModeShowsTimestampedMonospaceRows(t *testing.T
 	runtime := newExplorerRuntime()
 	runtime.startPrompt(":log")
 	runtime.handlePromptDone(tcell.KeyEnter)
-	runtime.renderTableWithWidth(220)
+	runtime.renderTableWithWidth(320)
 	logCell := runtime.body.GetCell(1, 1).Text
 	if !regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T`).MatchString(logCell) {
 		t.Fatalf("expected timestamped log cell, got %q", logCell)
@@ -356,7 +356,9 @@ func TestRenderTableWithWidthHighlightsSelectedRowAcrossFullTableWidth(t *testin
 	if err := runtime.session.HandleKey("DOWN"); err != nil {
 		t.Fatalf("expected row move to succeed: %v", err)
 	}
-	runtime.renderTableWithWidth(220)
+	rows := tableRows(runtime.session.CurrentView(), runtime.session.IsMarked, true)
+	availableWidth := tableRenderWidth(naturalColumnWidths(rows)) + 8
+	runtime.renderTableWithWidth(availableWidth)
 
 	selectedRow, selectedColumn := selectionForTable(runtime.session, true)
 	cell := runtime.body.GetCell(selectedRow, selectedColumn)

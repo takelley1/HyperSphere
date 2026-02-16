@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-124 by extending VM view with `SNAPSHOT_COUNT` and
+  `SNAPSHOT_TOTAL_GB` columns.
+- Added failing-first coverage in `internal/tui/session_test.go` for the
+  expanded VM schema including snapshot-count/size fields.
+- Updated VM row shaping in `internal/tui/explorer.go` and seeded VM sample
+  values in `cmd/hypersphere/main.go` for snapshot total size data.
 - Added and fulfilled RQ-123 by expanding VM table coverage to include runtime
   usage and placement columns: used CPU/memory/storage, IP, DNS, cluster, host,
   network, total CPU cores, total RAM, largest disk, and attached storage.

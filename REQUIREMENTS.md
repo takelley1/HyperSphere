@@ -299,6 +299,13 @@
   values for local browsing.
 - Status: fulfilled (2026-02-16).
 
+### RQ-124: Add VM snapshot count and total snapshot size columns
+- vSphere mapping: snapshot governance needs immediate per-VM visibility in the
+  primary VM table without opening detail panels.
+- Acceptance: VM view includes `SNAPSHOT_COUNT` and `SNAPSHOT_TOTAL_GB` columns.
+- Acceptance: built-in VM sample rows populate both fields.
+- Status: fulfilled (2026-02-16).
+
 ### RQ-096: Add cyan framed content border style
 - vSphere mapping: high-contrast visual grouping of active views.
 - Acceptance: active content view is wrapped in a single cyan border frame
