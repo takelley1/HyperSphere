@@ -232,6 +232,7 @@
 - vSphere mapping: cursor clarity in dense inventories.
 - Acceptance: selected row is visually distinct from non-selected rows via
   deterministic inversion or accent style that does not alter cell text.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-101: Add top metrics style parity for CPU and MEM
 - vSphere mapping: quick capacity posture at glance.

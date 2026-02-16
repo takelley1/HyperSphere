@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-100 selected-row inversion parity by applying a deterministic
+  reverse attribute style to the selected table row without mutating cell text.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert selected-row inversion attributes and stable selected-cell text.
+- Marked `RQ-100` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on sub-tasks for compact/headless inversion
+  coverage and inversion accessibility toggles.
 - Implemented RQ-099 status-color parity by adding canonical status mapping for
   table rows: healthy (green), degraded (yellow), and faulted (red), with
   deterministic fallback to alternating row colors when status is unknown.

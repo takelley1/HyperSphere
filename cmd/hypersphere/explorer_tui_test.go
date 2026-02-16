@@ -290,6 +290,24 @@ func TestRenderFooterIncludesPromptMode(t *testing.T) {
 	}
 }
 
+func TestRenderTableWithWidthAppliesInversionStyleToSelectedRowWithoutTextMutation(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	if err := runtime.session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("expected row move to succeed: %v", err)
+	}
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+
+	selectedRow, selectedColumn := selectionForTable(runtime.session, true)
+	cell := runtime.body.GetCell(selectedRow, selectedColumn)
+	if cell.Text != "vm-b" {
+		t.Fatalf("expected selected cell text to remain unchanged, got %q", cell.Text)
+	}
+	_, _, attributes := cell.Style.Decompose()
+	if attributes&tcell.AttrReverse == 0 {
+		t.Fatalf("expected selected row to include reverse attribute, got %v", attributes)
+	}
+}
+
 func TestNewExplorerRuntimeUsesCyanFrameForActiveContentView(t *testing.T) {
 	t.Setenv("NO_COLOR", "")
 	runtime := newExplorerRuntime()

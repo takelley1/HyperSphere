@@ -647,6 +647,9 @@ func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
 					dataRowIndex--
 				}
 				cell.SetTextColor(tableRowColor(r.theme, view, dataRowIndex))
+				if dataRowIndex == r.session.SelectedRow() {
+					cell.SetAttributes(tcell.AttrReverse)
+				}
 			}
 			r.body.SetCell(rowIndex, columnIndex, cell)
 		}
