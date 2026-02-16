@@ -128,6 +128,24 @@ func TestTemplateViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestSnapshotViewColumnsAreRelevant(t *testing.T) {
+	navigator := NewNavigator(
+		Catalog{
+			Snapshots: []SnapshotRow{
+				{VM: "vm-a", Snapshot: "pre-upgrade", Size: "12G", Created: "2026-02-10T12:00:00Z", Age: "6d", Quiesced: "yes"},
+			},
+		},
+	)
+	view, err := navigator.Execute(":ss")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED"}
+	if !reflect.DeepEqual(view.Columns, want) {
+		t.Fatalf("unexpected snapshot columns: got %v want %v", view.Columns, want)
+	}
+}
+
 func TestSessionSpaceSelectAndBulkAction(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a", Cluster: "c1"}, {Name: "vm-b", Cluster: "c1"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

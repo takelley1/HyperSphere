@@ -252,6 +252,12 @@ func TestDefaultCatalogProvidesExpandedBrowsingDataset(t *testing.T) {
 			len(catalog.Templates),
 		)
 	}
+	if len(catalog.Snapshots) < 6 {
+		t.Fatalf(
+			"expected at least 6 snapshot rows for browsing, got %d",
+			len(catalog.Snapshots),
+		)
+	}
 	if len(catalog.Hosts) < 8 {
 		t.Fatalf("expected at least 8 host rows for browsing, got %d", len(catalog.Hosts))
 	}

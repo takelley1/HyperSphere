@@ -33,6 +33,8 @@
 - [ ] Sub-task: add integration coverage for startup `--command network` with seeded network rows.
 - [ ] Sub-task: add template samples with mixed OS generations and lifecycle ages.
 - [ ] Sub-task: add integration coverage for startup `--command tp` with seeded template rows.
+- [ ] Sub-task: add snapshot samples covering large-size and stale-age governance edge cases.
+- [ ] Sub-task: add integration coverage for startup `--command ss` with seeded snapshot rows.
 
 ### Terminal Readability and Styles
 - [ ] Add configurable high-contrast, standard, and dim color palettes.

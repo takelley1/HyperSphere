@@ -36,6 +36,7 @@ const (
 	ResourcePool       Resource = "resourcepool"
 	ResourceNetwork    Resource = "network"
 	ResourceTemplate   Resource = "template"
+	ResourceSnapshot   Resource = "snapshot"
 	ResourceHost       Resource = "host"
 	ResourceDatastore  Resource = "datastore"
 )
@@ -60,6 +61,10 @@ var resourceAliasMap = map[string]Resource{
 	"tp":            ResourceTemplate,
 	"template":      ResourceTemplate,
 	"templates":     ResourceTemplate,
+	"ss":            ResourceSnapshot,
+	"snap":          ResourceSnapshot,
+	"snapshot":      ResourceSnapshot,
+	"snapshots":     ResourceSnapshot,
 	"host":          ResourceHost,
 	"hosts":         ResourceHost,
 	"datastore":     ResourceDatastore,
@@ -146,6 +151,16 @@ type TemplateRow struct {
 	Age       string
 }
 
+// SnapshotRow represents one VM snapshot row in the resource table.
+type SnapshotRow struct {
+	VM       string
+	Snapshot string
+	Size     string
+	Created  string
+	Age      string
+	Quiesced string
+}
+
 // HostRow represents one host row in the resource table.
 type HostRow struct {
 	Name            string
@@ -175,6 +190,7 @@ type Catalog struct {
 	ResourcePools []ResourcePoolRow
 	Networks      []NetworkRow
 	Templates     []TemplateRow
+	Snapshots     []SnapshotRow
 	Hosts         []HostRow
 	Datastores    []DatastoreRow
 }
@@ -287,6 +303,8 @@ func (n *Navigator) viewFor(resource Resource) (ResourceView, bool) {
 		return networkView(n.catalog.Networks), true
 	case ResourceTemplate:
 		return templateView(n.catalog.Templates), true
+	case ResourceSnapshot:
+		return snapshotView(n.catalog.Snapshots), true
 	case ResourceHost:
 		return hostView(n.catalog.Hosts), true
 	case ResourceDatastore:
@@ -678,6 +696,18 @@ func templateView(rows []TemplateRow) ResourceView {
 	)
 }
 
+func snapshotView(rows []SnapshotRow) ResourceView {
+	columns := []string{"VM", "SNAPSHOT", "SIZE", "CREATED", "AGE", "QUIESCED"}
+	return buildView(
+		ResourceSnapshot,
+		columns,
+		snapshotSortHotKeys(),
+		snapshotActions(),
+		rows,
+		snapshotCells,
+	)
+}
+
 func hostView(rows []HostRow) ResourceView {
 	columns := []string{"NAME", "TAGS", "CLUSTER", "CPU_PERCENT", "MEM_PERCENT", "CONNECTION"}
 	return buildView(ResourceHost, columns, hostSortHotKeys(), hostActions(), rows, hostCells)
@@ -769,6 +799,18 @@ func templateCells(row TemplateRow) (string, []string) {
 	}
 }
 
+func snapshotCells(row SnapshotRow) (string, []string) {
+	id := defaultCell(row.VM) + ":" + defaultCell(row.Snapshot)
+	return id, []string{
+		defaultCell(row.VM),
+		defaultCell(row.Snapshot),
+		defaultCell(row.Size),
+		defaultCell(row.Created),
+		defaultCell(row.Age),
+		defaultCell(row.Quiesced),
+	}
+}
+
 func datastoreCells(row DatastoreRow) (string, []string) {
 	return row.Name, []string{row.Name, defaultCell(row.Tags), defaultCell(row.Cluster), strconv.Itoa(row.CapacityGB), strconv.Itoa(row.UsedGB), strconv.Itoa(row.FreeGB)}
 }
@@ -806,6 +848,10 @@ func networkSortHotKeys() map[string]string {
 
 func templateSortHotKeys() map[string]string {
 	return map[string]string{"N": "NAME", "O": "OS", "D": "DATASTORE", "F": "FOLDER", "A": "AGE"}
+}
+
+func snapshotSortHotKeys() map[string]string {
+	return map[string]string{"V": "VM", "S": "SNAPSHOT", "Z": "SIZE", "C": "CREATED", "A": "AGE", "Q": "QUIESCED"}
 }
 
 func hostSortHotKeys() map[string]string {
@@ -846,6 +892,10 @@ func networkActions() []string {
 
 func templateActions() []string {
 	return []string{"clone", "edit-tags"}
+}
+
+func snapshotActions() []string {
+	return []string{"revert", "delete", "edit-tags"}
 }
 
 func datastoreActions() []string {

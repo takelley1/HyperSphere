@@ -335,6 +335,7 @@ func defaultCatalog() tui.Catalog {
 		ResourcePools: defaultResourcePoolRows(),
 		Networks:      defaultNetworkRows(),
 		Templates:     defaultTemplateRows(),
+		Snapshots:     defaultSnapshotRows(),
 		Hosts:         defaultHostRows(),
 		Datastores:    defaultDatastoreRows(),
 	}
@@ -411,6 +412,17 @@ func defaultTemplateRows() []tui.TemplateRow {
 		{Name: "tpl-sles15-base", OS: "sles15", Datastore: "vsan-east", Folder: "/Templates/Linux", Age: "27d"},
 		{Name: "tpl-centos7-legacy", OS: "centos7", Datastore: "ds-6", Folder: "/Templates/Legacy", Age: "143d"},
 		{Name: "tpl-debian12-app", OS: "debian12", Datastore: "ds-7", Folder: "/Templates/App", Age: "18d"},
+	}
+}
+
+func defaultSnapshotRows() []tui.SnapshotRow {
+	return []tui.SnapshotRow{
+		{VM: "vm-a", Snapshot: "pre-patch", Size: "12G", Created: "2026-02-10T12:00:00Z", Age: "6d", Quiesced: "yes"},
+		{VM: "vm-b", Snapshot: "before-upgrade", Size: "8G", Created: "2026-02-08T09:15:00Z", Age: "8d", Quiesced: "no"},
+		{VM: "vm-c", Snapshot: "monthly-backup", Size: "24G", Created: "2026-01-31T22:40:00Z", Age: "16d", Quiesced: "yes"},
+		{VM: "vm-d", Snapshot: "pre-maintenance", Size: "6G", Created: "2026-02-14T03:05:00Z", Age: "2d", Quiesced: "no"},
+		{VM: "vm-e", Snapshot: "schema-change", Size: "10G", Created: "2026-02-12T18:20:00Z", Age: "4d", Quiesced: "yes"},
+		{VM: "vm-f", Snapshot: "pre-hotfix", Size: "5G", Created: "2026-02-15T07:55:00Z", Age: "1d", Quiesced: "no"},
 	}
 }
 

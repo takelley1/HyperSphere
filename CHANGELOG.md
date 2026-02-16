@@ -1,6 +1,18 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-032 snapshot-governance coverage by adding `:snapshot`,
+  `:snap`, and `:ss` command aliases with columns `VM`, `SNAPSHOT`, `SIZE`,
+  `CREATED`, `AGE`, and `QUIESCED`.
+- Added failing-first coverage in `internal/tui/command_test.go` and
+  `internal/tui/session_test.go` for snapshot alias parsing and snapshot view
+  column rendering.
+- Expanded `defaultCatalog()` in `cmd/hypersphere/main.go` with seeded
+  snapshot rows and added browse-dataset assertions in
+  `cmd/hypersphere/main_test.go`.
+- Marked `RQ-032` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` with follow-on snapshot dataset and startup-routing
+  coverage sub-tasks.
 - Implemented RQ-031 template lifecycle coverage by adding `:template` and
   `:tp` command aliases with columns `NAME`, `OS`, `DATASTORE`, `FOLDER`,
   and `AGE`.

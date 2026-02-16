@@ -314,6 +314,7 @@
 ### RQ-032: Add `:snapshot`/`:snap`/`:ss` view
 - vSphere mapping: VM snapshot governance.
 - Acceptance: view columns include `VM`, `SNAPSHOT`, `SIZE`, `CREATED`, `AGE`, `QUIESCED`.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-033: Add `:task` view
 - vSphere mapping: vCenter task execution stream.
