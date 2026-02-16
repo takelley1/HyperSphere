@@ -28,30 +28,31 @@ var compactColumnsByResource = map[tui.Resource][]string{
 }
 
 type explorerRuntime struct {
-	app          *tview.Application
-	session      tui.Session
-	promptState  tui.PromptState
-	actionExec   *runtimeActionExecutor
-	contexts     runtimeContextManager
-	headless     bool
-	crumbsless   bool
-	theme        explorerTheme
-	pages        *tview.Pages
-	layout       *tview.Flex
-	helpModal    *tview.Modal
-	aliasModal   *tview.Modal
-	body         *tview.Table
-	breadcrumb   *tview.TextView
-	status       *tview.TextView
-	prompt       *tview.InputField
-	footer       *tview.TextView
-	aliasEntries []string
-	promptMode   bool
-	helpOpen     bool
-	aliasOpen    bool
-	helpText     string
-	lastWidth    int
-	wideColumns  bool
+	app           *tview.Application
+	session       tui.Session
+	promptState   tui.PromptState
+	actionExec    *runtimeActionExecutor
+	contexts      runtimeContextManager
+	headless      bool
+	crumbsless    bool
+	theme         explorerTheme
+	pages         *tview.Pages
+	layout        *tview.Flex
+	helpModal     *tview.Modal
+	aliasModal    *tview.Modal
+	body          *tview.Table
+	breadcrumb    *tview.TextView
+	status        *tview.TextView
+	prompt        *tview.InputField
+	footer        *tview.TextView
+	aliasEntries  []string
+	promptMode    bool
+	helpOpen      bool
+	aliasOpen     bool
+	helpText      string
+	lastWidth     int
+	wideColumns   bool
+	headerVisible bool
 }
 
 type runtimeActionExecutor struct {
@@ -172,23 +173,24 @@ func newExplorerRuntimeWithRenderOptions(
 	crumbsless bool,
 ) explorerRuntime {
 	runtime := explorerRuntime{
-		app:         tview.NewApplication(),
-		session:     tui.NewSession(defaultCatalog()),
-		promptState: tui.NewPromptState(defaultPromptHistorySize),
-		actionExec:  &runtimeActionExecutor{},
-		contexts:    newRuntimeContextManager(),
-		headless:    headless,
-		crumbsless:  crumbsless,
-		theme:       readTheme(),
-		pages:       tview.NewPages(),
-		helpModal:   tview.NewModal(),
-		aliasModal:  tview.NewModal(),
-		body:        tview.NewTable(),
-		breadcrumb:  tview.NewTextView(),
-		status:      tview.NewTextView(),
-		prompt:      tview.NewInputField(),
-		footer:      tview.NewTextView(),
-		wideColumns: true,
+		app:           tview.NewApplication(),
+		session:       tui.NewSession(defaultCatalog()),
+		promptState:   tui.NewPromptState(defaultPromptHistorySize),
+		actionExec:    &runtimeActionExecutor{},
+		contexts:      newRuntimeContextManager(),
+		headless:      headless,
+		crumbsless:    crumbsless,
+		theme:         readTheme(),
+		pages:         tview.NewPages(),
+		helpModal:     tview.NewModal(),
+		aliasModal:    tview.NewModal(),
+		body:          tview.NewTable(),
+		breadcrumb:    tview.NewTextView(),
+		status:        tview.NewTextView(),
+		prompt:        tview.NewInputField(),
+		footer:        tview.NewTextView(),
+		wideColumns:   true,
+		headerVisible: !headless,
 	}
 	runtime.session.SetReadOnly(readOnly)
 	message := startupCommandStatus(&runtime.session, startupCommand)
@@ -211,7 +213,7 @@ func startupCommandStatus(session *tui.Session, startupCommand string) string {
 
 func (r *explorerRuntime) configureWidgets() {
 	r.body.SetSelectable(true, true)
-	r.body.SetFixed(fixedHeaderRows(r.headless), fixedTableColumns)
+	r.body.SetFixed(fixedHeaderRows(r.tableHeaderVisible()), fixedTableColumns)
 	r.body.SetBorders(false)
 	r.body.SetSeparator(' ')
 	r.body.SetBorder(true)
@@ -263,7 +265,7 @@ func (r *explorerRuntime) configureHandlers() {
 
 func (r *explorerRuntime) handleTableSelectionChanged(row int, column int) {
 	selectedRow := row
-	if !r.headless {
+	if r.tableHeaderVisible() {
 		selectedRow--
 	}
 	r.session.SetSelection(selectedRow, column-1)
@@ -323,9 +325,7 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	if !ok {
 		return evt
 	}
-	if command == "CTRL+W" {
-		r.toggleWideColumns()
-		r.render("")
+	if r.handleRuntimeToggle(command) {
 		return nil
 	}
 	r.emitStatus(r.session.HandleKey(command))
@@ -333,9 +333,37 @@ func (r *explorerRuntime) handleGlobalKey(evt *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
+func (r *explorerRuntime) handleRuntimeToggle(command string) bool {
+	switch command {
+	case "CTRL+W":
+		r.toggleWideColumns()
+	case "CTRL+E":
+		r.toggleHeaderVisibility()
+	default:
+		return false
+	}
+	r.render("")
+	return true
+}
+
 func (r *explorerRuntime) toggleWideColumns() {
 	selectedID := selectedIDForRow(r.session.CurrentView(), r.session.SelectedRow())
 	r.wideColumns = !r.wideColumns
+	if selectedID == "" {
+		return
+	}
+	nextRow := rowIndexForID(r.session.CurrentView(), selectedID)
+	if nextRow >= 0 {
+		r.session.SetSelection(nextRow, r.session.SelectedColumn())
+	}
+}
+
+func (r *explorerRuntime) toggleHeaderVisibility() {
+	if r.headless {
+		return
+	}
+	selectedID := selectedIDForRow(r.session.CurrentView(), r.session.SelectedRow())
+	r.headerVisible = !r.headerVisible
 	if selectedID == "" {
 		return
 	}
@@ -503,7 +531,8 @@ func (r *explorerRuntime) renderTable() {
 }
 
 func (r *explorerRuntime) renderTableWithWidth(availableWidth int) {
-	includeHeader := !r.headless
+	includeHeader := r.tableHeaderVisible()
+	r.body.SetFixed(fixedHeaderRows(includeHeader), fixedTableColumns)
 	view := viewForColumnMode(r.session.CurrentView(), r.wideColumns)
 	view = compactViewForWidth(view, availableWidth)
 	rows := tableRows(view, r.session.IsMarked, includeHeader)
@@ -864,11 +893,18 @@ func selectionForRenderedView(
 	return row, column
 }
 
-func fixedHeaderRows(headless bool) int {
-	if headless {
-		return 0
+func fixedHeaderRows(includeHeader bool) int {
+	if includeHeader {
+		return 1
 	}
-	return 1
+	return 0
+}
+
+func (r *explorerRuntime) tableHeaderVisible() bool {
+	if r.headless {
+		return false
+	}
+	return r.headerVisible
 }
 
 func renderFooter(promptMode bool) string {
@@ -1187,6 +1223,9 @@ func isQuitEvent(evt *tcell.EventKey) bool {
 func eventToHotKey(evt *tcell.EventKey) (string, bool) {
 	if evt.Key() == tcell.KeyCtrlW {
 		return "CTRL+W", true
+	}
+	if evt.Key() == tcell.KeyCtrlE {
+		return "CTRL+E", true
 	}
 	if evt.Key() == tcell.KeyCtrlSpace {
 		return "CTRL+SPACE", true

@@ -269,6 +269,47 @@ func TestHandleGlobalKeyCtrlWTogglesWideColumnsAndPreservesSelectedIdentity(t *t
 	}
 }
 
+func TestHandleGlobalKeyCtrlETogglesHeaderVisibilityWithoutSelectionReset(t *testing.T) {
+	runtime := newExplorerRuntimeWithStartupCommand(false, "vm")
+	if err := runtime.session.HandleKey("DOWN"); err != nil {
+		t.Fatalf("expected row move to succeed: %v", err)
+	}
+	if err := runtime.session.HandleKey("SHIFT+RIGHT"); err != nil {
+		t.Fatalf("expected column move to succeed: %v", err)
+	}
+	selectedID := runtime.session.CurrentView().IDs[runtime.session.SelectedRow()]
+	selectedColumn := runtime.session.SelectedColumn()
+
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+	if runtime.body.GetCell(0, 0).Text != "SEL" {
+		t.Fatalf("expected header row to be visible before ctrl-e")
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyCtrlE, 0, tcell.ModCtrl))
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+	if runtime.body.GetCell(0, 0).Text == "SEL" {
+		t.Fatalf("expected header row to be hidden after ctrl-e")
+	}
+	if runtime.session.CurrentView().IDs[runtime.session.SelectedRow()] != selectedID {
+		t.Fatalf("expected selected id to remain %q after hiding header", selectedID)
+	}
+	if runtime.session.SelectedColumn() != selectedColumn {
+		t.Fatalf("expected selected column %d after hiding header, got %d", selectedColumn, runtime.session.SelectedColumn())
+	}
+
+	runtime.handleGlobalKey(tcell.NewEventKey(tcell.KeyCtrlE, 0, tcell.ModCtrl))
+	runtime.renderTableWithWidth(compactModeWidthThreshold + 10)
+	if runtime.body.GetCell(0, 0).Text != "SEL" {
+		t.Fatalf("expected header row to be visible after second ctrl-e")
+	}
+	if runtime.session.CurrentView().IDs[runtime.session.SelectedRow()] != selectedID {
+		t.Fatalf("expected selected id to remain %q after restoring header", selectedID)
+	}
+	if runtime.session.SelectedColumn() != selectedColumn {
+		t.Fatalf("expected selected column %d after restoring header, got %d", selectedColumn, runtime.session.SelectedColumn())
+	}
+}
+
 func TestReadThemeRespectsNoColor(t *testing.T) {
 	t.Setenv("NO_COLOR", "1")
 	theme := readTheme()

@@ -156,6 +156,7 @@
 ### RQ-027: Add `ctrl-e` header visibility toggle
 - vSphere mapping: high-density terminal mode.
 - Acceptance: repeated toggle alternates header on/off with no row selection reset.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-107: Add `d` hotkey to describe selected resource
 - vSphere mapping: k9s-style describe flow for deep object inspection.

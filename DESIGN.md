@@ -12,8 +12,8 @@
 - [ ] Sub-task: add sticky-header viewport offset indicator (`rows x-y of z`) in the footer.
 - [ ] Sub-task: add sticky-header viewport size configuration for dense vs standard layouts.
 - [ ] Sub-task: add ASCII-compatible sort-direction glyph fallback (`^`/`v`) for NO_COLOR mode.
-- [ ] Sub-task: add `ctrl-e` header-visibility toggle state wiring in explorer runtime.
-- [ ] Sub-task: add `ctrl-e` integration tests for repeated toggle without selection reset.
+- [ ] Sub-task: add `d` describe-panel runtime wiring for selected resources.
+- [ ] Sub-task: add `d` describe-panel tests for Esc-close focus restoration.
 - [ ] Add per-resource status badges in the header line.
 - [ ] Sub-task: add integration coverage for repeated terminal resize width changes.
 - [ ] Sub-task: add integration coverage for overflow markers across column-offset transitions.

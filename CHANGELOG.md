@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented RQ-027 `ctrl-e` header-visibility toggle parity in the explorer
+  runtime.
+- Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`
+  to verify repeated header toggle behavior preserves selected row/column identity.
+- Updated `cmd/hypersphere/explorer_tui.go` to map `ctrl-e`, toggle table
+  header rendering on/off, and keep header-offset selection behavior consistent.
+- Marked `RQ-027` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `ctrl-e` sub-tasks and adding
+  follow-on `d` describe-panel implementation/test sub-tasks.
 - Implemented RQ-026 `ctrl-w` wide-column toggle parity in the explorer runtime.
 - Added failing-first runtime coverage in `cmd/hypersphere/explorer_tui_test.go`
   to verify schema toggling and selected-row identity preservation across toggles.
