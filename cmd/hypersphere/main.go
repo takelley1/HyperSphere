@@ -23,6 +23,7 @@ type cliFlags struct {
 	workflow       string
 	mode           string
 	execute        bool
+	readOnly       bool
 	threshold      int
 	refreshSeconds float64
 	logLevel       logLevel
@@ -77,7 +78,7 @@ func run(args []string, output io.Writer, errOutput io.Writer) int {
 	case "deletion":
 		runDeletionWorkflow(application, cfg)
 	case "explorer":
-		runExplorerWorkflow(os.Stdout)
+		runExplorerWorkflow(os.Stdout, flags.readOnly)
 	default:
 		runMigrationWorkflow(application, cfg)
 	}
@@ -90,6 +91,7 @@ func parseFlags(args []string) (cliFlags, error) {
 	workflow := flagSet.String("workflow", "explorer", "workflow: explorer, migration, or deletion")
 	mode := flagSet.String("mode", "all", "mode: mark, purge, or all")
 	execute := flagSet.Bool("execute", false, "execute mutating actions")
+	readOnly := flagSet.Bool("readonly", false, "start in read-only mode")
 	threshold := flagSet.Int("threshold", 85, "target utilization threshold percent")
 	refresh := flagSet.Float64("refresh", defaultRefreshSeconds, "inventory refresh interval in seconds")
 	level := flagSet.String("log-level", string(logLevelInfo), "log level: debug, info, warn, or error")
@@ -114,6 +116,7 @@ func parseFlags(args []string) (cliFlags, error) {
 		workflow:       value,
 		mode:           strings.TrimSpace(*mode),
 		execute:        *execute,
+		readOnly:       *readOnly,
 		threshold:      *threshold,
 		refreshSeconds: clampRefreshSeconds(*refresh),
 		logLevel:       resolvedLevel,

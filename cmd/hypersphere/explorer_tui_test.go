@@ -210,3 +210,20 @@ func TestExecutePromptCommandCtxSelectRefreshesActiveView(t *testing.T) {
 		t.Fatalf("expected active view refresh to reset selection row, got %d", session.SelectedRow())
 	}
 }
+
+func TestNewExplorerRuntimeWithReadOnlyBlocksMutatingAction(t *testing.T) {
+	runtime := newExplorerRuntimeWithReadOnly(true)
+	message, keepRunning := executePromptCommand(
+		&runtime.session,
+		&runtime.promptState,
+		runtime.actionExec,
+		&runtime.contexts,
+		"!power-off",
+	)
+	if !keepRunning {
+		t.Fatalf("expected action command to keep runtime alive")
+	}
+	if message != "[red]command error: read-only mode" {
+		t.Fatalf("expected deterministic read-only error, got %q", message)
+	}
+}

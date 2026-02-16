@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-02-15
+- Implemented RQ-006 `--readonly` startup flag support for explorer sessions.
+- Added failing-first tests in `cmd/hypersphere/main_test.go` and
+  `cmd/hypersphere/explorer_tui_test.go` covering flag parsing and deterministic
+  mutating-action rejection in read-only mode.
+- Wired CLI startup state through `cmd/hypersphere/main.go` into
+  `cmd/hypersphere/explorer_tui.go` so runtime sessions initialize read-only.
+- Confirmed canonical error output for blocked mutating actions:
+  `[red]command error: read-only mode`.
+- Marked `RQ-006` as fulfilled in `REQUIREMENTS.md`.
+- Updated `DESIGN.md` by removing completed `--readonly` subtasks and adding
+  follow-on `--write` precedence and non-interactive read-only wiring tasks.
 - Implemented RQ-005 `--log-file` startup flag support to write runtime logs
   to an operator-defined file path.
 - Added failing-first CLI coverage in `cmd/hypersphere/main_test.go` to assert

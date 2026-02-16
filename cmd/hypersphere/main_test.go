@@ -132,3 +132,13 @@ func TestRunWritesLogsToCustomPathWhenLogFileFlagSet(t *testing.T) {
 		t.Fatalf("expected startup log message, got %q", logOutput)
 	}
 }
+
+func TestParseFlagsReadOnlyEnablesStartupSafetyMode(t *testing.T) {
+	flags, err := parseFlags([]string{"--readonly"})
+	if err != nil {
+		t.Fatalf("expected --readonly to parse, got error: %v", err)
+	}
+	if !flags.readOnly {
+		t.Fatalf("expected readOnly=true when --readonly is passed")
+	}
+}

@@ -46,6 +46,7 @@
 - vSphere mapping: Block write actions for inventory safety.
 - Acceptance: write action invocation in read-only mode returns a deterministic
   `read-only mode` error.
+- Status: fulfilled (2026-02-15).
 
 ### RQ-007: Add `--write` startup flag override
 - vSphere mapping: Explicit write enable even when config defaults read-only.

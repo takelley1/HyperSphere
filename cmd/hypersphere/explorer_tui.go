@@ -107,14 +107,18 @@ func (c *inMemoryContextConnector) Switch(name string) error {
 	return fmt.Errorf("unknown context: %s", name)
 }
 
-func runExplorerWorkflow(output io.Writer) {
-	runtime := newExplorerRuntime()
+func runExplorerWorkflow(output io.Writer, readOnly bool) {
+	runtime := newExplorerRuntimeWithReadOnly(readOnly)
 	if err := runtime.run(); err != nil {
 		_, _ = fmt.Fprintf(output, "tui error: %v\n", err)
 	}
 }
 
 func newExplorerRuntime() explorerRuntime {
+	return newExplorerRuntimeWithReadOnly(false)
+}
+
+func newExplorerRuntimeWithReadOnly(readOnly bool) explorerRuntime {
 	runtime := explorerRuntime{
 		app:         tview.NewApplication(),
 		session:     tui.NewSession(defaultCatalog()),
@@ -127,6 +131,7 @@ func newExplorerRuntime() explorerRuntime {
 		prompt:      tview.NewInputField(),
 		footer:      tview.NewTextView(),
 	}
+	runtime.session.SetReadOnly(readOnly)
 	runtime.configureWidgets()
 	runtime.configureHandlers()
 	runtime.render("ready")
