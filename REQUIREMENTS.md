@@ -565,6 +565,7 @@
 ### RQ-057: Add snapshot create/remove/revert actions
 - vSphere mapping: snapshot lifecycle parity.
 - Acceptance: action requires snapshot name for create and existing snapshot ID for remove/revert.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-058: Add host maintenance mode enter/exit actions
 - vSphere mapping: host lifecycle operations.

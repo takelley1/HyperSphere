@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Implemented and fulfilled RQ-057 by expanding snapshot actions to
+  `create/remove/revert` and enforcing action payload validation:
+  `create snapshot=<name>`, `remove snapshot=<id>`, and `revert snapshot=<id>`.
+- Added snapshot ID existence checks against catalog data and retained
+  destructive confirmation behavior for `remove`/`revert`.
+- Added failing-first coverage in `internal/tui/session_test.go` for snapshot
+  action list parity and create/remove/revert validation flows.
 - Implemented and fulfilled RQ-056 by requiring VM migrate actions to include
   exactly one placement target (`host=<name>` or `datastore=<name>`) and
   validating target existence against known inventory rows.

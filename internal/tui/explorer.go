@@ -633,6 +633,11 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 		if err != nil {
 			return err
 		}
+	} else if s.view.Resource == ResourceSnapshot {
+		executorAction, err = s.validatedSnapshotAction(actionName, options)
+		if err != nil {
+			return err
+		}
 	} else if len(options) > 0 {
 		return fmt.Errorf("%w: unsupported options for %s", ErrInvalidAction, actionName)
 	}
@@ -1696,7 +1701,7 @@ func templateActions() []string {
 }
 
 func snapshotActions() []string {
-	return []string{"revert", "delete", "edit-tags"}
+	return []string{"create", "remove", "revert", "edit-tags"}
 }
 
 func taskActions() []string {
@@ -1994,7 +1999,7 @@ func actionSideEffects(action string) []string {
 
 func isDestructiveAction(action string) bool {
 	switch action {
-	case "power-off", "delete", "revert":
+	case "power-off", "delete", "remove", "revert":
 		return true
 	default:
 		return false
@@ -2073,6 +2078,42 @@ func (s *Session) validatedMigrateAction(options map[string]string) (string, err
 		return "", fmt.Errorf("%w: unknown datastore %s", ErrInvalidAction, datastore)
 	}
 	return fmt.Sprintf("migrate datastore=%s", datastore), nil
+}
+
+func (s *Session) validatedSnapshotAction(
+	action string,
+	options map[string]string,
+) (string, error) {
+	snapshotID, hasSnapshot := options["snapshot"]
+	switch action {
+	case "create":
+		if !hasSnapshot || snapshotID == "" || len(options) != 1 {
+			return "", fmt.Errorf("%w: create requires snapshot=<name>", ErrInvalidAction)
+		}
+		return fmt.Sprintf("create snapshot=%s", snapshotID), nil
+	case "remove", "revert":
+		if !hasSnapshot || snapshotID == "" || len(options) != 1 {
+			return "", fmt.Errorf("%w: %s requires snapshot=<id>", ErrInvalidAction, action)
+		}
+		if !containsSnapshotID(s.navigator.catalog.Snapshots, snapshotID) {
+			return "", fmt.Errorf("%w: unknown snapshot %s", ErrInvalidAction, snapshotID)
+		}
+		return fmt.Sprintf("%s snapshot=%s", action, snapshotID), nil
+	default:
+		if len(options) > 0 {
+			return "", fmt.Errorf("%w: unsupported options for %s", ErrInvalidAction, action)
+		}
+		return action, nil
+	}
+}
+
+func containsSnapshotID(rows []SnapshotRow, snapshotID string) bool {
+	for _, row := range rows {
+		if row.Snapshot == snapshotID {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Session) jumpFilteredMatch(step int) bool {

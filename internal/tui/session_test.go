@@ -122,6 +122,18 @@ func TestClusterViewColumnsAreRelevant(t *testing.T) {
 	}
 }
 
+func TestSnapshotViewActionsRequireLifecycleSet(t *testing.T) {
+	navigator := NewNavigator(Catalog{Snapshots: []SnapshotRow{{VM: "vm-a", Snapshot: "snap-1"}}})
+	view, err := navigator.Execute(":ss")
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	want := []string{"create", "remove", "revert", "edit-tags"}
+	if !reflect.DeepEqual(view.Actions, want) {
+		t.Fatalf("unexpected snapshot actions: got %v want %v", view.Actions, want)
+	}
+}
+
 func TestDatacenterViewColumnsAreRelevant(t *testing.T) {
 	navigator := NewNavigator(
 		Catalog{
@@ -489,6 +501,90 @@ func TestSessionApplyActionRejectsEmptyActionString(t *testing.T) {
 	}
 	if executor.calls != 0 {
 		t.Fatalf("expected executor not to run for empty action input")
+	}
+}
+
+func TestSessionApplyActionSnapshotCreateRequiresSnapshotName(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Snapshots: []SnapshotRow{{VM: "vm-a", Snapshot: "snap-1"}},
+		},
+	)
+	if err := session.ExecuteCommand(":ss"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("create", executor); err == nil {
+		t.Fatalf("expected create to require snapshot=<name>")
+	}
+	if err := session.ApplyAction("create snapshot=snap-new", executor); err != nil {
+		t.Fatalf("expected create snapshot action with name to succeed: %v", err)
+	}
+	if executor.action != "create snapshot=snap-new" {
+		t.Fatalf("expected create action to carry snapshot name, got %q", executor.action)
+	}
+}
+
+func TestSessionApplyActionSnapshotRemoveAndRevertValidateSnapshotID(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Snapshots: []SnapshotRow{
+				{VM: "vm-a", Snapshot: "snap-1"},
+				{VM: "vm-a", Snapshot: "snap-2"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":ss"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("remove", executor); err == nil {
+		t.Fatalf("expected remove to require snapshot=<id>")
+	}
+	if err := session.ApplyAction("remove snapshot=missing", executor); err == nil {
+		t.Fatalf("expected remove to reject unknown snapshot id")
+	}
+	if err := session.ApplyAction("remove snapshot=snap-1", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected destructive remove action to require confirmation, got %v", err)
+	}
+	if err := session.ApplyAction("remove snapshot=snap-1", executor); err != nil {
+		t.Fatalf("expected confirmed remove action to succeed: %v", err)
+	}
+	if executor.action != "remove snapshot=snap-1" {
+		t.Fatalf("expected remove action to carry snapshot id, got %q", executor.action)
+	}
+	if err := session.ApplyAction("revert snapshot=missing", executor); err == nil {
+		t.Fatalf("expected revert to reject unknown snapshot id")
+	}
+	if err := session.ApplyAction("revert snapshot=snap-2", executor); !errors.Is(err, ErrConfirmationRequired) {
+		t.Fatalf("expected destructive revert action to require confirmation, got %v", err)
+	}
+	if err := session.ApplyAction("revert snapshot=snap-2", executor); err != nil {
+		t.Fatalf("expected confirmed revert action to succeed: %v", err)
+	}
+	if executor.action != "revert snapshot=snap-2" {
+		t.Fatalf("expected revert action to carry snapshot id, got %q", executor.action)
+	}
+}
+
+func TestSessionApplyActionSnapshotEditTagsRejectsOptionsButAllowsBareAction(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Snapshots: []SnapshotRow{{VM: "vm-a", Snapshot: "snap-1"}},
+		},
+	)
+	if err := session.ExecuteCommand(":ss"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("edit-tags key=value", executor); err == nil {
+		t.Fatalf("expected snapshot edit-tags with options to be rejected")
+	}
+	if err := session.ApplyAction("edit-tags", executor); err != nil {
+		t.Fatalf("expected snapshot edit-tags without options to succeed: %v", err)
+	}
+	if executor.action != "edit-tags" {
+		t.Fatalf("expected bare edit-tags action payload, got %q", executor.action)
 	}
 }
 
