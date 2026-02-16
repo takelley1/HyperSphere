@@ -588,6 +588,90 @@ func TestSessionApplyActionSnapshotEditTagsRejectsOptionsButAllowsBareAction(t *
 	}
 }
 
+func TestSessionApplyActionHostMaintenanceUpdatesStateAndTransitions(t *testing.T) {
+	session := NewSession(
+		Catalog{
+			Hosts: []HostRow{
+				{Name: "esxi-01", ConnectionState: "connected"},
+			},
+		},
+	)
+	if err := session.ExecuteCommand(":host"); err != nil {
+		t.Fatalf("ExecuteCommand returned error: %v", err)
+	}
+	executor := &fakeExecutor{}
+	if err := session.ApplyAction("enter-maintenance", executor); err != nil {
+		t.Fatalf("enter-maintenance returned error: %v", err)
+	}
+	if value := session.CurrentView().Rows[0][5]; value != "maintenance" {
+		t.Fatalf("expected host connection state to switch to maintenance, got %q", value)
+	}
+	transitions := session.ActionTransitions()
+	if transitions[len(transitions)-1].Status != "maintenance-enabled" {
+		t.Fatalf("expected maintenance-enabled transition, got %q", transitions[len(transitions)-1].Status)
+	}
+	if err := session.ApplyAction("exit-maintenance", executor); err != nil {
+		t.Fatalf("exit-maintenance returned error: %v", err)
+	}
+	if value := session.CurrentView().Rows[0][5]; value != "connected" {
+		t.Fatalf("expected host connection state to switch back to connected, got %q", value)
+	}
+	transitions = session.ActionTransitions()
+	if transitions[len(transitions)-1].Status != "maintenance-disabled" {
+		t.Fatalf("expected maintenance-disabled transition, got %q", transitions[len(transitions)-1].Status)
+	}
+}
+
+func TestUpdateHostConnectionCellsGuardsUnsupportedShapes(t *testing.T) {
+	targets := map[string]struct{}{"esxi-01": {}}
+	nonHostView := ResourceView{
+		Resource: ResourceVM,
+		Columns:  []string{"NAME", "POWER"},
+		Rows:     [][]string{{"vm-a", "on"}},
+		IDs:      []string{"vm-a"},
+	}
+	updateHostConnectionCells(&nonHostView, targets, "maintenance")
+	if nonHostView.Rows[0][1] != "on" {
+		t.Fatalf("expected non-host rows to remain unchanged")
+	}
+
+	hostWithoutConnection := ResourceView{
+		Resource: ResourceHost,
+		Columns:  []string{"NAME", "CPU_PERCENT"},
+		Rows:     [][]string{{"esxi-01", "42"}},
+		IDs:      []string{"esxi-01"},
+	}
+	updateHostConnectionCells(&hostWithoutConnection, targets, "maintenance")
+	if hostWithoutConnection.Rows[0][1] != "42" {
+		t.Fatalf("expected host rows without connection column to remain unchanged")
+	}
+
+	hostWithMismatchedRows := ResourceView{
+		Resource: ResourceHost,
+		Columns:  []string{"NAME", "CONNECTION"},
+		Rows:     [][]string{},
+		IDs:      []string{"esxi-01"},
+	}
+	updateHostConnectionCells(&hostWithMismatchedRows, targets, "maintenance")
+
+	hostWithMixedTargets := ResourceView{
+		Resource: ResourceHost,
+		Columns:  []string{"NAME", "CONNECTION"},
+		Rows: [][]string{
+			{"esxi-01", "connected"},
+			{"esxi-02", "connected"},
+		},
+		IDs: []string{"esxi-01", "esxi-02"},
+	}
+	updateHostConnectionCells(&hostWithMixedTargets, targets, "maintenance")
+	if hostWithMixedTargets.Rows[0][1] != "maintenance" {
+		t.Fatalf("expected matched target host to update connection state")
+	}
+	if hostWithMixedTargets.Rows[1][1] != "connected" {
+		t.Fatalf("expected unmatched target host to remain unchanged")
+	}
+}
+
 func TestSessionApplyActionRecordsQueuedRunningAndSuccessTransitions(t *testing.T) {
 	session := NewSession(Catalog{VMs: []VMRow{{Name: "vm-a"}}})
 	if err := session.ExecuteCommand(":vm"); err != nil {

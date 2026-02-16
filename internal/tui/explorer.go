@@ -665,6 +665,7 @@ func (s *Session) ApplyAction(action string, executor ActionExecutor) error {
 				execErr = fmt.Errorf("%w: %s", ErrActionTimeout, actionName)
 			} else {
 				s.recordTransition(actionName, "success")
+				s.applyPostActionState(actionName, ids)
 				s.recordAudit(actionName, ids, "success", nil)
 				return nil
 			}
@@ -1944,6 +1945,54 @@ func (s *Session) recordTransition(action string, status string) {
 		Status:    status,
 		Timestamp: s.now().UTC().Format(time.RFC3339Nano),
 	})
+}
+
+func (s *Session) applyPostActionState(action string, ids []string) {
+	if s.view.Resource != ResourceHost {
+		return
+	}
+	if action == "enter-maintenance" {
+		s.setHostConnectionState(ids, "maintenance")
+		s.recordTransition(action, "maintenance-enabled")
+		return
+	}
+	if action == "exit-maintenance" {
+		s.setHostConnectionState(ids, "connected")
+		s.recordTransition(action, "maintenance-disabled")
+	}
+}
+
+func (s *Session) setHostConnectionState(ids []string, state string) {
+	targets := map[string]struct{}{}
+	for _, id := range ids {
+		targets[id] = struct{}{}
+	}
+	for index, row := range s.navigator.catalog.Hosts {
+		if _, ok := targets[row.Name]; ok {
+			row.ConnectionState = state
+			s.navigator.catalog.Hosts[index] = row
+		}
+	}
+	updateHostConnectionCells(&s.baseView, targets, state)
+	updateHostConnectionCells(&s.view, targets, state)
+}
+
+func updateHostConnectionCells(view *ResourceView, targets map[string]struct{}, state string) {
+	if view.Resource != ResourceHost {
+		return
+	}
+	column := findColumnIndex(view.Columns, "CONNECTION")
+	if column < 0 {
+		return
+	}
+	for rowIndex, id := range view.IDs {
+		if _, ok := targets[id]; !ok {
+			continue
+		}
+		if rowIndex < len(view.Rows) && column < len(view.Rows[rowIndex]) {
+			view.Rows[rowIndex][column] = state
+		}
+	}
 }
 
 func (s *Session) recordAudit(

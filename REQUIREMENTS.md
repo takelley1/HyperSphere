@@ -570,6 +570,7 @@
 ### RQ-058: Add host maintenance mode enter/exit actions
 - vSphere mapping: host lifecycle operations.
 - Acceptance: host view includes actions and state transitions reflect maintenance mode changes.
+- Status: fulfilled (2026-02-16).
 
 ### RQ-059: Add datastore maintenance and evacuation action
 - vSphere mapping: storage maintenance workflows.
