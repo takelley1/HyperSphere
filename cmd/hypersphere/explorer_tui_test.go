@@ -342,6 +342,7 @@ func TestRenderTopHeaderCenterIncludesMovedHelpHintsAndPromptState(t *testing.T)
 		"<!> Action",
 		"<Tab> Complete",
 		"<h/j/k/l> Move",
+		"<Shift+O> Sort",
 		"Prompt: ON | <q> Quit",
 	}
 	if len(lines) != len(want) {

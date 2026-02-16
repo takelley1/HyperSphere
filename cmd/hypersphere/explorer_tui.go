@@ -1788,6 +1788,7 @@ func renderTopHeaderCenter(logMode bool, promptMode bool) string {
 			"<!> Action",
 			"<Tab> Complete",
 			"<h/j/k/l> Move",
+			"<Shift+O> Sort",
 			fmt.Sprintf("Prompt: %s | <q> Quit", prompt),
 		},
 		"\n",

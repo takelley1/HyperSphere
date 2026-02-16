@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-02-16
+- Added and fulfilled RQ-119 by adding explicit sort guidance (`<Shift+O> Sort`)
+  to the top-center table help legend.
+- Added failing-first coverage in `cmd/hypersphere/explorer_tui_test.go` to
+  assert sort-hint visibility in moved top-header help text.
 - Added and fulfilled RQ-117 by changing resource-table selection styling from
   text-only reverse attributes to full-row background highlighting.
 - Added and fulfilled RQ-118 by applying full-row background colors for marked
